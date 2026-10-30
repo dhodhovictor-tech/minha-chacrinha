@@ -351,7 +351,7 @@
     switch (o.k) {
       case 'grass': blit(obj2Canvas('grass', Math.round(Math.sin(t * 1.6 + px * 0.05) * 1)), px - 1, py - 8); return true;
       case 'ftree': {
-        const st = o.age < 7 ? 0 : o.age < 14 ? 1 : o.age < 28 ? 2 : 3;
+        const st = o.age < 7 ? 0 : o.age < 14 ? 1 : o.age < FTREE_DAYS ? 2 : 3;
         shadowAt(px + 8, py + 15, st ? 12 : 5, st ? 4 : 2);
         blit(ftreeCanvas(o.id, st, o.fr || 0), px + 8 - 26, py + 15 - 74);
         return true;

@@ -200,7 +200,7 @@
       if (o.k === 'bau') { openChest(k); return true; }
       if (MACHINES.includes(o.k)) return machine(k, tl, o);
       if (o.k === 'ftree' && o.fr > 0) { if (addItem(o.id, o.fr)) { setTile(k, { ...tl, o: { ...o, fr: 0 } }); gainXP('foraging', 3 * o.fr); sfx.pop(); } return true; }
-      if (o.k === 'ftree') { toast(o.age < 28 ? `${FTREES[o.id].name}: cresce mais ${28 - o.age} dia${28 - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
+      if (o.k === 'ftree') { toast(o.age < FTREE_DAYS ? `${FTREES[o.id].name}: cresce mais ${FTREE_DAYS - o.age} dia${FTREE_DAYS - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
       if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + TAPS[(o.v || 0) % 3].days * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
     }
     return false;
@@ -316,7 +316,7 @@
       const tl = tile(k);
       if (solidAt(m, tx, ty) || (tl && (tl.o || tl.c || tl.s)) || ![G.GRASS, G.DIRT, G.FLOWERS, ...(m.gh ? [G.COBBLE] : [])].includes(m.at(tx, ty)) || m.spots[k0]) { toast('Plante num lugar livre.'); sfx.no(); return; }
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const t2 = tile(KP(m) + (tx + dx) + ',' + (ty + dy)); if ((dx || dy) && ((t2 && t2.o && ['tree', 'ftree', 'stump'].includes(t2.o.k)) || (!m.gh && bGrid().has((tx + dx) + ',' + (ty + dy))))) { toast('A muda precisa de espaço livre em volta.'); sfx.no(); return; } }
-      setTile(k, { o: { k: 'ftree', id: it.tree, age: 0, fr: 0, hp: 10 } }); useHeld(1); sfx.hoe(); toast('Muda plantada! Em 28 dias vira árvore.');
+      setTile(k, { o: { k: 'ftree', id: it.tree, age: 0, fr: 0, hp: 10 } }); useHeld(1); sfx.hoe(); toast(`Muda plantada! Em ${FTREE_DAYS} dias vira árvore.`);
       return;
     }
     if (s.id === 'extrator') {

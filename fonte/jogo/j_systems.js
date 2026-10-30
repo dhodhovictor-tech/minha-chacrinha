@@ -611,7 +611,7 @@
       const o = v && v.o; if (!o || o.k !== 'ftree') continue;
       o.age = (o.age || 0) + 1;
       const gh = k.startsWith('g:');
-      if (o.age >= 28 && (gh || FTREES[o.id].season === newS)) o.fr = Math.min(3, (o.fr || 0) + 1); else if (!gh && FTREES[o.id].season !== newS) o.fr = 0;
+      if (o.age >= FTREE_DAYS && (gh || FTREES[o.id].season === newS)) o.fr = Math.min(3, (o.fr || 0) + 1); else if (!gh && FTREES[o.id].season !== newS) o.fr = 0;
     }
     // covos
     for (const [k, p] of Object.entries(pots)) if (p.bait && !p.c) { const list = k.startsWith('beach:') ? CRAB_OCEAN : CRAB_FRESH; p.c = list[Math.floor(r() * list.length)]; p.bait = 0; }

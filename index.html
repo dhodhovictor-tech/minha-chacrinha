@@ -197,24 +197,24 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ================= plantações =================
   // days: dias até colher; regrow: dias para dar de novo; n: quantos frutos; kind: forma do pé
   const CROPS = {
-    pastinaca: { name: 'Pastinaca', seed: 20, sell: 35, days: 4, seasons: ['spring'], kind: 'root', col: '#f4e8c8', leaf: '#5aa83c', cat: 'veg' },
-    batata: { name: 'Batata', seed: 50, sell: 80, days: 6, seasons: ['spring'], kind: 'root', col: '#c8964a', leaf: '#4e9a34', cat: 'veg', extra: 0.2 },
-    couveflor: { name: 'Couve-flor', seed: 80, sell: 175, days: 12, seasons: ['spring'], kind: 'big', col: '#fff8e8', leaf: '#4a9a4a', cat: 'veg' },
-    couve: { name: 'Couve', seed: 70, sell: 110, days: 6, seasons: ['spring'], kind: 'bush', col: '#3a8a4a', leaf: '#3a8a4a', cat: 'veg' },
-    vagem: { name: 'Vagem', seed: 60, sell: 40, days: 10, regrow: 3, seasons: ['spring'], kind: 'vine', col: '#6ac84a', leaf: '#3a8a3a', cat: 'veg' },
-    morango: { name: 'Morango', seed: 100, sell: 120, days: 8, regrow: 4, seasons: ['spring'], kind: 'bush', col: '#e83a4a', leaf: '#4aa83a', cat: 'fruit' },
-    melao: { name: 'Melão', seed: 80, sell: 250, days: 12, seasons: ['summer'], kind: 'big', col: '#8ad84a', leaf: '#3a8a3a', cat: 'fruit' },
-    tomate: { name: 'Tomate', seed: 50, sell: 60, days: 11, regrow: 4, seasons: ['summer'], kind: 'vine', col: '#e8402a', leaf: '#3a8a3a', cat: 'veg' },
-    mirtilo: { name: 'Mirtilo', seed: 80, sell: 50, days: 13, regrow: 4, n: 3, seasons: ['summer'], kind: 'bush', col: '#4a5ae0', leaf: '#3a7a3a', cat: 'fruit' },
-    pimenta: { name: 'Pimenta', seed: 40, sell: 40, days: 5, regrow: 3, seasons: ['summer'], kind: 'bush', col: '#e8302a', leaf: '#4a9a3a', cat: 'fruit' },
-    trigo: { name: 'Trigo', seed: 10, sell: 25, days: 4, seasons: ['summer', 'fall'], kind: 'tall', col: '#e8c84a', leaf: '#c8b04a', cat: 'veg' },
-    milho: { name: 'Milho', seed: 150, sell: 50, days: 14, regrow: 4, seasons: ['summer', 'fall'], kind: 'tall', col: '#f4d83a', leaf: '#4a9a3a', cat: 'veg' },
-    abobora: { name: 'Abóbora', seed: 100, sell: 320, days: 13, seasons: ['fall'], kind: 'big', col: '#f08a2a', leaf: '#4a8a3a', cat: 'veg' },
-    uva: { name: 'Uva', seed: 60, sell: 80, days: 10, regrow: 3, seasons: ['fall'], kind: 'vine', col: '#8a3ac8', leaf: '#3a7a3a', cat: 'fruit' },
-    berinjela: { name: 'Berinjela', seed: 20, sell: 60, days: 5, regrow: 5, seasons: ['fall'], kind: 'bush', col: '#6a2a8a', leaf: '#4a8a3a', cat: 'veg' },
-    inhame: { name: 'Inhame', seed: 60, sell: 160, days: 10, seasons: ['fall'], kind: 'root', col: '#c86a4a', leaf: '#5a9a3a', cat: 'veg' },
-    mixinverno: { name: 'Mix de inverno', seed: 60, sell: 0, days: 7, seasons: ['winter'], kind: 'root', col: '#a86a5a', leaf: '#6a8a7a', cat: 'veg', mix: true },
-    oxicoco: { name: 'Oxicoco', seed: 240, sell: 75, days: 7, regrow: 5, n: 2, seasons: ['fall'], kind: 'bush', col: '#c8202a', leaf: '#5a7a2a', cat: 'fruit' },
+    pastinaca: { name: 'Pastinaca', seed: 20, sell: 35, days: 3, seasons: ['spring'], kind: 'root', col: '#f4e8c8', leaf: '#5aa83c', cat: 'veg' },
+    batata: { name: 'Batata', seed: 50, sell: 80, days: 5, seasons: ['spring'], kind: 'root', col: '#c8964a', leaf: '#4e9a34', cat: 'veg', extra: 0.2 },
+    couveflor: { name: 'Couve-flor', seed: 80, sell: 175, days: 11, seasons: ['spring'], kind: 'big', col: '#fff8e8', leaf: '#4a9a4a', cat: 'veg' },
+    couve: { name: 'Couve', seed: 70, sell: 110, days: 5, seasons: ['spring'], kind: 'bush', col: '#3a8a4a', leaf: '#3a8a4a', cat: 'veg' },
+    vagem: { name: 'Vagem', seed: 60, sell: 40, days: 9, regrow: 3, seasons: ['spring'], kind: 'vine', col: '#6ac84a', leaf: '#3a8a3a', cat: 'veg' },
+    morango: { name: 'Morango', seed: 100, sell: 120, days: 7, regrow: 4, seasons: ['spring'], kind: 'bush', col: '#e83a4a', leaf: '#4aa83a', cat: 'fruit' },
+    melao: { name: 'Melão', seed: 80, sell: 250, days: 11, seasons: ['summer'], kind: 'big', col: '#8ad84a', leaf: '#3a8a3a', cat: 'fruit' },
+    tomate: { name: 'Tomate', seed: 50, sell: 60, days: 10, regrow: 4, seasons: ['summer'], kind: 'vine', col: '#e8402a', leaf: '#3a8a3a', cat: 'veg' },
+    mirtilo: { name: 'Mirtilo', seed: 80, sell: 50, days: 12, regrow: 4, n: 3, seasons: ['summer'], kind: 'bush', col: '#4a5ae0', leaf: '#3a7a3a', cat: 'fruit' },
+    pimenta: { name: 'Pimenta', seed: 40, sell: 40, days: 4, regrow: 3, seasons: ['summer'], kind: 'bush', col: '#e8302a', leaf: '#4a9a3a', cat: 'fruit' },
+    trigo: { name: 'Trigo', seed: 10, sell: 25, days: 3, seasons: ['summer', 'fall'], kind: 'tall', col: '#e8c84a', leaf: '#c8b04a', cat: 'veg' },
+    milho: { name: 'Milho', seed: 150, sell: 50, days: 13, regrow: 4, seasons: ['summer', 'fall'], kind: 'tall', col: '#f4d83a', leaf: '#4a9a3a', cat: 'veg' },
+    abobora: { name: 'Abóbora', seed: 100, sell: 320, days: 12, seasons: ['fall'], kind: 'big', col: '#f08a2a', leaf: '#4a8a3a', cat: 'veg' },
+    uva: { name: 'Uva', seed: 60, sell: 80, days: 9, regrow: 3, seasons: ['fall'], kind: 'vine', col: '#8a3ac8', leaf: '#3a7a3a', cat: 'fruit' },
+    berinjela: { name: 'Berinjela', seed: 20, sell: 60, days: 4, regrow: 5, seasons: ['fall'], kind: 'bush', col: '#6a2a8a', leaf: '#4a8a3a', cat: 'veg' },
+    inhame: { name: 'Inhame', seed: 60, sell: 160, days: 9, seasons: ['fall'], kind: 'root', col: '#c86a4a', leaf: '#5a9a3a', cat: 'veg' },
+    mixinverno: { name: 'Mix de inverno', seed: 60, sell: 0, days: 6, seasons: ['winter'], kind: 'root', col: '#a86a5a', leaf: '#6a8a7a', cat: 'veg', mix: true },
+    oxicoco: { name: 'Oxicoco', seed: 240, sell: 75, days: 6, regrow: 5, n: 2, seasons: ['fall'], kind: 'bush', col: '#c8202a', leaf: '#5a7a2a', cat: 'fruit' },
   };
   // ================= peixes =================
   // where: pond (lagoa da chacrinha), river (rio da vila), mine (lago da mina); diff 1-100
@@ -374,6 +374,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const BEACH_FORAGE = ['concha', 'coral', 'ourico', 'mexilhao', 'ameijoa', 'ostra'];
 
   // ================= árvores frutíferas e extrator =================
+  const FTREE_DAYS = 27; // dias para a muda virar árvore e começar a dar frutas
   const FTREES = {
     cereja: { name: 'Cerejeira', season: 'spring', price: 3400, sell: 80, col: '#d8203a' },
     damasco: { name: 'Damasqueiro', season: 'spring', price: 2000, sell: 50, col: '#f4a83a' },
@@ -456,7 +457,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   });
   for (const [k, f] of Object.entries(FTREES)) {
     ITEMS[k] = { name: { cereja: 'Cereja', damasco: 'Damasco', laranja: 'Laranja', pessego: 'Pêssego', maca: 'Maçã', roma: 'Romã' }[k], cat: 'fruit', sell: f.sell, energy: Math.round(f.sell * 0.5), col: f.col };
-    ITEMS['m_' + k] = { name: 'Muda de ' + f.name.toLowerCase(), cat: 'sapling', sell: Math.floor(f.price / 2), tree: k, desc: `Plante na chacrinha com espaço em volta. Cresce em 28 dias e dá ${ITEMS[k].name.toLowerCase()} no ${SEASONS[SEASON_ID.indexOf(f.season)].toLowerCase()}.` };
+    ITEMS['m_' + k] = { name: 'Muda de ' + f.name.toLowerCase(), cat: 'sapling', sell: Math.floor(f.price / 2), tree: k, desc: `Plante na chacrinha com espaço em volta. Cresce em ${FTREE_DAYS} dias e dá ${ITEMS[k].name.toLowerCase()} no ${SEASONS[SEASON_ID.indexOf(f.season)].toLowerCase()}.` };
   }
   for (const k of ['peixeespada', 'sardinha', 'anchova', 'atum', 'linguado', 'polvo', 'lula', 'baiacu', 'arenque', 'salmonete']) { const f = FISH[k]; ITEMS[k] = { name: f.name, cat: 'fish', sell: f.sell, energy: Math.round(f.sell * 0.4 + 10), col: f.col }; }
   RECIPES.push(
@@ -746,12 +747,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ================= flores e mel =================
   // a colmeia faz mel do sabor da flor madura mais perto (até 5 quadrados); sem flor, sai mel silvestre
   const FLOWERS = {
-    tulipa: { name: 'Tulipa', seed: 20, sell: 30, days: 6, seasons: ['spring'], kind: 'flower', col: '#e84a6a', leaf: '#4aa83a', cat: 'flower' },
-    jazz: { name: 'Jazz-azul', seed: 30, sell: 50, days: 7, seasons: ['spring'], kind: 'flower', col: '#5a8ae8', leaf: '#4aa83a', cat: 'flower' },
-    papoula: { name: 'Papoula', seed: 100, sell: 140, days: 7, seasons: ['summer'], kind: 'flower', col: '#e8302a', leaf: '#4a9a3a', cat: 'flower' },
-    flordeverao: { name: 'Flor-de-verão', seed: 50, sell: 90, days: 8, seasons: ['summer'], kind: 'flower', col: '#e87ad8', leaf: '#4a9a3a', cat: 'flower' },
-    girassol: { name: 'Girassol', seed: 200, sell: 80, days: 8, seasons: ['summer', 'fall'], kind: 'sunflower', col: '#f4c820', leaf: '#4a9a3a', cat: 'flower' },
-    rosafada: { name: 'Rosa-fada', seed: 200, sell: 290, days: 12, seasons: ['fall'], kind: 'flower', col: '#f0a8d8', leaf: '#4a8a3a', cat: 'flower' },
+    tulipa: { name: 'Tulipa', seed: 20, sell: 30, days: 5, seasons: ['spring'], kind: 'flower', col: '#e84a6a', leaf: '#4aa83a', cat: 'flower' },
+    jazz: { name: 'Jazz-azul', seed: 30, sell: 50, days: 6, seasons: ['spring'], kind: 'flower', col: '#5a8ae8', leaf: '#4aa83a', cat: 'flower' },
+    papoula: { name: 'Papoula', seed: 100, sell: 140, days: 6, seasons: ['summer'], kind: 'flower', col: '#e8302a', leaf: '#4a9a3a', cat: 'flower' },
+    flordeverao: { name: 'Flor-de-verão', seed: 50, sell: 90, days: 7, seasons: ['summer'], kind: 'flower', col: '#e87ad8', leaf: '#4a9a3a', cat: 'flower' },
+    girassol: { name: 'Girassol', seed: 200, sell: 80, days: 7, seasons: ['summer', 'fall'], kind: 'sunflower', col: '#f4c820', leaf: '#4a9a3a', cat: 'flower' },
+    rosafada: { name: 'Rosa-fada', seed: 200, sell: 290, days: 11, seasons: ['fall'], kind: 'flower', col: '#f0a8d8', leaf: '#4a8a3a', cat: 'flower' },
   };
   for (const [k, c] of Object.entries(FLOWERS)) {
     CROPS[k] = c;
@@ -2404,7 +2405,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     switch (o.k) {
       case 'grass': blit(obj2Canvas('grass', Math.round(Math.sin(t * 1.6 + px * 0.05) * 1)), px - 1, py - 8); return true;
       case 'ftree': {
-        const st = o.age < 7 ? 0 : o.age < 14 ? 1 : o.age < 28 ? 2 : 3;
+        const st = o.age < 7 ? 0 : o.age < 14 ? 1 : o.age < FTREE_DAYS ? 2 : 3;
         shadowAt(px + 8, py + 15, st ? 12 : 5, st ? 4 : 2);
         blit(ftreeCanvas(o.id, st, o.fr || 0), px + 8 - 26, py + 15 - 74);
         return true;
@@ -3168,7 +3169,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (o.k === 'bau') { openChest(k); return true; }
       if (MACHINES.includes(o.k)) return machine(k, tl, o);
       if (o.k === 'ftree' && o.fr > 0) { if (addItem(o.id, o.fr)) { setTile(k, { ...tl, o: { ...o, fr: 0 } }); gainXP('foraging', 3 * o.fr); sfx.pop(); } return true; }
-      if (o.k === 'ftree') { toast(o.age < 28 ? `${FTREES[o.id].name}: cresce mais ${28 - o.age} dia${28 - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
+      if (o.k === 'ftree') { toast(o.age < FTREE_DAYS ? `${FTREES[o.id].name}: cresce mais ${FTREE_DAYS - o.age} dia${FTREE_DAYS - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
       if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + TAPS[(o.v || 0) % 3].days * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
     }
     return false;
@@ -3284,7 +3285,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const tl = tile(k);
       if (solidAt(m, tx, ty) || (tl && (tl.o || tl.c || tl.s)) || ![G.GRASS, G.DIRT, G.FLOWERS, ...(m.gh ? [G.COBBLE] : [])].includes(m.at(tx, ty)) || m.spots[k0]) { toast('Plante num lugar livre.'); sfx.no(); return; }
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const t2 = tile(KP(m) + (tx + dx) + ',' + (ty + dy)); if ((dx || dy) && ((t2 && t2.o && ['tree', 'ftree', 'stump'].includes(t2.o.k)) || (!m.gh && bGrid().has((tx + dx) + ',' + (ty + dy))))) { toast('A muda precisa de espaço livre em volta.'); sfx.no(); return; } }
-      setTile(k, { o: { k: 'ftree', id: it.tree, age: 0, fr: 0, hp: 10 } }); useHeld(1); sfx.hoe(); toast('Muda plantada! Em 28 dias vira árvore.');
+      setTile(k, { o: { k: 'ftree', id: it.tree, age: 0, fr: 0, hp: 10 } }); useHeld(1); sfx.hoe(); toast(`Muda plantada! Em ${FTREE_DAYS} dias vira árvore.`);
       return;
     }
     if (s.id === 'extrator') {
@@ -4553,7 +4554,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const o = v && v.o; if (!o || o.k !== 'ftree') continue;
       o.age = (o.age || 0) + 1;
       const gh = k.startsWith('g:');
-      if (o.age >= 28 && (gh || FTREES[o.id].season === newS)) o.fr = Math.min(3, (o.fr || 0) + 1); else if (!gh && FTREES[o.id].season !== newS) o.fr = 0;
+      if (o.age >= FTREE_DAYS && (gh || FTREES[o.id].season === newS)) o.fr = Math.min(3, (o.fr || 0) + 1); else if (!gh && FTREES[o.id].season !== newS) o.fr = 0;
     }
     // covos
     for (const [k, p] of Object.entries(pots)) if (p.bait && !p.c) { const list = k.startsWith('beach:') ? CRAB_OCEAN : CRAB_FRESH; p.c = list[Math.floor(r() * list.length)]; p.bait = 0; }

@@ -19,6 +19,7 @@
   const BEACH_FORAGE = ['concha', 'coral', 'ourico', 'mexilhao', 'ameijoa', 'ostra'];
 
   // ================= árvores frutíferas e extrator =================
+  const FTREE_DAYS = 27; // dias para a muda virar árvore e começar a dar frutas
   const FTREES = {
     cereja: { name: 'Cerejeira', season: 'spring', price: 3400, sell: 80, col: '#d8203a' },
     damasco: { name: 'Damasqueiro', season: 'spring', price: 2000, sell: 50, col: '#f4a83a' },
@@ -101,7 +102,7 @@
   });
   for (const [k, f] of Object.entries(FTREES)) {
     ITEMS[k] = { name: { cereja: 'Cereja', damasco: 'Damasco', laranja: 'Laranja', pessego: 'Pêssego', maca: 'Maçã', roma: 'Romã' }[k], cat: 'fruit', sell: f.sell, energy: Math.round(f.sell * 0.5), col: f.col };
-    ITEMS['m_' + k] = { name: 'Muda de ' + f.name.toLowerCase(), cat: 'sapling', sell: Math.floor(f.price / 2), tree: k, desc: `Plante na chacrinha com espaço em volta. Cresce em 28 dias e dá ${ITEMS[k].name.toLowerCase()} no ${SEASONS[SEASON_ID.indexOf(f.season)].toLowerCase()}.` };
+    ITEMS['m_' + k] = { name: 'Muda de ' + f.name.toLowerCase(), cat: 'sapling', sell: Math.floor(f.price / 2), tree: k, desc: `Plante na chacrinha com espaço em volta. Cresce em ${FTREE_DAYS} dias e dá ${ITEMS[k].name.toLowerCase()} no ${SEASONS[SEASON_ID.indexOf(f.season)].toLowerCase()}.` };
   }
   for (const k of ['peixeespada', 'sardinha', 'anchova', 'atum', 'linguado', 'polvo', 'lula', 'baiacu', 'arenque', 'salmonete']) { const f = FISH[k]; ITEMS[k] = { name: f.name, cat: 'fish', sell: f.sell, energy: Math.round(f.sell * 0.4 + 10), col: f.col }; }
   RECIPES.push(

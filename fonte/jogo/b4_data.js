@@ -2,12 +2,12 @@
   // ================= flores e mel =================
   // a colmeia faz mel do sabor da flor madura mais perto (até 5 quadrados); sem flor, sai mel silvestre
   const FLOWERS = {
-    tulipa: { name: 'Tulipa', seed: 20, sell: 30, days: 6, seasons: ['spring'], kind: 'flower', col: '#e84a6a', leaf: '#4aa83a', cat: 'flower' },
-    jazz: { name: 'Jazz-azul', seed: 30, sell: 50, days: 7, seasons: ['spring'], kind: 'flower', col: '#5a8ae8', leaf: '#4aa83a', cat: 'flower' },
-    papoula: { name: 'Papoula', seed: 100, sell: 140, days: 7, seasons: ['summer'], kind: 'flower', col: '#e8302a', leaf: '#4a9a3a', cat: 'flower' },
-    flordeverao: { name: 'Flor-de-verão', seed: 50, sell: 90, days: 8, seasons: ['summer'], kind: 'flower', col: '#e87ad8', leaf: '#4a9a3a', cat: 'flower' },
-    girassol: { name: 'Girassol', seed: 200, sell: 80, days: 8, seasons: ['summer', 'fall'], kind: 'sunflower', col: '#f4c820', leaf: '#4a9a3a', cat: 'flower' },
-    rosafada: { name: 'Rosa-fada', seed: 200, sell: 290, days: 12, seasons: ['fall'], kind: 'flower', col: '#f0a8d8', leaf: '#4a8a3a', cat: 'flower' },
+    tulipa: { name: 'Tulipa', seed: 20, sell: 30, days: 5, seasons: ['spring'], kind: 'flower', col: '#e84a6a', leaf: '#4aa83a', cat: 'flower' },
+    jazz: { name: 'Jazz-azul', seed: 30, sell: 50, days: 6, seasons: ['spring'], kind: 'flower', col: '#5a8ae8', leaf: '#4aa83a', cat: 'flower' },
+    papoula: { name: 'Papoula', seed: 100, sell: 140, days: 6, seasons: ['summer'], kind: 'flower', col: '#e8302a', leaf: '#4a9a3a', cat: 'flower' },
+    flordeverao: { name: 'Flor-de-verão', seed: 50, sell: 90, days: 7, seasons: ['summer'], kind: 'flower', col: '#e87ad8', leaf: '#4a9a3a', cat: 'flower' },
+    girassol: { name: 'Girassol', seed: 200, sell: 80, days: 7, seasons: ['summer', 'fall'], kind: 'sunflower', col: '#f4c820', leaf: '#4a9a3a', cat: 'flower' },
+    rosafada: { name: 'Rosa-fada', seed: 200, sell: 290, days: 11, seasons: ['fall'], kind: 'flower', col: '#f0a8d8', leaf: '#4a8a3a', cat: 'flower' },
   };
   for (const [k, c] of Object.entries(FLOWERS)) {
     CROPS[k] = c;
