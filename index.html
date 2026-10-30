@@ -5075,8 +5075,19 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </script>
 
 <script>
-  // guarda o app no aparelho para abrir rápido; uma versão nova entra na próxima vez que abrir
-  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  // guarda o app no aparelho para abrir rápido; quando uma versão nova termina de baixar, avisa para atualizar
+  if ('serviceWorker' in navigator) {
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!had || document.getElementById('appUpd')) return;
+      const b = document.createElement('button');
+      b.id = 'appUpd'; b.type = 'button'; b.className = 'btn g'; b.textContent = 'Versão nova! Toque aqui para atualizar';
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(56px + env(safe-area-inset-top, 0px));z-index:200;max-width:calc(100% - 32px);font-size:14px';
+      b.onclick = () => location.reload();
+      document.body.appendChild(b);
+    });
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => setInterval(() => r.update().catch(() => {}), 30 * 60 * 1000)).catch(() => {}));
+  }
 </script>
 </body>
 </html>

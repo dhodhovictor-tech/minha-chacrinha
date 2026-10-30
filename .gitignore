@@ -1,0 +1,4 @@
+fonte/.tmp/
+node_modules/
+*.log
+fonte/app/*.png

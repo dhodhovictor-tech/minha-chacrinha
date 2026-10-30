@@ -1,0 +1,34 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+// Confere se o progresso trazido (seed.js da raiz) abre inteiro. Uso: node seed_test.js <código> <pasta do export>
+const [code, dumpDir] = process.argv.slice(2);
+const EMU = "window.FIREBASE_CONFIG = { apiKey: 'demo', projectId: 'demo-chacrinha', databaseURL: 'http://127.0.0.1:9000?ns=demo-chacrinha', emulator: { host: '127.0.0.1', port: 9000 } };";
+(async () => {
+  await fetch('http://127.0.0.1:9000/.json?ns=demo-chacrinha', { method: 'DELETE', headers: { Authorization: 'Bearer owner' } });
+  const b = await chromium.launch({ args: ['--disable-features=LocalNetworkAccessChecks'] });
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2, serviceWorkers: 'block' });
+  const html = fs.readFileSync(__dirname + '/../.tmp/index_test.html', 'utf8');
+  await ctx.route(u => ['/', '/index.html'].includes(new URL(u).pathname), r => r.fulfill({ status: 200, contentType: 'text/html', body: html }));
+  await ctx.route('**/config.js', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: EMU }));
+  const errs = []; const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  await p.goto('http://127.0.0.1:8080/'); await p.waitForTimeout(1200);
+  await p.fill('#gcode', '  ' + code.toUpperCase() + ' '); await p.click('#gok'); await p.waitForTimeout(1500);
+  const g = await p.evaluate(() => document.getElementById('appgate').innerText.replace(/\s+/g, ' '));
+  console.log('gate:', g);
+  await p.click('[data-u]:not([data-u=""])'); await p.waitForTimeout(3000);
+  const dump = JSON.parse(fs.readFileSync(dumpDir + '/players/u_PLEnHbH4dNKljT3ohlNAQg.json', 'utf8'));
+  const meta = JSON.parse(fs.readFileSync(dumpDir + '/world/meta.json', 'utf8'));
+  const farm = JSON.parse(fs.readFileSync(dumpDir + '/world/farm.json', 'utf8'));
+  const st = await p.evaluate(() => ({ name: __sv.P.name, day: __sv.W.meta.day, inv: JSON.stringify(__sv.P.inv), tiles: Object.keys(__sv.W.farm.t).length, b: Object.keys(__sv.W.farm.b || {}).length, a: Object.keys(__sv.W.farm.a || {}).length, gold: __sv.gold(), museum: Object.keys(__sv.W.meta.museum || {}).length }));
+  console.log('estado:', JSON.stringify({ ...st, inv: undefined }));
+  const ok = (c, m) => console.log((c ? 'OK   ' : 'FALHA') + ' ' + m);
+  ok(st.name === dump.name, 'nome');
+  ok(st.day === meta.day, 'dia ' + st.day);
+  ok(st.inv === JSON.stringify(dump.inv), 'mochila igual');
+  ok(st.tiles === Object.keys(farm.t).length, `fazenda: ${st.tiles} de ${Object.keys(farm.t).length} pedaços`);
+  ok(st.museum === Object.keys(meta.museum || {}).length, 'museu');
+  await p.evaluate(() => { const c = document.querySelector('[data-a="close"]'); c && c.click(); });
+  await p.waitForTimeout(500); await p.screenshot({ path: 'seed_final.png' });
+  console.log('erros', errs.slice(0, 5));
+  await b.close();
+})();

@@ -11,6 +11,9 @@ Na primeira vez, o app pede o **código da chacrinha**. Quem digita o mesmo cód
 
 ## Arquivos
 
+O site é gerado a partir de `fonte/` (veja `fonte/LEIAME.md`).
+
+
 - `index.html`: o jogo inteiro.
 - `shim.js`: liga o jogo ao salvamento online (Firebase Realtime Database).
 - `config.js`: endereço do banco do Firebase deste jogo.

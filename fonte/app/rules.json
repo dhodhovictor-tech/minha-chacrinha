@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "chacrinhas": { "$codigo": { ".read": true, ".write": true } },
+    "salas": { "$codigo": { ".read": true, ".write": true } }
+  }
+}
