@@ -590,6 +590,13 @@
     ctx.save();
     const a = dir === 3 ? -1.7 + t * 2.4 : dir === 2 ? 1.7 - t * 2.4 : dir === 1 ? -0.7 + t * 1.4 : 0.7 - t * 1.4;
     const ox = dir === 3 ? 6 : dir === 2 ? -6 : dir === 1 ? 2 : 0, oy = dir === 0 ? -18 : -12;
+    // rastro do golpe para espada e foice
+    if (tool === 'sword' || tool === 'scythe') {
+      const a0 = dir === 3 ? -1.7 : dir === 2 ? 1.7 : dir === 1 ? -0.7 : 0.7;
+      const off = dir === 2 ? -2.2 : -0.94;
+      ctx.strokeStyle = `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(cx + ox, y + oy, 15, Math.min(a0, a) + off, Math.max(a0, a) + off); ctx.stroke();
+    }
     ctx.translate(cx + ox, y + oy); ctx.rotate(a); if (dir === 2) ctx.scale(-1, 1);
     ctx.drawImage(ic, -3, -16, 16, 16);
     ctx.restore();
