@@ -69,6 +69,13 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   await A.waitForTimeout(1000);
   await ev(A, () => __sv.act()); await A.waitForTimeout(1200);
   ok(await ev(B, () => __sv.count('s_pastinaca')) === sB0 + 1, 'presente de A chegou para B');
+  // mudar construção de lugar: A muda o silo, B vê
+  await ev(A, () => { const s = __sv; for (let y = 18; y <= 26; y++) for (let x = 8; x <= 30; x++) if (s.tile(x + ',' + y)) s.setTile(x + ',' + y, null); s.setFarm('b', 'bsilo', { type: 'silo', lv: 1, x: 20, y: 22, ready: s.W.meta.day, feed: 0 }); });
+  await A.waitForTimeout(800);
+  await A.click('#bMenu'); await A.click('[data-t="coop"]'); await A.click('[data-a="moveStart"]'); await A.waitForTimeout(200);
+  await ev(A, () => { const pl = __sv.placing; pl.x = 21; pl.y = 22; __sv.act(); }); await A.waitForTimeout(200);
+  await ev(A, () => { const pl = __sv.placing; pl.x = 12; pl.y = 21; __sv.act(); }); await A.waitForTimeout(1200);
+  ok(await ev(B, () => { const b = __sv.W.farm.b.bsilo; return b && b.x === 12 && b.y === 21; }), 'A mudou o silo de lugar e B vê no lugar novo');
   // mina
   await ev(A, () => __sv.goMap('mine1', 0, 0, 1)); await ev(B, () => __sv.goMap('mine1', 0, 0, 1)); await A.waitForTimeout(800);
   const rk = await ev(A, () => { const m = __sv.curMap(); const k = Object.keys(m.rocks)[0]; const [x, y] = k.split(',').map(Number); const P = __sv.P; P.x = x * 16 + 8; P.y = (y + 1) * 16 + 12; P.dir = 0; P.sel = 3; __sv.curMap().rocks[k].hp = 1; __sv.act(); return k; });

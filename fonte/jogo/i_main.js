@@ -77,7 +77,7 @@
     const m = placing ? MAPS.farm : curMap(), t = performance.now() / 1000;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, VW, VH);
-    const PB = placing && BUILDS[placing.type];
+    const PB = placing && placeSize();
     const tx = placing ? (placing.x + PB.w / 2) * T - VW / 2 : P.x - VW / 2, ty = placing ? (placing.y + PB.h / 2) * T - VH / 2 : P.y - 12 - VH / 2;
     camX = m.w * T <= VW ? (m.w * T - VW) / 2 : clamp(tx, 0, m.w * T - VW);
     camY = m.h * T <= VH ? (m.h * T - VH) / 2 : clamp(ty, 0, m.h * T - VH);
@@ -104,7 +104,7 @@
           if (s === 'winter' && !m.gh) R(px + 2, py + 2, 4, 2, '#ffffff88');
         }
         if (tl.c) ents.push({ y: py + 14, f: () => drawCrop(tl.c, px, py) });
-        if (tl.o) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
+        if (tl.o && !(placing && placing.tree === pre + x + ',' + y)) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
       }
     }
     if (m.id === 'town') for (const f of townForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
@@ -223,7 +223,7 @@
   const useEnd = () => { holdUse = false; };
   bUse.addEventListener('pointerup', useEnd); bUse.addEventListener('pointercancel', useEnd); bUse.addEventListener('pointerleave', useEnd);
   $('bPet').addEventListener('click', () => { initAudio(); if (!panelOpen) togglePet(); });
-  $('bMenu').addEventListener('click', () => { initAudio(); if (!P) return; if (placing) { placing = null; toast('Construção cancelada.'); return; } if (panelOpen) closePanel(); else openInventory(); });
+  $('bMenu').addEventListener('click', () => { initAudio(); if (!P) return; if (placing) { toast(placing.type && !placing.move ? 'Construção cancelada.' : 'Mudança cancelada.'); placing = null; return; } if (panelOpen) closePanel(); else openInventory(); });
   $('hotbar').addEventListener('click', e => { const b = e.target.closest('[data-a="hot"]'); if (!b || !P) return; P.sel = +b.dataset.i; renderHotbar(); dirty(); });
   // tocar num quadrado perto da pessoa age nele
   cv.addEventListener('pointerdown', e => {
@@ -231,7 +231,7 @@
     if (!P || panelOpen) return;
     const r = cv.getBoundingClientRect(), wx = (e.clientX - r.left) / r.width * VW + camX, wy = (e.clientY - r.top) / r.height * VH + camY;
     const tx = Math.floor(wx / T), ty = Math.floor(wy / T), [px, py] = ptile();
-    if (placing) { const B = BUILDS[placing.type]; placing.x = clamp(tx - Math.floor(B.w / 2), 1, MAPS.farm.w - B.w - 1); placing.y = clamp(ty - B.h + 1, 1, MAPS.farm.h - B.h - 2); return; }
+    if (placing) { const B = placeSize(); placing.x = clamp(tx - Math.floor(B.w / 2), 1, MAPS.farm.w - B.w - 1); placing.y = clamp(placing.type ? ty - B.h + 1 : ty, 1, MAPS.farm.h - B.h - 2); return; }
     if (Math.abs(tx - px) <= 1 && Math.abs(ty - py) <= 1 && !(tx === px && ty === py)) {
       const dx = tx - px, dy = ty - py;
       P.dir = Math.abs(dx) >= Math.abs(dy) && dx ? (dx > 0 ? 3 : 2) : dy > 0 ? 1 : 0;

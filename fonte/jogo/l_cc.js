@@ -155,6 +155,7 @@
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
+      case 'moveStart': startMoving(); break;
       case 'appswitch': openPanel(`<h2>Trocar de chacrinha?</h2><p style="text-align:center">Seu progresso continua salvo. Na próxima tela você digita o código da chacrinha e escolhe quem você é.</p><div class="row"><button class="btn" data-a="close" type="button">Voltar</button><button class="btn g" data-a="appswitch2" type="button">Trocar</button></div>`); break;
       case 'appswitch2': if (window.__chacrinhaReset) window.__chacrinhaReset(); break;
       case 'appupdate': {

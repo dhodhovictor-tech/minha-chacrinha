@@ -49,13 +49,13 @@
 
   // ================= construir: escolher o lugar na chacrinha =================
   let placing = null, placeStep = 0;
-  function placeTiles(type, px, py) {
+  function placeTiles(type, px, py, skip) {
     const B = BUILDS[type], m = MAPS.farm, out = [];
     const grid = bGrid();
     const isWarp = (x, y) => m.warps.some(w => x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1));
     const free = (x, y, front) => {
       if (x < 2 || y < 3 || x > m.w - 3 || y > m.h - 3) return false;
-      if (![G.GRASS, G.DIRT, G.FLOWERS].includes(m.at(x, y)) || m.solid[y * m.w + x] || grid.has(x + ',' + y) || isWarp(x, y) || m.spots[x + ',' + y]) return false;
+      if (![G.GRASS, G.DIRT, G.FLOWERS].includes(m.at(x, y)) || m.solid[y * m.w + x] || (grid.has(x + ',' + y) && grid.get(x + ',' + y).id !== skip) || isWarp(x, y) || m.spots[x + ',' + y]) return false;
       const tl = tile(x + ',' + y);
       if (tl && (tl.c || (tl.s && !front) || (tl.o && !['weed', 'grass', 'twig', 'forage'].includes(tl.o.k)))) return false;
       return true;
@@ -64,6 +64,8 @@
     if (B.door != null) { const x = px + B.door, y = py + B.h; out.push([x, y, free(x, y, true), true]); }
     return out;
   }
+  // tamanho do que está sendo posicionado: construção (nova ou mudando de lugar); árvore e cursor ocupam um quadrado
+  const placeSize = () => (placing && placing.type ? BUILDS[placing.type] : { w: 1, h: 1 });
   function startPlacing(type) {
     const B = BUILDS[type], lv = buildLv(type);
     if (Object.values(farmB()).some(b => !bReady(b))) { toast('A Rosa já está ocupada com outra obra. Espere ficar pronta.'); return; }
@@ -84,18 +86,99 @@
     if (Math.hypot(dx, dy) < 0.3) { placeStep = 0; return; }
     if (placeStep > 0) return;
     placeStep = 0.11;
-    const B = BUILDS[placing.type];
+    const B = placeSize();
     if (Math.abs(dx) > 0.3) placing.x = clamp(placing.x + Math.sign(dx), 1, MAPS.farm.w - B.w - 1);
     if (Math.abs(dy) > 0.3) placing.y = clamp(placing.y + Math.sign(dy), 1, MAPS.farm.h - B.h - 2);
   }
   function drawPlacing() {
-    const B = BUILDS[placing.type], tiles = placeTiles(placing.type, placing.x, placing.y);
+    if (placing.pick) {
+      const tg = pickTarget(), box = (x, y, w, h, c) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(x * T + 1, y * T + 1, w * T - 2, h * T - 2); };
+      if (tg && tg.b) { const b = farmB()[tg.b], B = BUILDS[b.type]; ctx.fillStyle = 'rgba(255,220,80,0.3)'; ctx.fillRect(b.x * T, b.y * T, B.w * T, B.h * T); box(b.x, b.y, B.w, B.h, '#ffd84a'); }
+      else if (tg && tg.tree) { const [x, y] = tg.tree.split(',').map(Number); ctx.fillStyle = 'rgba(255,220,80,0.4)'; ctx.fillRect(x * T, y * T, T, T); box(x, y, 1, 1, '#ffd84a'); }
+      box(placing.x, placing.y, 1, 1, '#ffffff');
+      return;
+    }
+    if (placing.tree) {
+      const ok = treeSpotOk(placing.x, placing.y, placing.tree);
+      ctx.fillStyle = ok ? 'rgba(80,220,80,0.4)' : 'rgba(230,50,40,0.5)'; ctx.fillRect(placing.x * T + 1, placing.y * T + 1, T - 2, T - 2);
+      ctx.globalAlpha = 0.7; drawObj(placing.o, placing.x * T, placing.y * T, placing.x + ',' + placing.y, 0); ctx.globalAlpha = 1;
+      return;
+    }
+    const B = BUILDS[placing.type], tiles = placeTiles(placing.type, placing.x, placing.y, placing.move), mb = placing.move && farmB()[placing.move];
     ctx.globalAlpha = 0.55;
-    blit(building2Canvas(placing.type, B.w * T, B.h * T, false, 1), placing.x * T - 8, placing.y * T - 36);
+    blit(building2Canvas(placing.type, B.w * T, B.h * T, false, mb ? mb.lv : 1), placing.x * T - 8, placing.y * T - 36);
     ctx.globalAlpha = 1;
     for (const [x, y, ok, front] of tiles) { ctx.fillStyle = ok ? (front ? 'rgba(80,160,255,0.45)' : 'rgba(80,220,80,0.4)') : 'rgba(230,50,40,0.5)'; ctx.fillRect(x * T + 1, y * T + 1, T - 2, T - 2); }
   }
+  // ================= mudar construções e árvores de lugar =================
+  function startMoving() {
+    closePanel();
+    const [px, py] = P.map === 'farm' ? ptile() : [18, 22];
+    placing = { pick: true, x: px, y: Math.max(3, py - 1) };
+    toast('Toque numa construção ou árvore da chacrinha e aperte Usar. Mochila cancela.', 'big');
+  }
+  // o que está no quadrado escolhido (ou logo abaixo: o desenho de prédios e árvores fica mais alto que o chão que ocupam)
+  function pickTarget() {
+    const g = bGrid();
+    for (let dy = 0; dy <= 2; dy++) {
+      const k = placing.x + ',' + (placing.y + dy);
+      if (g.has(k)) return { b: g.get(k).id };
+      const tl = tile(k);
+      if (tl && tl.o && (tl.o.k === 'tree' || tl.o.k === 'ftree')) return { tree: k };
+    }
+    return null;
+  }
+  // árvore precisa de chão livre e de espaço em volta (igual a plantar uma muda)
+  function treeSpotOk(x, y, from) {
+    const m = MAPS.farm, k = x + ',' + y, g = bGrid();
+    if (x < 2 || y < 3 || x > m.w - 3 || y > m.h - 3) return false;
+    if (![G.GRASS, G.DIRT, G.FLOWERS].includes(m.at(x, y)) || m.solid[y * m.w + x] || g.has(k) || m.spots[k]) return false;
+    if (m.warps.some(w => x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1))) return false;
+    const tl = tile(k);
+    if (k !== from && tl && (tl.c || tl.s || (tl.o && !['weed', 'grass', 'twig', 'forage'].includes(tl.o.k)))) return false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const k2 = (x + dx) + ',' + (y + dy); if ((!dx && !dy) || k2 === from) continue;
+      const t2 = tile(k2); if ((t2 && t2.o && ['tree', 'ftree', 'stump'].includes(t2.o.k)) || g.has(k2)) return false;
+    }
+    return true;
+  }
+  function confirmMoving() {
+    const p = placing;
+    if (p.pick) {
+      const tg = pickTarget();
+      if (!tg) { toast('Aqui não tem construção nem árvore. Toque numa delas.'); sfx.no(); return; }
+      if (tg.b) {
+        const b = farmB()[tg.b], name = BUILDS[b.type].names[(b.lv || 1) - 1];
+        placing = { type: b.type, x: b.x, y: b.y, move: tg.b };
+        toast(`Escolha o lugar novo: ${name}. Usar coloca aqui, Mochila cancela.`, 'big');
+      } else {
+        const [x, y] = tg.tree.split(',').map(Number);
+        placing = { tree: tg.tree, o: clone(tile(tg.tree).o), x, y };
+        toast('Escolha o lugar novo da árvore. Usar planta aqui, Mochila cancela.', 'big');
+      }
+      sfx.pop(); return;
+    }
+    if (p.tree) {
+      const from = tile(p.tree);
+      if (!from || !from.o || !['tree', 'ftree'].includes(from.o.k)) { placing = null; toast('A árvore não está mais lá.'); return; }
+      if (!treeSpotOk(p.x, p.y, p.tree)) { toast('Não dá para plantar aí: a árvore precisa de chão livre e espaço em volta.'); sfx.no(); return; }
+      const k = p.x + ',' + p.y;
+      if (k !== p.tree) { const rest = { ...from }; delete rest.o; setTile(p.tree, Object.keys(rest).length ? rest : null); setTile(k, { o: from.o }); }
+      placing = null; sfx.hoe(); toast('A árvore mudou de lugar!', 'big');
+      return;
+    }
+    const b = farmB()[p.move];
+    if (!b) { placing = null; toast('Essa construção não está mais lá.'); return; }
+    const tiles = placeTiles(p.type, p.x, p.y, p.move);
+    if (tiles.some(t => !t[2])) { toast('Não dá para colocar aí: precisa de chão livre (vermelho está ocupado).'); sfx.no(); return; }
+    for (const [x, y] of tiles) { const tl = tile(x + ',' + y); if (tl && tl.o) setTile(x + ',' + y, null); }
+    setFarm('b', p.move, { ...b, x: p.x, y: p.y });
+    animLocal.clear();
+    placing = null; sfx.level();
+    toast(`${BUILDS[b.type].names[(b.lv || 1) - 1]} mudou de lugar!`, 'big');
+  }
   function confirmPlacing() {
+    if (placing.pick || placing.tree || placing.move) { confirmMoving(); return; }
     const p = placing, B = BUILDS[p.type], lv = buildLv(p.type), tiles = placeTiles(p.type, p.x, p.y);
     if (tiles.some(t => !t[2])) { toast('Não dá para construir aí: precisa de chão livre (vermelho está ocupado).'); sfx.no(); return; }
     if (!Object.entries(lv.need).every(([k, n]) => count(k) >= n) || !spend(lv.gold)) { toast('Faltam moedas ou materiais.'); placing = null; return; }
@@ -648,7 +731,7 @@
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
     if (m.id === 'farm') {
-      for (const b of Object.values(farmB())) { const B = BUILDS[b.type]; if (!B) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
+      for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
       if (hasUnread()) ents.push({ y: 6 * T + 20, f: () => { const b = Math.round(Math.sin(performance.now() / 250) * 1.5); R(14 * T + 4, 6 * T - 22 + b, 8, 12, '#ffffff'); drawText('!', 14 * T + 8, 6 * T - 16 + b, '#e8402a', 10); } });
     }
