@@ -14,7 +14,7 @@ O site na raiz do repositório (`index.html`, `sw.js`, `shim.js`, `manifest.webm
 1. Edite as partes em `fonte/jogo`.
 2. `python3 fonte/build.py`
 3. Teste (abaixo), faça commit e push na `main`. O GitHub Pages publica em cerca de um minuto.
-4. Nos celulares, o app baixa a versão nova sozinho e mostra o aviso "Versão nova! Toque aqui para atualizar". O progresso fica no Firebase e não é afetado.
+4. Nos celulares, o app busca o jogo mais novo sempre que abre com internet (sem internet, usa a cópia guardada). Se a versão nova sair com o app aberto, aparece o aviso "Versão nova! Toque aqui para atualizar". A aba Chacrinha do menu mostra a versão e tem o botão "Procurar atualização". O progresso fica no Firebase e não é afetado.
 
 ## Testar
 

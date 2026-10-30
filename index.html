@@ -151,6 +151,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
+<script>window.__APP_VERSION = 'f43cd7a'; window.__APP_DATE = '30/10/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -3715,7 +3716,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         ${P.spouse ? `<p class="big" style="text-align:center">💍 Casados: ${esc(P.name)} e ${esc(P.spouseName || 'amor')}${P.flags.wedDay ? ` desde o dia ${P.flags.wedDay}` : ''}</p>` : ''}
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
-        ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div>` : ''}
+        ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
     openPanel(`<h2>${P.name}</h2>${tabs}${body}`, 'inv');
@@ -4867,6 +4868,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'reload': location.reload(); break;
       case 'appswitch': openPanel(`<h2>Trocar de chacrinha?</h2><p style="text-align:center">Seu progresso continua salvo. Na próxima tela você digita o código da chacrinha e escolhe quem você é.</p><div class="row"><button class="btn" data-a="close" type="button">Voltar</button><button class="btn g" data-a="appswitch2" type="button">Trocar</button></div>`); break;
       case 'appswitch2': if (window.__chacrinhaReset) window.__chacrinhaReset(); break;
+      case 'appupdate': {
+        // pede ao aparelho para conferir se há versão nova e recarrega; com internet, o app abre sempre o jogo mais novo
+        toast('Procurando versão nova...');
+        const sw = navigator.serviceWorker;
+        (sw ? sw.getRegistration().then(r => r && r.update()).catch(() => {}) : Promise.resolve()).then(() => setTimeout(() => location.reload(), 1200));
+        break;
+      }
       case 'ccGive': ccGive(b.dataset.b, +b.dataset.i); break;
       case 'ccPay': ccPay(b.dataset.b); break;
       case 'mDonate': museumDonate(b.dataset.id); break;
@@ -5391,18 +5399,22 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </script>
 
 <script>
-  // guarda o app no aparelho para abrir rápido; quando uma versão nova termina de baixar, avisa para atualizar
+  // o app abre sempre a versão mais nova quando há internet; se uma versão nova sair com o app aberto, aparece um aviso para atualizar
   if ('serviceWorker' in navigator) {
-    const had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!had || document.getElementById('appUpd')) return;
+    const showUpd = () => {
+      if (document.getElementById('appUpd')) return;
       const b = document.createElement('button');
       b.id = 'appUpd'; b.type = 'button'; b.className = 'btn g'; b.textContent = 'Versão nova! Toque aqui para atualizar';
       b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(56px + env(safe-area-inset-top, 0px));z-index:200;max-width:calc(100% - 32px);font-size:14px';
       b.onclick = () => location.reload();
       document.body.appendChild(b);
-    });
-    addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => setInterval(() => r.update().catch(() => {}), 30 * 60 * 1000)).catch(() => {}));
+    };
+    navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.v && e.data.v !== window.__APP_VERSION) showUpd(); });
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => {
+      const check = () => r.update().catch(() => {});
+      setInterval(check, 30 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+    }).catch(() => {}));
   }
 </script>
 </body>

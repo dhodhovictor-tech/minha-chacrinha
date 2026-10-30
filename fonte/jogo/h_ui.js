@@ -118,7 +118,7 @@
         ${P.spouse ? `<p class="big" style="text-align:center">💍 Casados: ${esc(P.name)} e ${esc(P.spouseName || 'amor')}${P.flags.wedDay ? ` desde o dia ${P.flags.wedDay}` : ''}</p>` : ''}
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
-        ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div>` : ''}
+        ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
     openPanel(`<h2>${P.name}</h2>${tabs}${body}`, 'inv');

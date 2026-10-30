@@ -116,6 +116,7 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   await D.click('#bMenu'); await D.waitForTimeout(300);
   await D.click('[data-t="coop"]'); await D.waitForTimeout(300);
   ok((await ev(D, () => document.querySelector('.win').innerText)).includes(code), 'aba Chacrinha mostra o código');
+  ok(/Versão do jogo: .*\(\w{7}\)/.test(await ev(D, () => document.querySelector('.win').innerText)) && !!(await D.$('[data-a="appupdate"]')), 'aba Chacrinha mostra a versão e o botão Procurar atualização');
   await D.click('[data-a="appswitch"]'); await D.waitForTimeout(200); await D.click('[data-a="appswitch2"]'); await D.waitForTimeout(2000);
   ok(/Digite o código/.test(await gateText(D)), 'trocar de chacrinha volta para a tela do código');
   await D.close();

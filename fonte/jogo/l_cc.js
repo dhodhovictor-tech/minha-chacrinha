@@ -157,6 +157,13 @@
       case 'reload': location.reload(); break;
       case 'appswitch': openPanel(`<h2>Trocar de chacrinha?</h2><p style="text-align:center">Seu progresso continua salvo. Na próxima tela você digita o código da chacrinha e escolhe quem você é.</p><div class="row"><button class="btn" data-a="close" type="button">Voltar</button><button class="btn g" data-a="appswitch2" type="button">Trocar</button></div>`); break;
       case 'appswitch2': if (window.__chacrinhaReset) window.__chacrinhaReset(); break;
+      case 'appupdate': {
+        // pede ao aparelho para conferir se há versão nova e recarrega; com internet, o app abre sempre o jogo mais novo
+        toast('Procurando versão nova...');
+        const sw = navigator.serviceWorker;
+        (sw ? sw.getRegistration().then(r => r && r.update()).catch(() => {}) : Promise.resolve()).then(() => setTimeout(() => location.reload(), 1200));
+        break;
+      }
       case 'ccGive': ccGive(b.dataset.b, +b.dataset.i); break;
       case 'ccPay': ccPay(b.dataset.b); break;
       case 'mDonate': museumDonate(b.dataset.id); break;
