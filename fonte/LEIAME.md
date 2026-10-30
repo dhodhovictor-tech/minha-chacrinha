@@ -4,7 +4,7 @@ O site na raiz do repositório (`index.html`, `sw.js`, `shim.js`, `manifest.webm
 
 ## Pastas
 
-- `jogo/`: o jogo, em partes que são juntadas nesta ordem: `a_head.html` (estilos e HUD), `b*_data.js` (itens, receitas, NPCs), `c_maps.js` (mapas), `d_state.js` (estado e salvamento), `e*_draw.js` e `f*_icons.js` (desenhos), `g_game.js` (ações), `h_ui.js` (painéis), `j_systems.js` (construções, animais, cozinha, NPCs), `k_market.js` (mercado), `l_cc.js` (Centro Comunitário e museu), `m_pet.js` (o Darth), `i_main.js` (loop principal e carregamento).
+- `jogo/`: o jogo, em partes que são juntadas nesta ordem: `a_head.html` (estilos e HUD), `b*_data.js` (itens, receitas, NPCs), `c_maps.js` (mapas), `d_state.js` (estado e salvamento), `e*_draw.js` e `f*_icons.js` (desenhos), `f3_fish.js` (um desenho para cada peixe), `g_game.js` (ações), `h_ui.js` (painéis), `j_systems.js` (construções, animais, cozinha, NPCs), `k_market.js` (mercado), `l_cc.js` (Centro Comunitário e museu), `m_pet.js` (o Darth), `i_main.js` (loop principal e carregamento).
 - `app/shim.js`: liga o jogo ao Firebase Realtime Database, imitando a interface `claude.use('db' | 'room' | 'user')` que o jogo usava dentro do Claude.
 - `app/rules.json`: regras do banco (as mesmas publicadas no console do Firebase).
 - `build.py`: junta as partes, confere a sintaxe e gera o site na raiz, mais uma versão de teste em `fonte/.tmp/`.

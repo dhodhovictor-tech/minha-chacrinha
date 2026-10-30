@@ -4,7 +4,7 @@ import hashlib, json, os, re, subprocess
 FONTE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(FONTE)
 JOGO, APP, TMP = os.path.join(FONTE, 'jogo'), os.path.join(FONTE, 'app'), os.path.join(FONTE, '.tmp')
 os.makedirs(TMP, exist_ok=True)
-PARTES = ['a_head.html', 'b_data.js', 'b2_data.js', 'b3_data.js', 'b4_data.js', 'c_maps.js', 'd_state.js', 'e_draw.js', 'e2_draw.js', 'f_icons.js', 'f2_icons.js', 'g_game.js', 'h_ui.js', 'j_systems.js', 'k_market.js', 'l_cc.js', 'm_pet.js', 'i_main.js']
+PARTES = ['a_head.html', 'b_data.js', 'b2_data.js', 'b3_data.js', 'b4_data.js', 'c_maps.js', 'd_state.js', 'e_draw.js', 'e2_draw.js', 'f_icons.js', 'f2_icons.js', 'f3_fish.js', 'g_game.js', 'h_ui.js', 'j_systems.js', 'k_market.js', 'l_cc.js', 'm_pet.js', 'i_main.js']
 game = ''.join(open(os.path.join(JOGO, p)).read() for p in PARTES)
 # confere a sintaxe do script do jogo
 i = game.index('<script>\n(() =>'); j = game.rindex('</script>')

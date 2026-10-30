@@ -524,7 +524,7 @@
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
-      if (addItem(f.id, 1)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3)); sfx.catch(); toast(`Você pescou: ${FISH[f.id].name}!`, 'big'); }
+      if (addItem(f.id, 1)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3)); sfx.catch(); toast(`Você pescou: ${FISH[f.id].name}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
   }
@@ -539,7 +539,7 @@
     c.fillStyle = (f.fy > f.bar && f.fy < f.bar + f.barH) ? '#7ae84a' : '#5ab83a'; c.fillRect(7, Math.round(f.bar), 20, Math.round(f.barH));
     c.fillStyle = '#ffffff55'; c.fillRect(7, Math.round(f.bar), 20, 2);
     const fx = 12, fy = Math.round(f.fy) - 4;
-    c.fillStyle = FISH[f.id].col; c.fillRect(fx, fy + 1, 9, 6); c.fillRect(fx + 9, fy, 3, 8); c.fillStyle = '#000'; c.fillRect(fx + 2, fy + 3, 1, 1);
+    c.drawImage(iconCanvas(f.id), fx - 3 + Math.round(Math.sin(f.tt * 9)), fy - 4);
     c.fillStyle = '#3a1a0a'; c.fillRect(33, 2, 12, 116);
     const ph = Math.round(114 * f.prog);
     c.fillStyle = f.prog > 0.66 ? '#5ad84a' : f.prog > 0.33 ? '#f4c83a' : '#e8502a'; c.fillRect(35, 116 - ph, 8, ph);

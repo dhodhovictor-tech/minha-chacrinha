@@ -127,6 +127,7 @@
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
     if (paintTool(id, lv)) return;
+    if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
       case 'hoe': R(3, 12, 2, 2, '#6a3a1a'); for (let k = 0; k < 9; k++) R(4 + k, 11 - k, 2, 2, '#a86a3a'); R(10, 2, 5, 3, m); R(13, 2, 2, 6, m); return;

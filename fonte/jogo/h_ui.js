@@ -2,9 +2,10 @@
   const $ = id => document.getElementById(id);
   const panel = $('panel');
   let panelOpen = false, panelKind = null, panelArg = null, invSel = -1, invTab = 'items', shopTab = 'buy';
-  function toast(text, kind = '') {
+  function toast(text, kind = '', icon = null) {
     const box = $('toasts'), el = document.createElement('div');
     el.className = 'toast frame' + (kind === 'big' ? ' big' : ''); el.textContent = text;
+    if (icon) { const im = document.createElement('img'); im.src = iconURL(icon); im.alt = ''; im.style.cssText = 'width:32px;height:32px;image-rendering:pixelated;vertical-align:middle;margin-right:6px'; el.prepend(im); }
     if (kind === 'big') el.style.fontSize = '17px';
     box.appendChild(el);
     while (box.children.length > 3) box.firstChild.remove();
