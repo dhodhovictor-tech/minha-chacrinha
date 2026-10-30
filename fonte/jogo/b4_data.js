@@ -38,3 +38,9 @@
     }
     return best ? 'mel:' + best : 'mel';
   }
+
+  // ================= café e expresso =================
+  Object.assign(ITEMS.cafe, { name: 'Grão de café', energy: 0, desc: 'Na cozinha, 3 grãos viram uma xícara de expresso.' });
+  COOK.push({ id: 'expresso', name: 'Xícara de expresso', need: { cafe: 3 }, en: 40, sell: 120, learn: 'start', buff: { speed: 2 } });
+  ITEMS.expresso = { name: 'Xícara de expresso', cat: 'food', sell: 120, energy: 40, buff: { speed: 2 }, drink: true, desc: 'Um expresso quentinho. Dá Velocidade +2 por um tempo.' };
+  NPCS.bia.loves.push('expresso'); NPCS.davi.likes.push('expresso');

@@ -443,6 +443,24 @@
           if (st === 'ripe') for (const [x, y] of [[4, 8], [10, 6], [7, 11], [12, 10], [7, 5], [3, 12]]) { R(x, y, 2, 2, P); R(x, y, 1, 1, Pl); }
           break;
         }
+        case 'coffee': {
+          const hh = st === 's1' ? 12 : 21, top = 15 - hh, wood = '#7a5432';
+          R(7, top + 2, 2, hh - 2, wood); R(7, top + 2, 1, hh - 2, '#9a7048');
+          const levels = st === 's1' ? [top + 3, top + 8] : [top + 2, top + 7, top + 12, top + 17];
+          const wOf = i => 3 + Math.min(i, 2) * 1.5;
+          levels.forEach((y, i) => {
+            const w = wOf(i);
+            R(8 - w, y + 2, w * 2, 1, wood);
+            for (const f of [-1, 1]) { oval(8 + f * (w + 1), y + 1, 2.6, 1.4, i % 2 ? L : Ld); R(8 + f * (w + 1) - 1, y + 1, 2, 1, Ll); }
+          });
+          // frutinhos por cima das folhas: verdes crescendo, vermelhos quando maduros
+          if (st === 'ripe' || st === 's2') levels.forEach((y, i) => {
+            const w = wOf(i);
+            for (const f of [-1, 1]) for (const [dx, dy] of [[0, 0], [2, 0], [1, 2]]) { const x = 8 + f * (w - 1) + dx - 1, yy = y + 2 + dy; R(x, yy, 2, 2, st === 'ripe' ? (dy ? Pd : P) : '#7ab84a'); R(x, yy, 1, 1, st === 'ripe' ? Pl : '#a8d878'); }
+          });
+          oval(8, top + 1, 2.6, 2, Ld); R(7, top, 1, 1, Ll);
+          break;
+        }
         case 'vine': {
           R(7, -8, 2, 23, '#a8783e'); R(7, -8, 1, 23, '#c8985a'); R(3, -5, 10, 2, '#8a5a2a'); R(3, 4, 10, 1, '#8a5a2a');
           const n = st === 's1' ? 3 : 6;

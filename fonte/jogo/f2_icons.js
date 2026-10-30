@@ -19,6 +19,19 @@
     const jar = (c, lid = '#c8a06a') => { R(3, 4, 10, 11, '#e8f0f4'); R(4, 6, 8, 8, c); R(3, 2, 10, 3, lid); R(4, 7, 2, 4, '#ffffff66'); };
     const jug = (c, big) => { R(4, 4, 8, 11, c); R(5, 2, 6, 2, c); R(6, 1, 4, 1, '#c8c0b0'); R(12, 6, 2, 5, c); R(12, 6, 1, 1, '#8a8a8a'); R(5, 8, 6, 4, big ? '#e8402a' : '#3a8ad8'); R(5, 5, 1, 9, '#ffffff'); };
     const mineral = (c, d) => { poly([[8, 1], [14, 6], [12, 14], [4, 14], [2, 6]], d); poly([[8, 2], [12, 6], [10, 12], [5, 12], [4, 6]], c); R(6, 4, 2, 2, '#ffffff'); };
+    if (id === 'cafe') {
+      const pal = { b: '#4a2810', c: '#7a4822', d: '#a86e3a', k: '#24100a' };
+      ['................', '................', '..........bbb...', '.........bcdcb..', '........bcdckcb.', '........bcdkccb.', '...bbb..bcckccb.', '..bcdcb.bckcccb.', '.bcdckcb.bkccb..', '.bcdkccb..bbb...', '.bcckccb........', '.bckcccb........', '..bkccb.........', '...bbb..........', '................', '................'].forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) R(x, y, 1, 1, pal[ch]); }));
+      return true;
+    }
+    if (id === 'expresso') {
+      R(1, 13, 14, 2, '#e8e4dc'); R(1, 14, 14, 1, '#b8b2a8'); R(3, 12, 10, 1, '#f8f6f0');
+      R(3, 6, 9, 7, '#f8f6f0'); R(3, 6, 1, 7, '#ffffff'); R(10, 7, 2, 6, '#d8d2c8'); R(4, 11, 7, 1, '#e0dad0');
+      R(12, 7, 3, 1, '#f8f6f0'); R(14, 7, 1, 3, '#f8f6f0'); R(12, 9, 3, 1, '#d8d2c8');
+      R(4, 6, 7, 2, '#3a1e0e'); R(5, 6, 4, 1, '#c88a4a'); R(9, 7, 1, 1, '#a86a32');
+      R(5, 2, 1, 2, '#ffffffaa'); R(6, 1, 1, 1, '#ffffffaa'); R(8, 3, 1, 2, '#ffffffaa'); R(9, 2, 1, 1, '#ffffffaa');
+      return true;
+    }
     if (id === 'mel' || String(id).startsWith('mel:')) { R(3, 5, 10, 10, '#c8780a'); R(4, 6, 8, 8, '#f0a820'); R(3, 2, 10, 3, '#8a5a2a'); R(3, 2, 10, 1, '#b07a3a'); R(5, 7, 2, 5, '#ffd870'); R(4, 4, 3, 3, '#f0a820'); if (it.base) { disc(10, 10, 2.5, item(it.base).col || '#ffffff'); R(9, 9, 1, 1, '#ffffff'); } return true; }
     if (FLOWERS[id]) {
       const c = it.col;

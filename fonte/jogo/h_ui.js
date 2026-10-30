@@ -162,7 +162,7 @@
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }];
-      case 'lia': return [{ id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
+      case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
     return [];
   }

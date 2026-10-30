@@ -368,8 +368,9 @@
   }
   function openEat() {
     const s = held(), it = item(s.id);
-    openPanel(`<h2>Comer ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}.</p>
-      <div class="row"><button class="btn g" data-a="eat" type="button">Comer</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
+    const verb = it.drink ? 'Tomar' : 'Comer';
+    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
+      <div class="row"><button class="btn g" data-a="eat" type="button">${verb}</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
   }
   function eatHeld() {
     const s = held(); if (!s) return;

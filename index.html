@@ -151,7 +151,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'f43cd7a'; window.__APP_DATE = '30/10/2026';</script>
+<script>window.__APP_VERSION = 'd6b0c8f'; window.__APP_DATE = '30/10/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -215,6 +215,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     berinjela: { name: 'Berinjela', seed: 20, sell: 60, days: 4, regrow: 5, seasons: ['fall'], kind: 'bush', col: '#6a2a8a', leaf: '#4a8a3a', cat: 'veg' },
     inhame: { name: 'Inhame', seed: 60, sell: 160, days: 9, seasons: ['fall'], kind: 'root', col: '#c86a4a', leaf: '#5a9a3a', cat: 'veg' },
     mixinverno: { name: 'Mix de inverno', seed: 60, sell: 0, days: 6, seasons: ['winter'], kind: 'root', col: '#a86a5a', leaf: '#6a8a7a', cat: 'veg', mix: true },
+    cafe: { name: 'Café', seed: 60, sell: 15, days: 9, regrow: 2, n: 4, seasons: ['spring', 'summer'], kind: 'coffee', col: '#c8202a', leaf: '#2e6e34', cat: 'grao' },
     oxicoco: { name: 'Oxicoco', seed: 240, sell: 75, days: 6, regrow: 5, n: 2, seasons: ['fall'], kind: 'bush', col: '#c8202a', leaf: '#5a7a2a', cat: 'fruit' },
   };
   // ================= peixes =================
@@ -784,6 +785,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     return best ? 'mel:' + best : 'mel';
   }
+
+  // ================= café e expresso =================
+  Object.assign(ITEMS.cafe, { name: 'Grão de café', energy: 0, desc: 'Na cozinha, 3 grãos viram uma xícara de expresso.' });
+  COOK.push({ id: 'expresso', name: 'Xícara de expresso', need: { cafe: 3 }, en: 40, sell: 120, learn: 'start', buff: { speed: 2 } });
+  ITEMS.expresso = { name: 'Xícara de expresso', cat: 'food', sell: 120, energy: 40, buff: { speed: 2 }, drink: true, desc: 'Um expresso quentinho. Dá Velocidade +2 por um tempo.' };
+  NPCS.bia.loves.push('expresso'); NPCS.davi.likes.push('expresso');
   // ================= mapas =================
   // tipos de chão
   const G = { GRASS: 0, DIRT: 1, WATER: 2, SAND: 3, WOOD: 4, CAVE: 5, ROCKWALL: 6, VOID: 7, COBBLE: 8, FOREST: 9, WALL: 10, BRIDGE: 11, CARPET: 12, FLOWERS: 13, CLIFF: 14, STRAW: 15, TILE: 16 };
@@ -1711,6 +1718,24 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           const r = st === 's1' ? 4 : 6;
           oval(8, 15 - r, r + 1, r, Ld); oval(7, 14 - r, r, r - 1, L); oval(6, 13 - r, r - 2, r - 3, Ll);
           if (st === 'ripe') for (const [x, y] of [[4, 8], [10, 6], [7, 11], [12, 10], [7, 5], [3, 12]]) { R(x, y, 2, 2, P); R(x, y, 1, 1, Pl); }
+          break;
+        }
+        case 'coffee': {
+          const hh = st === 's1' ? 12 : 21, top = 15 - hh, wood = '#7a5432';
+          R(7, top + 2, 2, hh - 2, wood); R(7, top + 2, 1, hh - 2, '#9a7048');
+          const levels = st === 's1' ? [top + 3, top + 8] : [top + 2, top + 7, top + 12, top + 17];
+          const wOf = i => 3 + Math.min(i, 2) * 1.5;
+          levels.forEach((y, i) => {
+            const w = wOf(i);
+            R(8 - w, y + 2, w * 2, 1, wood);
+            for (const f of [-1, 1]) { oval(8 + f * (w + 1), y + 1, 2.6, 1.4, i % 2 ? L : Ld); R(8 + f * (w + 1) - 1, y + 1, 2, 1, Ll); }
+          });
+          // frutinhos por cima das folhas: verdes crescendo, vermelhos quando maduros
+          if (st === 'ripe' || st === 's2') levels.forEach((y, i) => {
+            const w = wOf(i);
+            for (const f of [-1, 1]) for (const [dx, dy] of [[0, 0], [2, 0], [1, 2]]) { const x = 8 + f * (w - 1) + dx - 1, yy = y + 2 + dy; R(x, yy, 2, 2, st === 'ripe' ? (dy ? Pd : P) : '#7ab84a'); R(x, yy, 1, 1, st === 'ripe' ? Pl : '#a8d878'); }
+          });
+          oval(8, top + 1, 2.6, 2, Ld); R(7, top, 1, 1, Ll);
           break;
         }
         case 'vine': {
@@ -2694,6 +2719,19 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const jar = (c, lid = '#c8a06a') => { R(3, 4, 10, 11, '#e8f0f4'); R(4, 6, 8, 8, c); R(3, 2, 10, 3, lid); R(4, 7, 2, 4, '#ffffff66'); };
     const jug = (c, big) => { R(4, 4, 8, 11, c); R(5, 2, 6, 2, c); R(6, 1, 4, 1, '#c8c0b0'); R(12, 6, 2, 5, c); R(12, 6, 1, 1, '#8a8a8a'); R(5, 8, 6, 4, big ? '#e8402a' : '#3a8ad8'); R(5, 5, 1, 9, '#ffffff'); };
     const mineral = (c, d) => { poly([[8, 1], [14, 6], [12, 14], [4, 14], [2, 6]], d); poly([[8, 2], [12, 6], [10, 12], [5, 12], [4, 6]], c); R(6, 4, 2, 2, '#ffffff'); };
+    if (id === 'cafe') {
+      const pal = { b: '#4a2810', c: '#7a4822', d: '#a86e3a', k: '#24100a' };
+      ['................', '................', '..........bbb...', '.........bcdcb..', '........bcdckcb.', '........bcdkccb.', '...bbb..bcckccb.', '..bcdcb.bckcccb.', '.bcdckcb.bkccb..', '.bcdkccb..bbb...', '.bcckccb........', '.bckcccb........', '..bkccb.........', '...bbb..........', '................', '................'].forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) R(x, y, 1, 1, pal[ch]); }));
+      return true;
+    }
+    if (id === 'expresso') {
+      R(1, 13, 14, 2, '#e8e4dc'); R(1, 14, 14, 1, '#b8b2a8'); R(3, 12, 10, 1, '#f8f6f0');
+      R(3, 6, 9, 7, '#f8f6f0'); R(3, 6, 1, 7, '#ffffff'); R(10, 7, 2, 6, '#d8d2c8'); R(4, 11, 7, 1, '#e0dad0');
+      R(12, 7, 3, 1, '#f8f6f0'); R(14, 7, 1, 3, '#f8f6f0'); R(12, 9, 3, 1, '#d8d2c8');
+      R(4, 6, 7, 2, '#3a1e0e'); R(5, 6, 4, 1, '#c88a4a'); R(9, 7, 1, 1, '#a86a32');
+      R(5, 2, 1, 2, '#ffffffaa'); R(6, 1, 1, 1, '#ffffffaa'); R(8, 3, 1, 2, '#ffffffaa'); R(9, 2, 1, 1, '#ffffffaa');
+      return true;
+    }
     if (id === 'mel' || String(id).startsWith('mel:')) { R(3, 5, 10, 10, '#c8780a'); R(4, 6, 8, 8, '#f0a820'); R(3, 2, 10, 3, '#8a5a2a'); R(3, 2, 10, 1, '#b07a3a'); R(5, 7, 2, 5, '#ffd870'); R(4, 4, 3, 3, '#f0a820'); if (it.base) { disc(10, 10, 2.5, item(it.base).col || '#ffffff'); R(9, 9, 1, 1, '#ffffff'); } return true; }
     if (FLOWERS[id]) {
       const c = it.col;
@@ -3338,8 +3376,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function openEat() {
     const s = held(), it = item(s.id);
-    openPanel(`<h2>Comer ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}.</p>
-      <div class="row"><button class="btn g" data-a="eat" type="button">Comer</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
+    const verb = it.drink ? 'Tomar' : 'Comer';
+    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
+      <div class="row"><button class="btn g" data-a="eat" type="button">${verb}</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
   }
   function eatHeld() {
     const s = held(); if (!s) return;
@@ -3760,7 +3799,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }];
-      case 'lia': return [{ id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
+      case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
     return [];
   }

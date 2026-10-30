@@ -36,6 +36,7 @@
     berinjela: { name: 'Berinjela', seed: 20, sell: 60, days: 4, regrow: 5, seasons: ['fall'], kind: 'bush', col: '#6a2a8a', leaf: '#4a8a3a', cat: 'veg' },
     inhame: { name: 'Inhame', seed: 60, sell: 160, days: 9, seasons: ['fall'], kind: 'root', col: '#c86a4a', leaf: '#5a9a3a', cat: 'veg' },
     mixinverno: { name: 'Mix de inverno', seed: 60, sell: 0, days: 6, seasons: ['winter'], kind: 'root', col: '#a86a5a', leaf: '#6a8a7a', cat: 'veg', mix: true },
+    cafe: { name: 'Café', seed: 60, sell: 15, days: 9, regrow: 2, n: 4, seasons: ['spring', 'summer'], kind: 'coffee', col: '#c8202a', leaf: '#2e6e34', cat: 'grao' },
     oxicoco: { name: 'Oxicoco', seed: 240, sell: 75, days: 6, regrow: 5, n: 2, seasons: ['fall'], kind: 'bush', col: '#c8202a', leaf: '#5a7a2a', cat: 'fruit' },
   };
   // ================= peixes =================
