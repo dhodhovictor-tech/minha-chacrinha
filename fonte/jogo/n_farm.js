@@ -63,7 +63,10 @@
     setTile(k, nt); useHeld(1); sfx.hoe();
   }
   // ao plantar numa terra com acelerador, a planta já nasce sabendo que cresce mais rápido
-  const plantedCrop = (tl, id) => (tl.fe === 'acelerador' ? { id, g: 0, d: Math.max(1, Math.round(CROPS[id].days * 0.75)) } : { id, g: 0 });
+  function plantedCrop(tl, id) {
+    const f = (tl.fe === 'acelerador' ? 0.75 : 1) * (hasProf('agricultor') ? 0.9 : 1), days = CROPS[id].days;
+    return f < 1 ? { id, g: 0, d: Math.max(1, Math.round(days * f)) } : { id, g: 0 };
+  }
 
   // ================= eventos da noite (chamado na virada do dia, com a fazenda nova em t) =================
   function nightEvents(t, day, nd, newS) {

@@ -125,7 +125,7 @@
     if (P.map !== 'town' && P.map !== 'beach') return;
     const [x, y] = [Math.floor(P.x / T), Math.floor((P.y - 3) / T)];
     for (const f of P.map === 'town' ? townForage() : beachForage()) if (f.x === x && f.y === y) {
-      if (!addItem(f.id, 1)) return;
+      if (!addItem(f.id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) return;
       queueUpdate('world/meta', { taken: { [f.k]: 1 } }); W.meta.taken[f.k] = 1;
       gainXP('foraging', 7); sfx.pop();
     }
@@ -196,12 +196,12 @@
     const o = tl.o, c = tl.c;
     if (c && !c.dead) { if (c.g >= cropDays(c) && !(c.rg > 0)) { harvest(k, tl); return true; } }
     if (o) {
-      if (o.k === 'forage') { if (addItem(o.id, 1)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
+      if (o.k === 'forage') { if (addItem(o.id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
       if (o.k === 'bau') { openChest(k); return true; }
       if (MACHINES.includes(o.k)) return machine(k, tl, o);
       if (o.k === 'ftree' && o.fr > 0) { if (addItem(o.id, o.fr)) { setTile(k, { ...tl, o: { ...o, fr: 0 } }); gainXP('foraging', 3 * o.fr); sfx.pop(); } return true; }
       if (o.k === 'ftree') { toast(o.age < FTREE_DAYS ? `${FTREES[o.id].name}: cresce mais ${FTREE_DAYS - o.age} dia${FTREE_DAYS - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
-      if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + TAPS[(o.v || 0) % 3].days * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
+      if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + tapDays(TAPS[(o.v || 0) % 3]) * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
     }
     return false;
   }
@@ -283,10 +283,10 @@
       if (s.id === 'axe') {
         if (!o) { sfx.no(); return; }
         if (o.k === 'tree' || o.k === 'ftree') {
-          const hp = (o.hp || 10) - power; sfx.chop();
+          const hp = (o.hp || 10) - power * (hasProf('mestrelenhador') ? 2 : 1); sfx.chop();
           if (o.k === 'ftree' && o.age < 7) { setTile(k, null); addItem('m_' + o.id, 1); return; }
           if (hp <= 0 && o.tap) addItem('extrator', 1);
-          if (hp <= 0) { setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', rint(8, 12)); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
+          if (hp <= 0) { setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(rint(8, 12) * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
           else setTile(k, { ...tl, o: { ...o, hp, shake: performance.now() + 300 } });
           return;
         }
@@ -331,8 +331,8 @@
       if (m.id !== 'farm' || !o || o.k !== 'tree') { toast('Coloque o extrator numa árvore da chacrinha.'); sfx.no(); return; }
       if (o.tap) { toast('Essa árvore já tem um extrator.'); return; }
       const tp = TAPS[(o.v || 0) % 3];
-      setTile(k, { ...tl, o: { ...o, tap: { out: tp.out, ready: gm() + tp.days * 1440 } } }); useHeld(1); sfx.hoe();
-      toast(`Extrator colocado: ${item(tp.out).name.toLowerCase()} em ${tp.days} dias.`);
+      setTile(k, { ...tl, o: { ...o, tap: { out: tp.out, ready: gm() + tapDays(tp) * 1440 } } }); useHeld(1); sfx.hoe();
+      toast(`Extrator colocado: ${item(tp.out).name.toLowerCase()} em ${tapDays(tp)} dias.`);
       return;
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
@@ -424,11 +424,11 @@
     const r = m.rocks[k];
     if (mine) {
       addItem('pedra', 1, true);
-      if (r.kind === 'coal') addItem('carvao', rint(1, 2));
-      else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3));
-      else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], 1);
-      else if (Math.random() < 0.04) addItem('carvao', 1);
-      if (r.kind === 'stone' && Math.random() < 0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
+      if (r.kind === 'coal') addItem('carvao', rint(1, 2) * (hasProf('prospector') ? 2 : 1));
+      else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3) + (hasProf('minerador') ? 1 : 0));
+      else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], hasProf('geologo') ? 2 : 1);
+      else if (Math.random() < 0.04 * (hasProf('prospector') ? 2 : 1)) addItem('carvao', 1);
+      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
       if (!m.ladder && m.floor < MINE_BOTTOM) {
@@ -444,8 +444,8 @@
     let any = false;
     for (const mo of monsters) {
       if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20) {
-        mo.hp -= 4 + lv * 3 + skillLv(P.skills.combat) + buffLv('attack') * 2; mo.hitT = 0.15; mo.vx = d[0] * 160; mo.vy = d[1] * 160; any = true;
-        if (mo.hp <= 0) { mo.dead = true; gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } } }
+        mo.hp -= (4 + lv * 3 + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk()) * critMul(); mo.hitT = 0.15; mo.vx = d[0] * 160; mo.vy = d[1] * 160; any = true;
+        if (mo.hp <= 0) { mo.dead = true; gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } } }
       }
     }
     monsters = monsters.filter(m => !m.dead);
@@ -470,7 +470,7 @@
       if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
       mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
       if (dist < 12 && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - buffLv('defense')); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - buffLv('defense') - profDef()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
         dirty();
@@ -515,7 +515,7 @@
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = 30 + lv * 2.5 + buffLv('fishing') * 4; f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0;
       document.getElementById('fish').hidden = false;
     }
   }
@@ -527,14 +527,14 @@
     if (f.bar < 2) { f.bar = 2; f.bv = Math.max(0, f.bv) * 0.3; }
     if (f.bar > 118 - f.barH) { f.bar = 118 - f.barH; f.bv = -Math.abs(f.bv) * 0.35; }
     if (Math.random() < dt * (0.6 + f.diff / 40)) f.target = clamp(f.fy + rnd(-1, 1) * (20 + f.diff), 6, 112);
-    f.fv += ((f.target - f.fy) * (1 + f.diff / 30) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
+    f.fv += ((f.target - f.fy) * (1 + f.diff / 30) * (hasProf('calmo') ? 0.75 : 1) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
     if (inside) f.entered = true; else if (f.entered) f.miss = true;
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
-      const fq = !f.miss ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 ? 1 : 0;
+      const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
@@ -590,7 +590,7 @@
       const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19; };
       for (let i = 0; i < 6; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'weed', hp: 1, v: Math.floor(r() * 3) } }; }
       const fl = FORAGE[newS];
-      for (let i = 0; i < 2; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
+      for (let i = 0; i < (anyProf('rastreador') ? 5 : 2); i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
       if (newS === 'winter' && oldS !== 'winter') for (const [k, v] of Object.entries(t)) if (v && v.c && !k.startsWith('g:') && !CROPS[v.c.id].mix) v.c.dead = true;
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
@@ -637,5 +637,6 @@
       ${nightLines()}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
       <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
+      ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}
       <div class="row"><button class="btn g" data-a="close" type="button">Bom dia!</button></div>`);
   }

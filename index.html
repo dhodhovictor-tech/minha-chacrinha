@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'b4783bd'; window.__APP_DATE = '31/10/2026';</script>
+<script>window.__APP_VERSION = 'd70baf8'; window.__APP_DATE = '31/10/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -325,7 +325,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const isFruit = id => { const it = item(id); return it.cat === 'fruit' || !!it.fruit; };
   const isVeg = id => item(id).cat === 'veg' || (item(id).cat === 'forage' && !item(id).fruit && item(id).energy);
   const basePrice = id => item(id).sell || 0;
-  const sellPrice = (id, q) => Math.round(marketPrice(id) * Q_PRICE[q || 0]);
+  const sellPrice = (id, q) => Math.round(marketPrice(id) * Q_PRICE[q || 0] * profPrice(id));
   const TOOL_LV = ['', 'de cobre', 'de ferro', 'de ouro'];
   const toolName = (id, lv) => item(id).name + (lv ? ' ' + TOOL_LV[lv] : '');
 
@@ -1236,11 +1236,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return inv;
   };
   function newPlayer(uid, name, look) {
-    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null };
+    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [] };
   }
   function playerDoc() {
-    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet } = P;
-    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
+    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof } = P;
+    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
@@ -1274,6 +1274,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const after = skillLv(P.skills[skill]);
     if (after > before) {
       toast(`${SKILLS[skill]} subiu para o nível ${after}!`, 'big');
+      if (after === 5 || after === 10) toast('Profissão nova para escolher! Abra a Mochila > Habilidades.', 'big');
       const rec = RECIPES.filter(r => r.skill && r.skill[0] === skill && r.skill[1] === after);
       if (rec.length) toast('Nova receita: ' + rec.map(r => item(r.id).name).join(', '));
       sfx.level();
@@ -3138,7 +3139,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (P.map !== 'town' && P.map !== 'beach') return;
     const [x, y] = [Math.floor(P.x / T), Math.floor((P.y - 3) / T)];
     for (const f of P.map === 'town' ? townForage() : beachForage()) if (f.x === x && f.y === y) {
-      if (!addItem(f.id, 1)) return;
+      if (!addItem(f.id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) return;
       queueUpdate('world/meta', { taken: { [f.k]: 1 } }); W.meta.taken[f.k] = 1;
       gainXP('foraging', 7); sfx.pop();
     }
@@ -3209,12 +3210,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const o = tl.o, c = tl.c;
     if (c && !c.dead) { if (c.g >= cropDays(c) && !(c.rg > 0)) { harvest(k, tl); return true; } }
     if (o) {
-      if (o.k === 'forage') { if (addItem(o.id, 1)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
+      if (o.k === 'forage') { if (addItem(o.id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
       if (o.k === 'bau') { openChest(k); return true; }
       if (MACHINES.includes(o.k)) return machine(k, tl, o);
       if (o.k === 'ftree' && o.fr > 0) { if (addItem(o.id, o.fr)) { setTile(k, { ...tl, o: { ...o, fr: 0 } }); gainXP('foraging', 3 * o.fr); sfx.pop(); } return true; }
       if (o.k === 'ftree') { toast(o.age < FTREE_DAYS ? `${FTREES[o.id].name}: cresce mais ${FTREE_DAYS - o.age} dia${FTREE_DAYS - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
-      if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + TAPS[(o.v || 0) % 3].days * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
+      if (o.k === 'tree' && o.tap && o.tap.ready <= gm()) { if (addItem(o.tap.out, 1)) { setTile(k, { ...tl, o: { ...o, tap: { out: o.tap.out, ready: gm() + tapDays(TAPS[(o.v || 0) % 3]) * 1440 } } }); gainXP('foraging', 5); sfx.pop(); } return true; }
     }
     return false;
   }
@@ -3296,10 +3297,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.id === 'axe') {
         if (!o) { sfx.no(); return; }
         if (o.k === 'tree' || o.k === 'ftree') {
-          const hp = (o.hp || 10) - power; sfx.chop();
+          const hp = (o.hp || 10) - power * (hasProf('mestrelenhador') ? 2 : 1); sfx.chop();
           if (o.k === 'ftree' && o.age < 7) { setTile(k, null); addItem('m_' + o.id, 1); return; }
           if (hp <= 0 && o.tap) addItem('extrator', 1);
-          if (hp <= 0) { setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', rint(8, 12)); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
+          if (hp <= 0) { setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(rint(8, 12) * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
           else setTile(k, { ...tl, o: { ...o, hp, shake: performance.now() + 300 } });
           return;
         }
@@ -3344,8 +3345,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (m.id !== 'farm' || !o || o.k !== 'tree') { toast('Coloque o extrator numa árvore da chacrinha.'); sfx.no(); return; }
       if (o.tap) { toast('Essa árvore já tem um extrator.'); return; }
       const tp = TAPS[(o.v || 0) % 3];
-      setTile(k, { ...tl, o: { ...o, tap: { out: tp.out, ready: gm() + tp.days * 1440 } } }); useHeld(1); sfx.hoe();
-      toast(`Extrator colocado: ${item(tp.out).name.toLowerCase()} em ${tp.days} dias.`);
+      setTile(k, { ...tl, o: { ...o, tap: { out: tp.out, ready: gm() + tapDays(tp) * 1440 } } }); useHeld(1); sfx.hoe();
+      toast(`Extrator colocado: ${item(tp.out).name.toLowerCase()} em ${tapDays(tp)} dias.`);
       return;
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
@@ -3437,11 +3438,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const r = m.rocks[k];
     if (mine) {
       addItem('pedra', 1, true);
-      if (r.kind === 'coal') addItem('carvao', rint(1, 2));
-      else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3));
-      else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], 1);
-      else if (Math.random() < 0.04) addItem('carvao', 1);
-      if (r.kind === 'stone' && Math.random() < 0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
+      if (r.kind === 'coal') addItem('carvao', rint(1, 2) * (hasProf('prospector') ? 2 : 1));
+      else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3) + (hasProf('minerador') ? 1 : 0));
+      else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], hasProf('geologo') ? 2 : 1);
+      else if (Math.random() < 0.04 * (hasProf('prospector') ? 2 : 1)) addItem('carvao', 1);
+      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
       if (!m.ladder && m.floor < MINE_BOTTOM) {
@@ -3457,8 +3458,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     let any = false;
     for (const mo of monsters) {
       if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20) {
-        mo.hp -= 4 + lv * 3 + skillLv(P.skills.combat) + buffLv('attack') * 2; mo.hitT = 0.15; mo.vx = d[0] * 160; mo.vy = d[1] * 160; any = true;
-        if (mo.hp <= 0) { mo.dead = true; gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } } }
+        mo.hp -= (4 + lv * 3 + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk()) * critMul(); mo.hitT = 0.15; mo.vx = d[0] * 160; mo.vy = d[1] * 160; any = true;
+        if (mo.hp <= 0) { mo.dead = true; gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } } }
       }
     }
     monsters = monsters.filter(m => !m.dead);
@@ -3483,7 +3484,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
       mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
       if (dist < 12 && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - buffLv('defense')); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - buffLv('defense') - profDef()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
         dirty();
@@ -3528,7 +3529,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = 30 + lv * 2.5 + buffLv('fishing') * 4; f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0;
       document.getElementById('fish').hidden = false;
     }
   }
@@ -3540,14 +3541,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (f.bar < 2) { f.bar = 2; f.bv = Math.max(0, f.bv) * 0.3; }
     if (f.bar > 118 - f.barH) { f.bar = 118 - f.barH; f.bv = -Math.abs(f.bv) * 0.35; }
     if (Math.random() < dt * (0.6 + f.diff / 40)) f.target = clamp(f.fy + rnd(-1, 1) * (20 + f.diff), 6, 112);
-    f.fv += ((f.target - f.fy) * (1 + f.diff / 30) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
+    f.fv += ((f.target - f.fy) * (1 + f.diff / 30) * (hasProf('calmo') ? 0.75 : 1) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
     if (inside) f.entered = true; else if (f.entered) f.miss = true;
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
-      const fq = !f.miss ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 ? 1 : 0;
+      const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
@@ -3603,7 +3604,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19; };
       for (let i = 0; i < 6; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'weed', hp: 1, v: Math.floor(r() * 3) } }; }
       const fl = FORAGE[newS];
-      for (let i = 0; i < 2; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
+      for (let i = 0; i < (anyProf('rastreador') ? 5 : 2); i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
       if (newS === 'winter' && oldS !== 'winter') for (const [k, v] of Object.entries(t)) if (v && v.c && !k.startsWith('g:') && !CROPS[v.c.id].mix) v.c.dead = true;
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
@@ -3650,6 +3651,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ${nightLines()}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
       <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
+      ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}
       <div class="row"><button class="btn g" data-a="close" type="button">Bom dia!</button></div>`);
   }
   // ================= interface =================
@@ -3759,7 +3761,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     } else if (invTab === 'skills') {
       body = Object.entries(SKILLS).map(([k, n]) => { const lv = skillLv(P.skills[k]); return `<div class="skill"><span>${n}</span><span class="pip">${Array.from({ length: 10 }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span><b>${lv}</b></div>`; }).join('')
         + `<p style="font-size:13px">Você sobe de nível colhendo, pescando, minerando, coletando e lutando. Novos níveis liberam receitas.</p>
-        <p style="font-size:13px">Peixes pescados: ${P.stats.fish || 0} · Total enviado: ${fmt(P.stats.shipped || 0)} ₲ · Andar mais fundo da mina: ${P.mineFloor || 0}</p>`;
+        <p style="font-size:13px">Peixes pescados: ${P.stats.fish || 0} · Total enviado: ${fmt(P.stats.shipped || 0)} ₲ · Andar mais fundo da mina: ${P.mineFloor || 0}</p>` + profsHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;
@@ -4270,7 +4272,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       return;
     }
     if (a.pet !== day) {
-      setFarm('a', id, { ...a, pet: day, fr: Math.min(1000, (a.fr || 0) + 15) });
+      setFarm('a', id, { ...a, pet: day, fr: Math.min(1000, (a.fr || 0) + (hasProf('amigobichos') ? 30 : 15)) });
       st.heart = 1.6; st.walk = false; st.t = 2; sfx.pop(); gainXP('farming', 5);
       return;
     }
@@ -4668,7 +4670,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const sp = (SEASON_PROD[an.kind] || [1, 1, 1, 1])[SEASON_ID.indexOf(oldS)], every = Math.max(1, def.every - (sp > 1.1 && def.every > 1 ? 1 : 0));
       if (fed && an.age >= def.mature && nd - (an.last || 0) >= every && r() < sp) {
         let out = def.prod;
-        if (def.big && an.fr >= 600 && r() < an.fr / 1500 * Math.max(0.8, sp)) out = def.big;
+        if (def.big && an.fr >= 600 && r() < an.fr / 1500 * Math.max(0.8, sp) * (anyProf('granjeiro') ? 2 : 1)) out = def.big;
         if (def.rare && an.fr >= 800 && r() < 0.15) out = def.rare;
         if (an.kind === 'galinha' && an.v === 1 && out === 'ovo') out = 'ovomarrom';
         if (an.kind === 'porco' && !outside) out = null;
@@ -5008,6 +5010,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
       case 'moveStart': startMoving(); break;
+      case 'profOpen': openProfChoice(); break;
+      case 'profPick': pickProf(b.dataset.p); break;
       case 'appswitch': openPanel(`<h2>Trocar de chacrinha?</h2><p style="text-align:center">Seu progresso continua salvo. Na próxima tela você digita o código da chacrinha e escolhe quem você é.</p><div class="row"><button class="btn" data-a="close" type="button">Voltar</button><button class="btn g" data-a="appswitch2" type="button">Trocar</button></div>`); break;
       case 'appswitch2': if (window.__chacrinhaReset) window.__chacrinhaReset(); break;
       case 'appupdate': {
@@ -5208,7 +5212,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     setTile(k, nt); useHeld(1); sfx.hoe();
   }
   // ao plantar numa terra com acelerador, a planta já nasce sabendo que cresce mais rápido
-  const plantedCrop = (tl, id) => (tl.fe === 'acelerador' ? { id, g: 0, d: Math.max(1, Math.round(CROPS[id].days * 0.75)) } : { id, g: 0 });
+  function plantedCrop(tl, id) {
+    const f = (tl.fe === 'acelerador' ? 0.75 : 1) * (hasProf('agricultor') ? 0.9 : 1), days = CROPS[id].days;
+    return f < 1 ? { id, g: 0, d: Math.max(1, Math.round(days * f)) } : { id, g: 0 };
+  }
 
   // ================= eventos da noite (chamado na virada do dia, com a fazenda nova em t) =================
   function nightEvents(t, day, nd, newS) {
@@ -5336,6 +5343,102 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (id === 'bateria') { R(4, 3, 8, 12, '#3a3a42'); R(5, 4, 6, 10, '#5ab84a'); R(5, 4, 6, 3, '#7ad86a'); R(6, 1, 4, 2, '#9a9aa2'); R(7, 8, 2, 4, '#f8f070'); R(6, 9, 4, 1, '#f8f070'); return true; }
     return false;
   }
+
+  // ================= profissões: no nível 5 e no nível 10 de cada habilidade, uma escolha que muda o jeito de jogar =================
+  // a escolha do nível 10 depende da do nível 5; cada pessoa tem as suas (P.prof)
+  const PROFS = {
+    farming: {
+      5: [['lavrador', 'Lavrador', 'Colheitas valem 10% a mais.'], ['pecuarista', 'Pecuarista', 'Ovos, leite, lã e outros produtos dos animais valem 20% a mais.']],
+      10: {
+        lavrador: [['artesao', 'Artesão', 'Geleias, vinhos, queijos, mel e outros produtos artesanais valem 40% a mais.'], ['agricultor', 'Agricultor', 'Tudo o que você planta fica pronto 10% mais rápido.']],
+        pecuarista: [['granjeiro', 'Granjeiro', 'Os animais da chacrinha dão produtos grandes com o dobro de frequência.'], ['amigobichos', 'Amigo dos bichos', 'Carinho nos animais vale o dobro de amizade.']],
+      },
+    },
+    fishing: {
+      5: [['pescador', 'Pescador', 'Peixes valem 25% a mais.'], ['paciente', 'Paciente', 'A barra verde da pesca fica 20% maior.']],
+      10: {
+        pescador: [['mestrepesca', 'Mestre da pesca', 'Peixes valem 50% a mais (em vez de 25%).'], ['pirata', 'Pirata', 'Baús de tesouro aparecem na pesca com o dobro de frequência.']],
+        paciente: [['calmo', 'Calmo', 'Os peixes fogem 25% mais devagar no minijogo.'], ['sortudo', 'Sortudo', 'Muito mais peixes de prata e de ouro.']],
+      },
+    },
+    mining: {
+      5: [['minerador', 'Minerador', '+1 minério em cada pedra com minério.'], ['geologo', 'Geólogo', 'Pedras com gema dão 2 gemas.']],
+      10: {
+        minerador: [['ferreiro', 'Ferreiro', 'Barras de metal valem 50% a mais.'], ['prospector', 'Prospector', 'Dobro de carvão na mina.']],
+        geologo: [['joalheiro', 'Joalheiro', 'Gemas e minerais valem 30% a mais.'], ['escavador', 'Escavador', 'Geodos aparecem com o dobro de frequência.']],
+      },
+    },
+    foraging: {
+      5: [['lenhador', 'Lenhador', 'Árvores derrubadas dão 25% mais madeira.'], ['coletor', 'Coletor', '20% de chance de pegar coletáveis em dobro.']],
+      10: {
+        lenhador: [['seiveiro', 'Seiveiro', 'Extratores nas árvores ficam prontos na metade do tempo.'], ['mestrelenhador', 'Mestre lenhador', 'O machado derruba árvores com metade dos golpes.']],
+        coletor: [['botanico', 'Botânico', 'Coletáveis saem sempre de ouro.'], ['rastreador', 'Rastreador', 'Aparecem mais coletáveis na chacrinha.']],
+      },
+    },
+    combat: {
+      5: [['lutador', 'Lutador', '+1 de ataque e +1 de defesa.'], ['batedor', 'Batedor', '15% de chance de golpe crítico (dano em dobro).']],
+      10: {
+        lutador: [['brutamontes', 'Brutamontes', '+3 de ataque.'], ['defensor', 'Defensor', '+3 de defesa.']],
+        batedor: [['desesperado', 'Desesperado', 'Golpes críticos dão o triplo de dano.'], ['ladrao', 'Ladrão', 'Monstros deixam cair o dobro de coisas.']],
+      },
+    },
+  };
+  const PROF_INFO = {};
+  for (const sk of Object.values(PROFS)) { for (const [id, name, desc] of sk[5]) PROF_INFO[id] = { name, desc }; for (const list of Object.values(sk[10])) for (const [id, name, desc] of list) PROF_INFO[id] = { name, desc }; }
+  const hasProf = id => !!(P && P.prof && P.prof.includes(id));
+  // efeitos que valem para a chacrinha toda (animais, coletáveis): basta uma das duas pessoas ter
+  const anyProf = id => hasProf(id) || Object.values(W.players || {}).some(p => p && p.prof && p.prof.includes(id));
+  const isArtisan = (id, it) => it.cat === 'art' || it.kind === 'mel';
+  // quanto a profissão de quem vende muda o preço
+  function profPrice(id) {
+    if (!P || !P.prof || !P.prof.length) return 1;
+    const it = item(id);
+    if (it.cat === 'fish') return hasProf('mestrepesca') ? 1.5 : hasProf('pescador') ? 1.25 : 1;
+    if (CROPS[id] && hasProf('lavrador')) return 1.1;
+    if (it.cat === 'animal' && hasProf('pecuarista')) return 1.2;
+    if (isArtisan(id, it) && hasProf('artesao')) return 1.4;
+    if (it.cat === 'bar' && hasProf('ferreiro')) return 1.5;
+    if ((it.cat === 'gem' || it.cat === 'mineral') && hasProf('joalheiro')) return 1.3;
+    return 1;
+  }
+  // a profissão que falta escolher (habilidade e nível), se houver
+  function pendingProf() {
+    for (const sk of Object.keys(PROFS)) {
+      const lv = skillLv(P.skills[sk]), mine = (P.prof || []).filter(id => profSkill(id) === sk);
+      if (lv >= 5 && mine.length < 1) return [sk, 5];
+      if (lv >= 10 && mine.length < 2) return [sk, 10];
+    }
+    return null;
+  }
+  function profSkill(id) { for (const [sk, d] of Object.entries(PROFS)) { if (d[5].some(x => x[0] === id) || Object.values(d[10]).some(l => l.some(x => x[0] === id))) return sk; } return null; }
+  function profOptions(sk, lvl) {
+    if (lvl === 5) return PROFS[sk][5];
+    const first = (P.prof || []).find(id => profSkill(id) === sk && PROFS[sk][10][id]);
+    return first ? PROFS[sk][10][first] : [];
+  }
+  function openProfChoice() {
+    const pend = pendingProf(); if (!pend) { closePanel(); return; }
+    const [sk, lvl] = pend;
+    openPanel(`<h2>${SKILLS[sk]} nível ${lvl}!</h2><p style="text-align:center">Escolha uma profissão. Ela vale para sempre e só para você.</p>
+      <div class="list">${profOptions(sk, lvl).map(([id, name, desc]) => `<div class="item"><span class="nm"><b>${name}</b><small>${desc}</small></span><button class="btn g" data-a="profPick" data-p="${id}" type="button">Escolher</button></div>`).join('')}</div>`, 'prof');
+  }
+  function pickProf(id) {
+    const pend = pendingProf(); if (!pend) return;
+    if (!profOptions(pend[0], pend[1]).some(x => x[0] === id)) return;
+    P.prof = [...(P.prof || []), id]; dirty(); savePlayer(); sfx.level();
+    toast(`Agora você é ${PROF_INFO[id].name}! ${PROF_INFO[id].desc}`, 'big');
+    if (pendingProf()) openProfChoice(); else closePanel();
+  }
+  function profsHTML() {
+    const mine = (P.prof || []).map(id => `<div class="item"><span class="nm"><b>${PROF_INFO[id].name}</b> <small>${SKILLS[profSkill(id)]} · ${PROF_INFO[id].desc}</small></span></div>`).join('');
+    return `<h3>Profissões</h3>${mine ? `<div class="list">${mine}</div>` : '<p style="font-size:13px">No nível 5 e no nível 10 de cada habilidade você escolhe uma profissão.</p>'}${pendingProf() ? '<div class="row"><button class="btn g" data-a="profOpen" type="button">Escolher profissão nova!</button></div>' : ''}`;
+  }
+  // combate
+  const profAtk = () => (hasProf('lutador') ? 1 : 0) + (hasProf('brutamontes') ? 3 : 0);
+  const profDef = () => (hasProf('lutador') ? 1 : 0) + (hasProf('defensor') ? 3 : 0);
+  const critMul = () => (hasProf('batedor') && Math.random() < 0.15 ? (hasProf('desesperado') ? 3 : 2) : 1);
+  // dias da extração com a profissão Seiveiro
+  const tapDays = tp => (hasProf('seiveiro') ? Math.max(1, Math.ceil(tp.days / 2)) : tp.days);
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {

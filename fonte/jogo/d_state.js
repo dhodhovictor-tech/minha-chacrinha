@@ -147,11 +147,11 @@
     return inv;
   };
   function newPlayer(uid, name, look) {
-    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null };
+    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [] };
   }
   function playerDoc() {
-    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet } = P;
-    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
+    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof } = P;
+    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
@@ -185,6 +185,7 @@
     const after = skillLv(P.skills[skill]);
     if (after > before) {
       toast(`${SKILLS[skill]} subiu para o nível ${after}!`, 'big');
+      if (after === 5 || after === 10) toast('Profissão nova para escolher! Abra a Mochila > Habilidades.', 'big');
       const rec = RECIPES.filter(r => r.skill && r.skill[0] === skill && r.skill[1] === after);
       if (rec.length) toast('Nova receita: ' + rec.map(r => item(r.id).name).join(', '));
       sfx.level();

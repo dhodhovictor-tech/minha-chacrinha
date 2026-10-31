@@ -269,7 +269,7 @@
       return;
     }
     if (a.pet !== day) {
-      setFarm('a', id, { ...a, pet: day, fr: Math.min(1000, (a.fr || 0) + 15) });
+      setFarm('a', id, { ...a, pet: day, fr: Math.min(1000, (a.fr || 0) + (hasProf('amigobichos') ? 30 : 15)) });
       st.heart = 1.6; st.walk = false; st.t = 2; sfx.pop(); gainXP('farming', 5);
       return;
     }
@@ -667,7 +667,7 @@
       const sp = (SEASON_PROD[an.kind] || [1, 1, 1, 1])[SEASON_ID.indexOf(oldS)], every = Math.max(1, def.every - (sp > 1.1 && def.every > 1 ? 1 : 0));
       if (fed && an.age >= def.mature && nd - (an.last || 0) >= every && r() < sp) {
         let out = def.prod;
-        if (def.big && an.fr >= 600 && r() < an.fr / 1500 * Math.max(0.8, sp)) out = def.big;
+        if (def.big && an.fr >= 600 && r() < an.fr / 1500 * Math.max(0.8, sp) * (anyProf('granjeiro') ? 2 : 1)) out = def.big;
         if (def.rare && an.fr >= 800 && r() < 0.15) out = def.rare;
         if (an.kind === 'galinha' && an.v === 1 && out === 'ovo') out = 'ovomarrom';
         if (an.kind === 'porco' && !outside) out = null;
