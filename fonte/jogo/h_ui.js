@@ -92,8 +92,9 @@
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
       body = `<p style="text-align:center;font-size:13px">A primeira fileira é a barra de ferramentas. Toque num item e depois em outro lugar para trocar.</p>
         <div class="grid">${P.inv.map((s, i) => slotHTML(s, i, i === invSel)).join('')}</div>
-        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}` : 'Toque num item para ver o que é.'}</div>
-        ${s && it.cat !== 'tool' ? `<div class="row">${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
+        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
+        ${s && it.cat !== 'tool' ? `<div class="row">${it.cat === 'ring' || it.cat === 'boots' ? '<button class="btn g" data-a="equipSel" type="button">Equipar</button>' : ''}${it.cat === 'tackle' ? '<button class="btn g" data-a="tackleSel" type="button">Prender na vara</button>' : ''}${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
+        ${gearHTML()}
         <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button></div>`;
     } else if (invTab === 'craft') {
       body = `<div class="list">${RECIPES.map(r => {
@@ -158,11 +159,11 @@
   function shopList(who) {
     switch (who) {
       case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
-      case 'claudio': return SHOP_CLAUDIO;
+      case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
-      case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }];
+      case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
     return [];
@@ -296,8 +297,11 @@
       default: panelAction2(a, b); break;
       case 'tab': invTab = b.dataset.t; invSel = -1; renderInventory(); break;
       case 'slot': invClick(+b.dataset.i); break;
+      case 'equipSel': if (invSel >= 0) { equipSlot(invSel); invSel = -1; renderInventory(); } break;
+      case 'unequip': unequip(b.dataset.k); renderInventory(); break;
+      case 'tackleSel': if (invSel >= 0) { attachTackle(invSel); invSel = -1; renderInventory(); } break;
       case 'trash': if (invSel >= 0 && P.inv[invSel] && item(P.inv[invSel].id).cat !== 'tool') { P.inv[invSel] = null; invSel = -1; dirty(); renderHotbar(); renderInventory(); } break;
-      case 'eatSel': if (invSel >= 0) { P.sel = invSel < 10 ? invSel : P.sel; const s = P.inv[invSel]; if (s) { const it = item(s.id); P.energy = Math.min(P.maxEnergy, P.energy + it.energy); P.hp = Math.min(100, P.hp + Math.round(it.energy * 0.45)); afterEat(s.id); s.n--; if (!s.n) { P.inv[invSel] = null; invSel = -1; } sfx.eat(); dirty(); renderHotbar(); renderInventory(); } } break;
+      case 'eatSel': if (invSel >= 0) { P.sel = invSel < 10 ? invSel : P.sel; const s = P.inv[invSel]; if (s) { const it = item(s.id), en0 = Math.round(it.energy * Q_ENERGY[s.q || 0]); P.energy = Math.min(P.maxEnergy, P.energy + en0); P.hp = Math.min(100, P.hp + Math.round(it.energy * 0.45)); afterEat(s.id); s.n--; if (!s.n) { P.inv[invSel] = null; invSel = -1; } sfx.eat(); dirty(); renderHotbar(); renderInventory(); } } break;
       case 'mute': muted = !muted; renderInventory(); break;
       case 'craft': craft(b.dataset.id); break;
       case 'wipe': if (b.dataset.sure) { store.wipe(); location.reload(); } else { b.dataset.sure = 1; b.textContent = 'Toque de novo para apagar tudo'; } break;

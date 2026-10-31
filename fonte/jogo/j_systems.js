@@ -588,7 +588,7 @@
   }
   function newQuest(nd) {
     const r = srand(nd * 7919 + 13), s = season(nd);
-    const pool = [...Object.keys(CROPS).filter(k => CROPS[k].seasons.includes(s)), ...Object.keys(FISH).filter(k => FISH[k].seasons.includes(s) && !FISH[k].where.includes('mine')), 'cobre', 'ferro', 'quartzo', 'carvao', ...(FORAGE[s] || [])];
+    const pool = [...Object.keys(CROPS).filter(k => CROPS[k].seasons.includes(s)), ...Object.keys(FISH).filter(k => FISH[k].seasons.includes(s) && !FISH[k].where.includes('mine') && !FISH[k].legend), 'cobre', 'ferro', 'quartzo', 'carvao', ...(FORAGE[s] || [])];
     const id = pool[Math.floor(r() * pool.length)], npc = Object.keys(NPCS)[Math.floor(r() * 10)];
     return { npc, id, reward: Math.max(150, sellPrice(id) * 3), done: null, day: nd };
   }

@@ -163,7 +163,7 @@
       const fl = 0.85 + Math.sin(t * 9) * 0.06 + Math.sin(t * 23) * 0.04;
       for (const [lx, ly] of m.lanterns || []) glow(lx * T + 8, ly * T + 12, 70, 0.3 * fl, '255,160,70');
       if (m.tier === 2) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.at(x, y) === G.WATER && (x + y) % 2 === 0) glow(x * T + 8, y * T + 8, 26, 0.12, '255,90,20');
-      glow(P.x, P.y - 10, 64, 0.1, '255,220,170');
+      glow(P.x, P.y - 10, eqHas('anelbrilho') ? 120 : 64, eqHas('anelbrilho') ? 0.22 : 0.1, '255,220,170');
       ctx.globalCompositeOperation = 'source-over';
       const g = ctx.createRadialGradient(P.x - camX, P.y - 10 - camY, 30, P.x - camX, P.y - 10 - camY, Math.max(VW, VH) * 0.7);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
@@ -192,7 +192,7 @@
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt);
+      updateMonsters(dt); bossBarUpdate();
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);

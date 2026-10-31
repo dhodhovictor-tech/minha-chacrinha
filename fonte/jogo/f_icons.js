@@ -126,7 +126,7 @@
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv) || paintIcon3(id)) return;
+    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {

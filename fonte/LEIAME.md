@@ -4,7 +4,7 @@ O site na raiz do repositório (`index.html`, `sw.js`, `shim.js`, `manifest.webm
 
 ## Pastas
 
-- `jogo/`: o jogo, em partes que são juntadas nesta ordem: `a_head.html` (estilos e HUD), `b*_data.js` (itens, receitas, NPCs), `c_maps.js` (mapas), `d_state.js` (estado e salvamento), `e*_draw.js` e `f*_icons.js` (desenhos), `f3_fish.js` (um desenho para cada peixe), `g_game.js` (ações), `h_ui.js` (painéis), `j_systems.js` (construções, animais, cozinha, NPCs), `k_market.js` (mercado), `l_cc.js` (Centro Comunitário e museu), `m_pet.js` (o Darth), `n_farm.js` (qualidade das colheitas, adubos, irrigadores, fazedor de sementes, para-raios e eventos da noite), `o_prof.js` (profissões nos níveis 5 e 10), `i_main.js` (loop principal e carregamento).
+- `jogo/`: o jogo, em partes que são juntadas nesta ordem: `a_head.html` (estilos e HUD), `b*_data.js` (itens, receitas, NPCs), `c_maps.js` (mapas), `d_state.js` (estado e salvamento), `e*_draw.js` e `f*_icons.js` (desenhos), `f3_fish.js` (um desenho para cada peixe), `g_game.js` (ações), `h_ui.js` (painéis), `j_systems.js` (construções, animais, cozinha, NPCs), `k_market.js` (mercado), `l_cc.js` (Centro Comunitário e museu), `m_pet.js` (o Darth), `n_farm.js` (qualidade das colheitas, adubos, irrigadores, fazedor de sementes, para-raios e eventos da noite), `o_prof.js` (profissões nos níveis 5 e 10), `p_aventura.js` (peixes lendários, tesouro na pesca, anzóis, chefes da mina, armas, anéis e botas), `i_main.js` (loop principal e carregamento).
 - `app/shim.js`: liga o jogo ao Firebase Realtime Database, imitando a interface `claude.use('db' | 'room' | 'user')` que o jogo usava dentro do Claude.
 - `app/rules.json`: regras do banco (as mesmas publicadas no console do Firebase).
 - `build.py`: junta as partes, confere a sintaxe e gera o site na raiz, mais uma versão de teste em `fonte/.tmp/`.
@@ -26,7 +26,7 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory <raiz do repositório>
 node app_test.js
 ```
 
-`etapa1_test.js` e `etapa2_test.js` conferem as novidades de cada etapa no jogo local (sem servidor): `etapa1_test.js` confere qualidade, adubos, irrigadores, fazedor de sementes e eventos da noite no jogo local (sem servidor). `app_test.js` simula dois aparelhos: criar a chacrinha, entrar com o código, jogar juntos, jogar em horários diferentes, trocar de chacrinha e abrir sem internet. Os testes usam `fonte/.tmp/index_test.html`, que expõe `window.__sv`.
+`etapa1_test.js`, `etapa2_test.js` e `etapa3_test.js` conferem as novidades de cada etapa no jogo local (sem servidor): `etapa1_test.js` confere qualidade, adubos, irrigadores, fazedor de sementes e eventos da noite no jogo local (sem servidor). `app_test.js` simula dois aparelhos: criar a chacrinha, entrar com o código, jogar juntos, jogar em horários diferentes, trocar de chacrinha e abrir sem internet. Os testes usam `fonte/.tmp/index_test.html`, que expõe `window.__sv`.
 
 ## Outros scripts
 

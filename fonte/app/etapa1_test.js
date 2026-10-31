@@ -38,7 +38,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
     }
     return out;
   });
-  ok(qs[1] > 5 && qs[2] > 5, `colheitas com Lavoura 10 e adubo de qualidade: ${qs[0]} normais, ${qs[1]} prata, ${qs[2]} ouro`);
+  ok(qs[1] > 1 && qs[2] > 15, `colheitas com Lavoura 10 e adubo de qualidade: ${qs[0]} normais, ${qs[1]} prata, ${qs[2]} ouro`);
   // mochila: estrelas, preço e não mistura qualidades
   await ev(() => { const s = __sv, P = s.P; P.inv = P.inv.map(x => (x && x.id === 'pastinaca' ? null : x)); s.addItem('pastinaca', 3, true, 0); s.addItem('pastinaca', 2, true, 2); s.addItem('pastinaca', 1, true, 1); s.renderHotbar(); });
   const st = await ev(() => { const P = __sv.P, sl = P.inv.filter(x => x && x.id === 'pastinaca').map(x => (x.q || 0) + ':' + x.n).join(' '); return { sl, gold: __sv.sellPrice('pastinaca', 2), base: __sv.sellPrice('pastinaca', 0), stars: document.querySelectorAll('#hotbar .q').length }; });

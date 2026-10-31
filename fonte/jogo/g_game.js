@@ -81,7 +81,7 @@
     if (fishing) { fishing = null; toast('Você recolheu a linha.'); }
     dx /= Math.max(1, len); dy /= Math.max(1, len);
     if (Math.abs(dx) > Math.abs(dy)) P.dir = dx > 0 ? 3 : 2; else P.dir = dy > 0 ? 1 : 0;
-    const sp = (P.energy <= 0 ? 50 : 82) * (P.ride ? 1.65 : 1) * (1 + 0.1 * buffLv('speed')) * dt, m = curMap();
+    const sp = (P.energy <= 0 ? 50 : 82) * (P.ride ? 1.65 : 1) * (1 + 0.1 * buffLv('speed') + eqSpeed()) * dt, m = curMap();
     const nx = P.x + dx * sp, ny = P.y + dy * sp;
     if (!blocked(m, nx, P.y)) P.x = nx;
     if (!blocked(m, P.x, ny)) P.y = ny;
@@ -136,7 +136,7 @@
     if (P.energy < n && P.energy <= 0) { toast('Sem energia! Coma algo ou vá dormir.'); sfx.no(); return false; }
     P.energy = Math.max(-10, P.energy - n); dirty(); return true;
   }
-  function swing(tool, lv) { toolAnim = { tool, lv, t: 0, dur: 0.28 }; lockT = 0.22; }
+  function swing(tool, lv, dur = 0.28) { toolAnim = { tool, lv, t: 0, dur }; lockT = dur * 0.8; }
   function act(target) {
     if (panelOpen || lockT > 0.05) return;
     if (placing) { confirmPlacing(); return; }
@@ -259,7 +259,7 @@
       const isWater = m.at(tx, ty) === G.WATER;
       if (s.id === 'rod') { startFishing(m); return; }
       if (s.id === 'balde' || s.id === 'tesoura') { toast(s.id === 'balde' ? 'Fique de frente para uma vaca ou cabra.' : 'Fique de frente para uma ovelha.'); return; }
-      if (s.id === 'sword') { swing('sword', lv); swordHit(); return; }
+      if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
       if (!useEnergy(s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0)))) return;
@@ -309,6 +309,8 @@
       return;
     }
     if (it.cat === 'fert') { useFert(m, k, s); return; }
+    if (it.cat === 'tackle') { attachTackle(P.sel); return; }
+    if (it.cat === 'ring' || it.cat === 'boots') { equipSlot(P.sel); return; }
     if (it.cat === 'seed') {
       if (!farmable(m)) { toast('Plante as sementes na chacrinha ou na estufa.'); return; }
       const tl = tile(k), c = CROPS[it.crop];
@@ -406,6 +408,7 @@
         list.push({ kind, x: x * T + 8, y: y * T + 12, hp, max: hp, dmg: 5 + Math.floor(n / 5), col: ['#5ad84a', '#4a8ae8', '#b05ae0'][m.tier], ph: r() * 10, vx: 0, vy: 0, cd: 0, hitT: 0, hopT: r() * 2 });
       }
     }
+    spawnBoss(m, n, list);
     monsters = list;
     if (n === 1 && !P.stats.mineIntro) { P.stats.mineIntro = 1; toast('Quebre pedras com a picareta. Uma delas esconde a escada para descer.'); }
   }
@@ -428,7 +431,7 @@
       else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3) + (hasProf('minerador') ? 1 : 0));
       else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], hasProf('geologo') ? 2 : 1);
       else if (Math.random() < 0.04 * (hasProf('prospector') ? 2 : 1)) addItem('carvao', 1);
-      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
+      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01 + (eqHas('anelsorte') ? 0.015 : 0)) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
       if (!m.ladder && m.floor < MINE_BOTTOM) {
@@ -440,17 +443,25 @@
     }
   }
   function swordHit() {
-    const lv = (held() && held().lv) || 0, d = DIRS[P.dir], cx = P.x + d[0] * 14, cy = P.y - 8 + d[1] * 14;
+    const s = held(), lv = (s && s.lv) || 0, wp = (s && WEAPONS[s.id]) || WEAPONS.sword, d = DIRS[P.dir], reach = wp.reach || 14, cx = P.x + d[0] * reach, cy = P.y - 8 + d[1] * reach;
     let any = false;
     for (const mo of monsters) {
-      if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20) {
-        mo.hp -= (4 + lv * 3 + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk()) * critMul(); mo.hitT = 0.15; mo.vx = d[0] * 160; mo.vy = d[1] * 160; any = true;
-        if (mo.hp <= 0) { mo.dead = true; gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } } }
+      if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20 + (mo.r ? mo.r - 12 : 0)) {
+        const base = !s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg, crit = Math.max(Math.random() < (wp.crit || 0) ? 2 : 1, critMul());
+        mo.hp -= (base + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk() + eqAtk()) * crit; mo.hitT = 0.15;
+        const kb = (wp.knock || 160) * (mo.kind === 'boss' ? 0.2 : 1); mo.vx = d[0] * kb; mo.vy = d[1] * kb; any = true;
+        if (mo.hp <= 0) killMonster(mo);
       }
     }
     monsters = monsters.filter(m => !m.dead);
     if (any) sfx.hit(); else noise(0.08, 0.05, 2500);
     if (P.map === 'farm') { const [tx, ty] = facing(), k = tx + ',' + ty, tl = tile(k); if (tl && tl.o && tl.o.k === 'weed') { setTile(k, null); if (Math.random() < 0.5) addItem('fibra', 1, true); } }
+  }
+  function killMonster(mo) {
+    mo.dead = true;
+    if (mo.kind === 'boss') { bossDefeated(mo); return; }
+    gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
+    monsterExtraDrops(mo);
   }
   function updateMonsters(dt) {
     const m = curMap();
@@ -459,18 +470,19 @@
     for (const mo of monsters) {
       mo.hitT -= dt;
       const dx = P.x - mo.x, dy = P.y - mo.y, dist = Math.hypot(dx, dy) || 1;
-      if (mo.kind === 'slime' || mo.kind === 'duster') {
+      if (mo.kind === 'boss') updateBoss(mo, dt, dx, dy, dist);
+      else if (mo.kind === 'slime' || mo.kind === 'duster') {
         mo.hopT -= dt;
         const fast = mo.kind === 'duster';
         if (mo.hopT <= 0 && dist < 120) { mo.hopT = fast ? rnd(0.35, 0.7) : rnd(0.7, 1.4); mo.vx = dx / dist * (fast ? 110 : 70); mo.vy = dy / dist * (fast ? 110 : 70); }
       } else if (mo.kind === 'ghost') { mo.vx += (dx / dist * 38 + Math.sin(performance.now() / 300 + mo.ph) * 30 - mo.vx) * dt * 1.5; mo.vy += (dy / dist * 38 - mo.vy) * dt * 1.5; } else { mo.vx += (dx / dist * 60 + rnd(-40, 40) - mo.vx) * dt * 2; mo.vy += (dy / dist * 60 + rnd(-40, 40) - mo.vy) * dt * 2; }
       const nx = mo.x + mo.vx * dt, ny = mo.y + mo.vy * dt;
-      const flies = mo.kind === 'bat' || mo.kind === 'ghost';
+      const flies = mo.kind === 'bat' || mo.kind === 'ghost' || mo.fly;
       if (flies || !solidAt(m, Math.floor(nx / T), Math.floor((mo.y - 3) / T))) mo.x = clamp(nx, T, (m.w - 1) * T);
       if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
       mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
-      if (dist < 12 && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - buffLv('defense') - profDef()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+      if (dist < (mo.r || 12) && hurtT <= 0) {
+        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
         dirty();
@@ -490,11 +502,12 @@
     if (!useEnergy(4)) return;
     swing('rod', 0);
     const bait = count('isca') > 0; if (bait) removeItem('isca', 1);
-    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * (bait ? 0.5 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
+    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
     sfx.cast();
   }
   function pickFish(water) {
-    const s = season(), min = nowMin(), opts = Object.entries(FISH).filter(([, f]) => f.where.includes(water) && f.seasons.includes(s) && (!f.from || min >= f.from) && (!f.to || min <= f.to) && (!f.rain || W.meta.rain || Math.random() < 0.3));
+    const leg = legendFor(water); if (leg) return leg;
+    const s = season(), min = nowMin(), opts = Object.entries(FISH).filter(([, f]) => !f.legend && f.where.includes(water) && f.seasons.includes(s) && (!f.from || min >= f.from) && (!f.to || min <= f.to) && (!f.rain || W.meta.rain || Math.random() < 0.3));
     if (!opts.length) return 'carpa';
     const w = opts.map(([k, f]) => [k, 120 - f.diff]), tot = w.reduce((a, x) => a + x[1], 0);
     let r = Math.random() * tot;
@@ -515,7 +528,7 @@
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
       document.getElementById('fish').hidden = false;
     }
   }
@@ -530,11 +543,17 @@
     f.fv += ((f.target - f.fy) * (1 + f.diff / 30) * (hasProf('calmo') ? 0.75 : 1) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
     if (inside) f.entered = true; else if (f.entered) f.miss = true;
+    if (inside && tackle() === 'anzolfarpado') f.bar += ((f.fy - f.barH / 2) - f.bar) * 1.6 * dt;
+    if (f.chestAt >= 0 && f.tt >= f.chestAt && !f.chest) f.chest = { y: rnd(12, 106), p: 0 };
+    if (f.chest && !f.chest.got) { const inC = f.chest.y > f.bar && f.chest.y < f.bar + f.barH; f.chest.p = clamp(f.chest.p + (inC ? 0.45 * (tackle() === 'imatesouro' ? 1.5 : 1) : -0.25) * dt, 0, 1); if (f.chest.p >= 1) { f.chest.got = true; sfx.coin(); } }
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
+      if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
+      if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
+      useTackle();
       if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
@@ -551,6 +570,7 @@
     c.fillStyle = '#ffffff55'; c.fillRect(7, Math.round(f.bar), 20, 2);
     const fx = 12, fy = Math.round(f.fy) - 4;
     c.drawImage(iconCanvas(f.id), fx - 3 + Math.round(Math.sin(f.tt * 9)), fy - 4);
+    drawFishChest(c, f);
     c.fillStyle = '#3a1a0a'; c.fillRect(33, 2, 12, 116);
     const ph = Math.round(114 * f.prog);
     c.fillStyle = f.prog > 0.66 ? '#5ad84a' : f.prog > 0.33 ? '#f4c83a' : '#e8502a'; c.fillRect(35, 116 - ph, 8, ph);

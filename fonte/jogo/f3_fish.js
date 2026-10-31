@@ -99,6 +99,10 @@
       case 'tuna': for (let x = at(0.62); x <= o.xt; x++) { if (top[x] != null && x % 2 === 0) P(x, top[x] - 1, '#f4d03a'); if (bot[x] != null && x % 2 === 1) P(x, bot[x] + 1, '#f4d03a'); } { const px = at(0.25), py = Math.round(midY(px)); P(px, py, '#22305e'); P(px + 1, py, '#22305e'); P(px + 2, py + 1, '#22305e'); P(px + 3, py + 1, '#22305e'); } break;
       case 'herring': for (let x = at(0.15); x <= o.xt; x++) paintIf(x, Math.round(midY(x)) - 1, (x % 2 ? '#a8c4ec' : '#c8b0e0')); break;
       case 'mullet': for (let x = at(0.15); x <= o.xt; x++) paintIf(x, Math.round(midY(x)), '#f4c83a'); { const y = bot[o.xs + 1]; P(o.xs, y + 1, '#f4c83a'); P(o.xs + 1, y + 1, '#f4c83a'); P(o.xs, y + 2, '#e8a82a'); } break;
+      case 'legend': for (const k in body) { const [x, y] = k.split(',').map(Number); const v = body[k]; if (v > 0.15 && v < 0.8 && (x * 3 + y) % 5 === 0) P(x, y, '#f8e070'); } break;
+      case 'angler': { const hx = o.xs + 2, hy = top[hx]; for (let k = 1; k <= 3; k++) P(hx - (k > 2 ? 1 : 0), hy - k, '#5a3a10'); P(hx - 2, hy - 4, '#fff6a0'); P(hx - 1, hy - 4, '#f8e070'); for (let x = o.xs; x <= o.xs + 2; x++) P(x, Math.round(o.cy) + 1, '#f4f0e0'); break; }
+      case 'ice': for (const k in body) { const [x, y] = k.split(',').map(Number); if (body[k] < 0.5 && (x * 5 + y * 3) % 6 === 0) P(x, y, '#ffffff'); } P(o.xt + 2, top[o.xt] - 2, '#ffffff'); break;
+      case 'mutant': for (const k in body) { const [x, y] = k.split(',').map(Number); const v = body[k]; if (v > 0.2 && v < 0.8 && (x * 7 + y * 3) % 6 === 0) P(x, y, '#8a3ab8'); } break;
       case 'sword': { const y = Math.round(o.cy) - 1; for (let x = 0; x < o.xs; x++) P(x, y, x === 0 ? '#8a96b8' : '#c8d2e6'); P(o.xs - 1, y + 1, '#8a96b8'); break; }
     }
     // guelra, peitoral e olho
@@ -109,6 +113,7 @@
     const ex = o.mark === 'sword' ? o.xs + 1 : Math.max(o.xs + 1, at(0.1)), ey = Math.max(top[ex] + 1, Math.round(midY(ex) - 1));
     if (o.H > 3.5) { P(ex, ey, '#ffffff'); P(ex + 1, ey, '#141414'); P(ex, ey + 1, '#141414'); P(ex + 1, ey + 1, '#141414'); }
     else { P(ex, ey, '#141414'); P(ex + 1, ey, '#f4f4f4'); }
+    if (FISH[id] && FISH[id].legend) { P(o.xt, Math.max(0, (top[o.xt] || 4) - 3), '#fff6a0'); P(o.xs + 3, Math.max(0, (top[o.xs + 3] || 4) - 2), '#fff6a0'); }
     // boca
     const my = Math.round(o.cy + (o.bigMouth ? 0.5 : 0.8));
     P(o.xs, my, shade(cBack, -0.2)); if (o.bigMouth) { P(o.xs + 1, my, '#1a1a1a'); P(o.xs + 2, my, '#3a2a1a'); }

@@ -609,7 +609,7 @@
     const a = dir === 3 ? -1.7 + t * 2.4 : dir === 2 ? 1.7 - t * 2.4 : dir === 1 ? -0.7 + t * 1.4 : 0.7 - t * 1.4;
     const ox = dir === 3 ? 6 : dir === 2 ? -6 : dir === 1 ? 2 : 0, oy = dir === 0 ? -18 : -12;
     // rastro do golpe para espada e foice
-    if (tool === 'sword' || tool === 'scythe') {
+    if (tool === 'scythe' || WEAPONS[tool]) {
       const a0 = dir === 3 ? -1.7 : dir === 2 ? 1.7 : dir === 1 ? -0.7 : 0.7;
       const off = dir === 2 ? -2.2 : -0.94;
       ctx.strokeStyle = `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = 2.5;
@@ -643,6 +643,7 @@
     });
   }
   function drawMonster(mo) {
+    if (mo.kind === 'boss') { drawBoss(mo); return; }
     const t = performance.now() / 1000 + mo.ph, x = Math.round(mo.x), y = Math.round(mo.y), hit = mo.hitT > 0;
     shadowAt(x, y, 7, 2);
     if (hit) ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 60);
