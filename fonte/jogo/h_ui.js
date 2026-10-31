@@ -86,7 +86,7 @@
     renderInventory();
   }
   function renderInventory() {
-    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (invTab === 'items') {
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
@@ -107,6 +107,8 @@
       body = Object.entries(SKILLS).map(([k, n]) => { const lv = skillLv(P.skills[k]); return `<div class="skill"><span>${n}</span><span class="pip">${Array.from({ length: 10 }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span><b>${lv}</b></div>`; }).join('')
         + `<p style="font-size:13px">Você sobe de nível colhendo, pescando, minerando, coletando e lutando. Novos níveis liberam receitas.</p>
         <p style="font-size:13px">Peixes pescados: ${P.stats.fish || 0} · Total enviado: ${fmt(P.stats.shipped || 0)} ₲ · Andar mais fundo da mina: ${P.mineFloor || 0}</p>` + profsHTML();
+    } else if (invTab === 'ach') {
+      body = achHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;

@@ -212,6 +212,7 @@
     const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
     // a primeira sai com a qualidade sorteada; as extras são normais
     if (!addItem(id, 1, false, q)) return;
+    if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
@@ -553,6 +554,7 @@
       document.getElementById('fish').hidden = true;
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
+      P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();

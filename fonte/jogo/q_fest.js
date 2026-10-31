@@ -18,6 +18,7 @@
   function festSave(data) {
     const d = W.meta.day; W.meta.fest = W.meta.fest || {}; W.meta.fest[d] = W.meta.fest[d] || {}; W.meta.fest[d][P.uid] = data;
     queueUpdate('world/meta', { fest: { [d]: { [P.uid]: data } } });
+    festDone(festOn());
   }
   const partner = () => Object.values(W.players).find(p => p && p.uid !== P.uid) || null;
   function festOthersHTML(fmtFn) {
@@ -256,3 +257,7 @@
   }
   // luz das abóboras no labirinto
   function festLights(m, light) { if (m.id === 'maze' || (m.id === 'beach' && m.jelly && festOn() && festOn().id === 'aguasvivas' && nowMin() >= 1200)) { for (const [jx, jy] of m.jelly || []) light(jx * T + 8, jy * T + 8, 22, 0.55, '120,230,255'); for (const [px, py] of m.pumpkins || []) light(px * T + 8, py * T + 10, 40, 0.5); if (m.gold) light(m.gold[0] * T + 8, m.gold[1] * T + 10, 50, 0.6); } }
+  // festivais de que a pessoa participou (para a conquista Festeiros)
+  function festDone(f) { if (!f || (W.meta.festDone && W.meta.festDone[f.id])) return; W.meta.festDone = { ...(W.meta.festDone || {}), [f.id]: 1 }; queueUpdate('world/meta', { festDone: { [f.id]: 1 } }); }
+  // ver as águas-vivas na praia conta como participar
+  function festWatch() { const f = festOn(); if (f && f.id === 'aguasvivas' && P.map === 'beach' && nowMin() >= 1200 && !(W.meta.festDone && W.meta.festDone.aguasvivas)) { festDone(f); toast('Que lindo! As águas-vivas iluminam o mar. 🌊✨', 'big'); } }

@@ -1,7 +1,7 @@
 // Guarda os arquivos do app no aparelho para abrir sem internet.
 // O jogo (index.html, shim.js, config.js) vem sempre da internet quando possível; fontes, ícones e bibliotecas saem do aparelho.
-const VERSION = '0a01d21';
-const CACHE = 'chacrinha-94024f55bd6f';
+const VERSION = '1c1117b';
+const CACHE = 'chacrinha-826e5073405b';
 const FILES = ["./", "index.html", "manifest.webmanifest", "vendor/firebase-app-compat.js", "vendor/firebase-database-compat.js", "config.js", "seed.js", "shim.js", "fonts/pixelify-sans-latin-400-normal.woff2", "fonts/pixelify-sans-latin-500-normal.woff2", "fonts/pixelify-sans-latin-600-normal.woff2", "fonts/pixelify-sans-latin-700-normal.woff2", "fonts/pixelify-sans-latin-ext-400-normal.woff2", "fonts/pixelify-sans-latin-ext-500-normal.woff2", "fonts/pixelify-sans-latin-ext-600-normal.woff2", "fonts/pixelify-sans-latin-ext-700-normal.woff2", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"];
 const STATIC = /\/(vendor|fonts|icons)\//;
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });

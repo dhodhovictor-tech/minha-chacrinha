@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '0a01d21'; window.__APP_DATE = '31/10/2026';</script>
+<script>window.__APP_VERSION = '1c1117b'; window.__APP_DATE = '31/10/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -3232,6 +3232,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
     // a primeira sai com a qualidade sorteada; as extras são normais
     if (!addItem(id, 1, false, q)) return;
+    if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
@@ -3573,6 +3574,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       document.getElementById('fish').hidden = true;
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
+      P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();
@@ -3772,7 +3774,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     renderInventory();
   }
   function renderInventory() {
-    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (invTab === 'items') {
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
@@ -3793,6 +3795,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       body = Object.entries(SKILLS).map(([k, n]) => { const lv = skillLv(P.skills[k]); return `<div class="skill"><span>${n}</span><span class="pip">${Array.from({ length: 10 }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span><b>${lv}</b></div>`; }).join('')
         + `<p style="font-size:13px">Você sobe de nível colhendo, pescando, minerando, coletando e lutando. Novos níveis liberam receitas.</p>
         <p style="font-size:13px">Peixes pescados: ${P.stats.fish || 0} · Total enviado: ${fmt(P.stats.shipped || 0)} ₲ · Andar mais fundo da mina: ${P.mineFloor || 0}</p>` + profsHTML();
+    } else if (invTab === 'ach') {
+      body = achHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;
@@ -5776,6 +5780,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function festSave(data) {
     const d = W.meta.day; W.meta.fest = W.meta.fest || {}; W.meta.fest[d] = W.meta.fest[d] || {}; W.meta.fest[d][P.uid] = data;
     queueUpdate('world/meta', { fest: { [d]: { [P.uid]: data } } });
+    festDone(festOn());
   }
   const partner = () => Object.values(W.players).find(p => p && p.uid !== P.uid) || null;
   function festOthersHTML(fmtFn) {
@@ -6014,6 +6019,68 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   // luz das abóboras no labirinto
   function festLights(m, light) { if (m.id === 'maze' || (m.id === 'beach' && m.jelly && festOn() && festOn().id === 'aguasvivas' && nowMin() >= 1200)) { for (const [jx, jy] of m.jelly || []) light(jx * T + 8, jy * T + 8, 22, 0.55, '120,230,255'); for (const [px, py] of m.pumpkins || []) light(px * T + 8, py * T + 10, 40, 0.5); if (m.gold) light(m.gold[0] * T + 8, m.gold[1] * T + 10, 50, 0.6); } }
+  // festivais de que a pessoa participou (para a conquista Festeiros)
+  function festDone(f) { if (!f || (W.meta.festDone && W.meta.festDone[f.id])) return; W.meta.festDone = { ...(W.meta.festDone || {}), [f.id]: 1 }; queueUpdate('world/meta', { festDone: { [f.id]: 1 } }); }
+  // ver as águas-vivas na praia conta como participar
+  function festWatch() { const f = festOn(); if (f && f.id === 'aguasvivas' && P.map === 'beach' && nowMin() >= 1200 && !(W.meta.festDone && W.meta.festDone.aguasvivas)) { festDone(f); toast('Que lindo! As águas-vivas iluminam o mar. 🌊✨', 'big'); } }
+
+  // ================= conquistas do casal: troféus que valem para os dois (W.meta.ach[id] = dia em que ganharam) =================
+  const NORMAL_FISH = () => Object.keys(FISH).filter(k => !FISH[k].legend);
+  const ACH = [
+    ['venda', 'Primeira venda', 'Vender alguma coisa na caixa de envio.', s => s.shipped > 0],
+    ['dezmil', 'Fazendeiros de verdade', 'Juntos, ganhar 10.000 ₲ com a caixa de envio.', s => s.shipped >= 10000],
+    ['cemmil', 'Ricos!', 'Juntos, ganhar 100.000 ₲ com a caixa de envio.', s => s.shipped >= 100000],
+    ['ouro', 'Colheita de ouro', 'Colher uma planta de qualidade ouro.', s => s.goldCrop],
+    ['pesca50', 'Pescadores', 'Juntos, pescar 50 peixes.', s => s.fish >= 50],
+    ['todospeixes', 'Mestres da pesca', 'Pescar todos os peixes do vale (sem contar os lendários).', s => NORMAL_FISH().every(k => s.caught.has(k))],
+    ['lendas', 'Caçadores de lendas', 'Pescar os 5 peixes lendários.', s => Object.keys(LEGENDS).every(k => s.legends.has(k))],
+    ['fundo', 'Até o fundo', 'Chegar ao andar 120 da mina.', s => s.floor >= MINE_BOTTOM],
+    ['chefes', 'Heróis da mina', 'Vencer os 4 chefes da mina.', () => Object.keys(BOSSES).every(n => W.meta.bosses && W.meta.bosses[n])],
+    ['museu', 'Museu completo', 'Doar todas as peças ao museu.', () => MUSEUM_ITEMS.every(id => W.meta.museum && W.meta.museum[id])],
+    ['cc', 'Vila restaurada', 'Completar todas as salas do Centro Comunitário.', () => ccRoomsDone() >= CC_ROOMS.length],
+    ['bichos', 'Fazenda cheia', 'Ter 10 animais na chacrinha.', () => Object.keys(farmA()).length >= 10],
+    ['obras', 'Construtores', 'Ter 4 construções na chacrinha.', () => Object.keys(farmB()).length >= 4],
+    ['estufa', 'Verão o ano todo', 'Construir a estufa.', () => Object.values(farmB()).some(b => b.type === 'greenhouse' && bReady(b))],
+    ['casamento', 'Felizes para sempre', 'Casar na chacrinha.', s => s.married],
+    ['amizade', 'Melhores amigos', 'Chegar a 10 corações com alguém da vila.', s => s.bestFriend],
+    ['festivais', 'Festeiros', 'Participar dos 8 festivais do ano.', () => Object.keys(FESTS).every(k => W.meta.festDone && W.meta.festDone[FESTS[k].id])],
+    ['juntos', 'Juntinhos na festa', 'Os dois participarem do mesmo festival.', () => Object.values(W.meta.fest || {}).some(d => Object.keys(d).length >= 2)],
+    ['mestre', 'Mestre no ofício', 'Escolher uma profissão de nível 10.', s => s.prof10],
+    ['chef', 'Chefs de cozinha', 'Saber 20 receitas.', s => s.recipes >= 20],
+  ];
+  function achState() {
+    const ps = [P, ...Object.values(W.players || {}).filter(p => p && p.uid !== P.uid)], st = { shipped: 0, fish: 0, caught: new Set(), legends: new Set(), floor: 0, goldCrop: false, married: false, bestFriend: false, prof10: false, recipes: 0 };
+    for (const p of ps) {
+      const s = p.stats || {};
+      st.shipped += s.shipped || 0; st.fish += s.fish || 0;
+      for (const k of Object.keys(s.caught || {})) st.caught.add(k);
+      for (const k of Object.keys((p.flags || {}).lend || {})) st.legends.add(k);
+      st.floor = Math.max(st.floor, p.mineFloor || 0);
+      st.goldCrop = st.goldCrop || !!s.goldCrop;
+      st.married = st.married || !!p.spouse;
+      st.bestFriend = st.bestFriend || Object.values(p.rel || {}).some(r => r && r.pts >= 2500);
+      st.prof10 = st.prof10 || Object.values(PROFS).some(d => Object.values(d[10]).some(l => l.some(x => (p.prof || []).includes(x[0]))));
+      st.recipes = Math.max(st.recipes, (p.recipes || []).length + COOK.filter(r => r.learn === 'start').length);
+    }
+    return st;
+  }
+  let achT = 0;
+  function checkAch(dt = 99) {
+    achT -= dt; if (achT > 0 || !P || !W.meta) return; achT = 5;
+    const st = achState(), have = W.meta.ach || {};
+    for (const [id, name, , test] of ACH) {
+      if (have[id]) continue;
+      let okA = false; try { okA = test(st); } catch (e) { okA = false; }
+      if (!okA) continue;
+      W.meta.ach = { ...(W.meta.ach || {}), [id]: W.meta.day };
+      queueUpdate('world/meta', { ach: { [id]: W.meta.day } });
+      sfx.level(); toast(`🏆 Conquista do casal: ${name}!`, 'big');
+    }
+  }
+  function achHTML() {
+    const have = W.meta.ach || {}, n = ACH.filter(a => have[a[0]]).length;
+    return `<p style="text-align:center">Conquistas de vocês dois: <b>${n} de ${ACH.length}</b></p><div class="list">${ACH.map(([id, name, desc]) => `<div class="item" style="${have[id] ? '' : 'opacity:0.55'}"><span style="font-size:22px;filter:${have[id] ? 'none' : 'grayscale(1)'}">🏆</span><span class="nm"><b>${name}</b><small>${desc}${have[id] ? ` · ganhou no dia ${have[id]}` : ''}</small></span></div>`).join('')}</div>`;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -6210,7 +6277,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck();
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt);
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
