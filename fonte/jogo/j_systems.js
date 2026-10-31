@@ -491,6 +491,7 @@
     if (d >= 3) sendMail('rosa1', 'Rosa', 'Oi! Sou a carpinteira da vila. Construo galinheiro, celeiro, estábulo, silo e poço. Minha carpintaria fica na vila, perto do bar.');
   }
   function openMail() {
+    deliverGifts();
     const list = P.mail;
     openPanel(`<h2>Caixa de correio</h2>${list.length ? `<div class="list">${list.map((m, i) => `<div class="item mail${m.read ? '' : ' new'}"><span class="nm"><b>${esc(m.from)}</b><small>${esc(m.text)}</small>${m.items && !m.got ? `<small>Anexo: ${m.items.map(([id, n]) => `${n}× ${item(id).name}`).join(', ')}</small>` : ''}${m.recipe && !m.got ? `<small>Receita: ${item(m.recipe).name}</small>` : ''}</span>${(m.items || m.recipe || m.effect) && !m.got ? `<button class="btn g" data-a="mailGet" data-i="${i}" type="button">Pegar</button>` : ''}</div>`).join('')}</div>` : '<p style="text-align:center">Nenhuma carta.</p>'}`, 'mail');
     for (const m of list) if (!m.items && !m.recipe && !m.effect) m.read = true;
@@ -581,6 +582,7 @@
     const s = season(), q = W.meta.quest;
     const bdays = {};
     for (const [id, n] of Object.entries(NPCS)) if (n.bday[0] === s) bdays[n.bday[1]] = n.name;
+    for (const [k, f] of Object.entries(FESTS)) if (k.startsWith(s + ':')) { const dd = +k.split(':')[1]; bdays[dd] = bdays[dd] ? bdays[dd] + ' · ' + f.name : '🎉 ' + f.name; }
     const cal = Array.from({ length: 28 }, (_, i) => `<div class="${i + 1 === dom() ? 'today' : ''}${bdays[i + 1] ? ' bd' : ''}"><b>${i + 1}</b>${bdays[i + 1] ? `<small>${esc(bdays[i + 1])}</small>` : ''}</div>`).join('');
     openPanel(`<h2>Quadro de avisos</h2>
       <h3>Pedido de ajuda</h3>${q ? `<div class="item"><img src="${iconURL(q.id)}" alt=""><span class="nm"><b>${NPCS[q.npc].name} precisa de ${item(q.id).name.toLowerCase()}</b><small>${q.done ? 'Já foi entregue. Obrigado!' : `Recompensa: ${fmt(q.reward)} ₲. Segure o item e converse com ${NPCS[q.npc].name}. Vale só hoje.`}</small></span></div>` : '<p>Nenhum pedido hoje.</p>'}
@@ -704,6 +706,7 @@
   // cada pessoa, de manhã: cartas, receitas por nível, avisos de aniversário
   function onNewDayExtra() {
     P.buff = null;
+    deliverGifts();
     for (const r of COOK) if (r.learn.startsWith('skill:')) { const [, k, l] = r.learn.split(':'); if (skillLv(P.skills[k]) >= +l && !P.recipes.includes(r.id)) { P.recipes.push(r.id); toast(`Nova receita de cozinha: ${r.name}!`); } }
     checkMail();
     for (const id of Object.keys(NPCS)) if (isBday(id)) setTimeout(() => toast(`Hoje é aniversário de ${NPCS[id].name}! Um presente vale muito mais.`), 2500);
@@ -731,6 +734,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
+    festEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }

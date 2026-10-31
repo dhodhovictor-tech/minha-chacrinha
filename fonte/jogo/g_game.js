@@ -141,6 +141,7 @@
     if (panelOpen || lockT > 0.05) return;
     if (placing) { confirmPlacing(); return; }
     if (fishing) { fishAction(); return; }
+    if (nearBooth()) { openFest(); return; }
     const m = curMap();
     let [tx, ty] = target || facing();
     const k = tx + ',' + ty;
@@ -551,6 +552,7 @@
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
+      festFishCaught();
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();
@@ -623,6 +625,7 @@
       const taken = {};
       for (const [k, v] of Object.entries(W.meta.taken || {})) if (v && +k.split(':')[0] >= nd - 1) taken[k] = v;
       W.meta.taken = taken;
+      if (W.meta.fest) for (const fd of Object.keys(W.meta.fest)) if (+fd < nd - 1) delete W.meta.fest[fd];
       if (pend['world/meta']) pend['world/meta'].patch = null;
       await store.doc('world/meta').set(stripNull(clone(W.meta)));
       W.clock = { min: DAY_START, at: Date.now(), day: nd, by: P.uid };
@@ -655,6 +658,7 @@
       <h3>Caixa de envio</h3>
       ${lines.length ? `<div class="list">${lines.map(l => `<div class="item"><span class="nm">${l}</span></div>`).join('')}</div><p class="big">+${fmt(total)} ₲</p>` : '<p>Nada foi enviado ontem.</p>'}
       ${nightLines()}
+      ${festLine()}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
       <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
       ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}

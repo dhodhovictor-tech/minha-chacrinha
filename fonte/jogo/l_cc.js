@@ -156,6 +156,12 @@
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
       case 'moveStart': startMoving(); break;
+      case 'festGo': { const f = festOn(); if (!f) break; if (f.id === 'ovo') startEggHunt(); else if (f.id === 'gelo') startIceFishing(); else if (f.id === 'flores') flowerDance(); else if (f.id === 'espiritos') enterMaze(); break; }
+      case 'festSoup': addToSoup(+b.dataset.i); break;
+      case 'festPick': { const i = +b.dataset.i; if (fairPick.includes(i)) fairPick = fairPick.filter(x => x !== i); else if (fairPick.length < 9) fairPick.push(i); openFest(); break; }
+      case 'festShow': fairShow(); break;
+      case 'festSpin': fairSpin(+b.dataset.v); break;
+      case 'festGift': winterGift(+b.dataset.i); break;
       case 'profOpen': openProfChoice(); break;
       case 'profPick': pickProf(b.dataset.p); break;
       case 'appswitch': openPanel(`<h2>Trocar de chacrinha?</h2><p style="text-align:center">Seu progresso continua salvo. Na próxima tela você digita o código da chacrinha e escolhe quem você é.</p><div class="row"><button class="btn" data-a="close" type="button">Voltar</button><button class="btn g" data-a="appswitch2" type="button">Trocar</button></div>`); break;

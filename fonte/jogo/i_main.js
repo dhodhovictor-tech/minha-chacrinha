@@ -149,11 +149,12 @@
     if (nf > 0.01) {
       ctx.fillStyle = `rgba(20, 16, 60, ${nf})`; ctx.fillRect(0, 0, VW, VH);
       ctx.globalCompositeOperation = 'lighter';
-      const light = (x, y, r, a) => { const g = ctx.createRadialGradient(x - camX, y - camY, 2, x - camX, y - camY, r); g.addColorStop(0, `rgba(255,200,120,${a})`); g.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = g; ctx.fillRect(x - camX - r, y - camY - r, r * 2, r * 2); };
+      const light = (x, y, r, a, col = '255,200,120') => { const g = ctx.createRadialGradient(x - camX, y - camY, 2, x - camX, y - camY, r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.fillRect(x - camX - r, y - camY - r, r * 2, r * 2); };
       if (m.id === 'farm') for (const [k, v] of Object.entries(W.farm.t)) if (v && v.o && v.o.k === 'tocha') { const [x, y] = k.split(',').map(Number); light(x * T + 8, y * T + 4, 40, nf * 0.6); }
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
+      festLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -163,6 +164,7 @@
       const fl = 0.85 + Math.sin(t * 9) * 0.06 + Math.sin(t * 23) * 0.04;
       for (const [lx, ly] of m.lanterns || []) glow(lx * T + 8, ly * T + 12, 70, 0.3 * fl, '255,160,70');
       if (m.tier === 2) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.at(x, y) === G.WATER && (x + y) % 2 === 0) glow(x * T + 8, y * T + 8, 26, 0.12, '255,90,20');
+      festLights(m, (x, y, r, a) => glow(x, y, r * 1.4, a * 0.6, '255,140,40'));
       glow(P.x, P.y - 10, eqHas('anelbrilho') ? 120 : 64, eqHas('anelbrilho') ? 0.22 : 0.1, '255,220,170');
       ctx.globalCompositeOperation = 'source-over';
       const g = ctx.createRadialGradient(P.x - camX, P.y - 10 - camY, 30, P.x - camX, P.y - 10 - camY, Math.max(VW, VH) * 0.7);
@@ -192,7 +194,7 @@
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate();
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck();
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
