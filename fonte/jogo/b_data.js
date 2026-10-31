@@ -142,7 +142,7 @@
   const isFruit = id => { const it = item(id); return it.cat === 'fruit' || !!it.fruit; };
   const isVeg = id => item(id).cat === 'veg' || (item(id).cat === 'forage' && !item(id).fruit && item(id).energy);
   const basePrice = id => item(id).sell || 0;
-  const sellPrice = id => marketPrice(id);
+  const sellPrice = (id, q) => Math.round(marketPrice(id) * Q_PRICE[q || 0]);
   const TOOL_LV = ['', 'de cobre', 'de ferro', 'de ouro'];
   const toolName = (id, lv) => item(id).name + (lv ? ' ' + TOOL_LV[lv] : '');
 

@@ -102,6 +102,7 @@
           R(px, py, T, T, wet ? '#5a3a1e' : '#9a6a3a');
           for (let k = 2; k < T; k += 4) R(px + 1, py + k, T - 2, 1, wet ? '#4a2e16' : '#7a5028');
           if (s === 'winter' && !m.gh) R(px + 2, py + 2, 4, 2, '#ffffff88');
+          if (tl.fe) drawFert(tl.fe, px, py);
         }
         if (tl.c) ents.push({ y: py + 14, f: () => drawCrop(tl.c, px, py) });
         if (tl.o && !(placing && placing.tree === pre + x + ',' + y)) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
@@ -175,6 +176,7 @@
         if (W.meta.snow) ctx.fillRect(d.x * VW, d.y * VH, 2, 2); else ctx.fillRect(d.x * VW, d.y * VH, 1, 5);
       }
       ctx.fillStyle = 'rgba(40,60,90,0.12)'; ctx.fillRect(0, 0, VW, VH);
+      drawStorm(dt);
     }
   }
 

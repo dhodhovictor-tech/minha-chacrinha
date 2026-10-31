@@ -60,6 +60,10 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 .slot { position: relative; width: 40px; height: 40px; flex: 0 0 auto; background: #f8d59a; border: 2px solid #b8742e; border-radius: 3px; box-shadow: inset 2px 2px 0 #d8a060, inset -2px -2px 0 #fff0c8; display: grid; place-items: center; cursor: pointer; padding: 0; }
 .slot img { width: 32px; height: 32px; image-rendering: pixelated; pointer-events: none; }
 .slot .n { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
+.slot .q { position: absolute; left: 2px; bottom: 0; font-size: 13px; font-style: normal; line-height: 1; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
+.slot .q1, .qtag.q1 { color: #e4eaf2; }
+.slot .q2, .qtag.q2 { color: #ffd23a; }
+.qtag { font-style: normal; text-shadow: 0 1px 0 #3b1d0a; white-space: nowrap; }
 .slot.on { outline: 3px solid #e02a1a; outline-offset: -2px; background: #ffe2a8; }
 .hearts i { display: inline-block; width: 10px; height: 9px; margin: 0 1px; background: #d8c0a8; clip-path: polygon(50% 100%, 0 45%, 0 15%, 22% 0, 50% 18%, 78% 0, 100% 15%, 100% 45%); }
 .hearts i.on { background: #e83a6a; }
@@ -151,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'a1637a8'; window.__APP_DATE = '30/10/2026';</script>
+<script>window.__APP_VERSION = 'b4783bd'; window.__APP_DATE = '31/10/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -321,7 +325,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const isFruit = id => { const it = item(id); return it.cat === 'fruit' || !!it.fruit; };
   const isVeg = id => item(id).cat === 'veg' || (item(id).cat === 'forage' && !item(id).fruit && item(id).energy);
   const basePrice = id => item(id).sell || 0;
-  const sellPrice = id => marketPrice(id);
+  const sellPrice = (id, q) => Math.round(marketPrice(id) * Q_PRICE[q || 0]);
   const TOOL_LV = ['', 'de cobre', 'de ferro', 'de ouro'];
   const toolName = (id, lv) => item(id).name + (lv ? ' ' + TOOL_LV[lv] : '');
 
@@ -781,7 +785,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) {
       const d = Math.abs(dx) + Math.abs(dy); if (d > 5 || d >= bd) continue;
       const t = W.farm.t[pre + (x + dx) + ',' + (y + dy)], c = t && t.c;
-      if (c && !c.dead && FLOWERS[c.id] && c.g >= CROPS[c.id].days) { best = c.id; bd = d; }
+      if (c && !c.dead && FLOWERS[c.id] && c.g >= cropDays(c)) { best = c.id; bd = d; }
     }
     return best ? 'mel:' + best : 'mel';
   }
@@ -1240,14 +1244,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
-  function addItem(id, n = 1, silent) {
+  function addItem(id, n = 1, silent, q = 0) {
     let left = n;
-    if (stackable(id)) for (const s of P.inv) if (s && s.id === id && s.n < 999) { const k = Math.min(left, 999 - s.n); s.n += k; left -= k; if (!left) break; }
+    if (stackable(id)) for (const s of P.inv) if (s && s.id === id && (s.q || 0) === q && s.n < 999) { const k = Math.min(left, 999 - s.n); s.n += k; left -= k; if (!left) break; }
     while (left > 0) {
       const i = P.inv.findIndex(s => !s);
       if (i < 0) break;
       const k = stackable(id) ? Math.min(left, 999) : 1;
-      P.inv[i] = { id, n: k, lv: 0 }; left -= k;
+      P.inv[i] = q ? { id, n: k, lv: 0, q } : { id, n: k, lv: 0 }; left -= k;
     }
     dirty(); renderHotbar();
     if (!silent && n - left > 0) pickupNote(id, n - left);
@@ -1257,7 +1261,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const count = id => P.inv.reduce((a, s) => a + (s && s.id === id ? s.n : 0), 0);
   function removeItem(id, n = 1) {
     if (count(id) < n) return false;
-    for (let i = P.inv.length - 1; i >= 0 && n > 0; i--) { const s = P.inv[i]; if (s && s.id === id) { const k = Math.min(n, s.n); s.n -= k; n -= k; if (!s.n) P.inv[i] = null; } }
+    // gasta primeiro os de qualidade mais baixa
+    for (let q = 0; q <= 2 && n > 0; q++) for (let i = P.inv.length - 1; i >= 0 && n > 0; i--) { const s = P.inv[i]; if (s && s.id === id && (s.q || 0) === q) { const k = Math.min(n, s.n); s.n -= k; n -= k; if (!s.n) P.inv[i] = null; } }
     dirty(); renderHotbar();
     return true;
   }
@@ -1668,7 +1673,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function drawObj(o, px, py, k, nf) {
     const t = performance.now() / 1000;
-    if (drawObj2(o, px, py, k)) return;
+    if (drawObj2(o, px, py, k) || drawObj3(o, px, py)) return;
     switch (o.k) {
       case 'tree': drawTree(px + 8, py + 15, 1, o.v || 0, o.hp, o.shake > performance.now()); if (o.tap) drawTapper(px, py, o); break;
       case 'stump': shadowAt(px + 8, py + 15, 7, 2); blit(STUMP(), px - 1, py); break;
@@ -1696,7 +1701,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ================= plantações =================
   function cropCanvas(c) {
     const d = CROPS[c.id];
-    const st = c.dead ? 'dead' : c.g >= d.days && !(c.rg > 0) ? 'ripe' : c.g / d.days < 0.25 && !c.harvested ? 's0' : c.g / d.days < 0.6 && !c.harvested ? 's1' : 's2';
+    const dd = cropDays(c), st = c.dead ? 'dead' : c.g >= dd && !(c.rg > 0) ? 'ripe' : c.g / dd < 0.25 && !c.harvested ? 's0' : c.g / dd < 0.6 && !c.harvested ? 's1' : 's2';
     return bake(`crop|${c.id}|${st}|${season()}`, 18, 30, () => {
       ctx.translate(1, 12);
       const L = d.leaf, Ld = shade(L, -0.35), Ll = shade(L, 0.3), P = d.col, Pd = shade(P, -0.3), Pl = shade(P, 0.4);
@@ -2601,7 +2606,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv)) return;
+    if (paintTool(id, lv) || paintIcon3(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
@@ -3175,7 +3180,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     switch (sp.kind) {
       case 'bin': {
         const s = held();
-        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push({ id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name} na caixa (${fmt(sellPrice(s.id))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
+        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
         else openShipInfo();
         return true;
       }
@@ -3202,7 +3207,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
     if (!tl) return false;
     const o = tl.o, c = tl.c;
-    if (c && !c.dead) { const d = CROPS[c.id]; if (c.g >= d.days && !(c.rg > 0)) { harvest(k, tl); return true; } }
+    if (c && !c.dead) { if (c.g >= cropDays(c) && !(c.rg > 0)) { harvest(k, tl); return true; } }
     if (o) {
       if (o.k === 'forage') { if (addItem(o.id, 1)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
       if (o.k === 'bau') { openChest(k); return true; }
@@ -3216,7 +3221,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function harvest(k, tl) {
     const c = tl.c, d = CROPS[c.id];
     let n = d.n || 1; if (d.extra && Math.random() < d.extra) n++;
-    if (!addItem(d.mix ? pick(FORAGE.winter) : c.id, n)) return;
+    const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
+    // a primeira sai com a qualidade sorteada; as extras são normais
+    if (!addItem(id, 1, false, q)) return;
+    if (n > 1) addItem(id, n - 1, true);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
     const nt = clone(tl);
@@ -3231,10 +3239,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       setTile(k, { ...clone(tl), o: o.k === 'colmeia' ? { k: o.k, in: 'flor', out: 'mel', ready: gm() + 4 * 1440 } : { k: o.k } });
       return true;
     }
+    if (o.k === 'pararaios') { toast(item(o.k).desc); return true; }
     if (o.in) { const mins = o.ready - gm(); toast(`${item(o.out).name}: fica pronto em ${mins >= 60 ? Math.ceil(mins / 60) + ' h' : mins + ' min'}.`); return true; }
     const s = held();
     if (!s) { toast(item(o.k).desc); return true; }
-    let out = null, time = 0, n = 1;
+    let out = null, time = 0, n = 1, seedN = 0;
+    if (o.k === 'fazedorsementes') { const c = CROPS[s.id]; if (c && !c.mix && ITEMS['s_' + s.id]) { out = 's_' + s.id; time = 60; seedN = rint(1, 3); } }
     if (o.k === 'pote') { if (isFruit(s.id)) out = 'geleia:' + s.id; else if (isVeg(s.id)) out = 'conserva:' + s.id; time = 1200; }
     if (o.k === 'barril' && item(s.id).kind === 'mel') { out = 'hidromel'; time = 600; }
     else if (o.k === 'barril') { if (isFruit(s.id)) { out = 'vinho:' + s.id; time = 2400; } else if (isVeg(s.id)) { out = 'suco:' + s.id; time = 1200; } }
@@ -3246,10 +3256,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (bar) { if (s.n < 5 || count('carvao') < 1) { toast('A fornalha precisa de 5 minérios e 1 carvão.'); return true; } removeItem(s.id, 5); removeItem('carvao', 1); out = bar[0]; time = bar[1]; n = 0; }
       else { toast('Coloque minério (com carvão na mochila).'); return true; }
     }
-    if (!out) { toast(o.k === 'pote' || o.k === 'barril' ? 'Coloque uma fruta ou um legume.' : 'Isso não serve aqui.'); sfx.no(); return true; }
+    if (!out) { toast(o.k === 'pote' || o.k === 'barril' ? 'Coloque uma fruta ou um legume.' : o.k === 'fazedorsementes' ? 'Coloque uma colheita (fruta, legume, flor ou grão).' : 'Isso não serve aqui.'); sfx.no(); return true; }
     if (n) useHeld(1);
     item(out);
-    setTile(k, { ...clone(tl), o: { k: o.k, in: s.id, out, ready: gm() + time, outN: outN > 1 && simple ? outN : undefined } });
+    setTile(k, { ...clone(tl), o: { k: o.k, in: s.id, out, ready: gm() + time, outN: seedN || (outN > 1 && simple ? outN : undefined) } });
     toast(`${item(out).name} vai ficar pronto em ${time >= 60 ? Math.round(time / 60) + ' h' : time + ' min'}.`);
     sfx.pop();
     return true;
@@ -3301,6 +3311,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         sfx.no(); return;
       }
       if (s.id === 'pick') {
+        if (o && o.k === 'meteorito') { breakMeteor(k, tl, o, power); return; }
         if (o && o.k === 'rock') { const hp = o.hp - power; sfx.pick(); if (hp <= 0) { setTile(k, null); addItem('pedra', rint(1, 3)); gainXP('mining', 1); } else setTile(k, { ...tl, o: { ...o, hp } }); return; }
         if (o && o.k === 'twig') { setTile(k, null); addItem('madeira', 1); return; }
         if (o && PLACED.includes(o.k)) { pickUpPlaced(k, tl, o); return; }
@@ -3310,13 +3321,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       }
       return;
     }
+    if (it.cat === 'fert') { useFert(m, k, s); return; }
     if (it.cat === 'seed') {
       if (!farmable(m)) { toast('Plante as sementes na chacrinha ou na estufa.'); return; }
       const tl = tile(k), c = CROPS[it.crop];
       if (!tl || !tl.s) { toast('Prepare a terra com a enxada primeiro.'); sfx.no(); return; }
       if (tl.c) { sfx.no(); return; }
       if (!m.gh && !c.seasons.includes(season())) { toast(`${c.name} não cresce nesta estação. Na estufa cresce o ano todo!`); sfx.no(); return; }
-      setTile(k, { ...tl, c: { id: it.crop, g: 0 } }); useHeld(1); sfx.hoe();
+      setTile(k, { ...tl, c: plantedCrop(tl, it.crop) }); useHeld(1); sfx.hoe();
       return;
     }
     if (it.cat === 'sapling') {
@@ -3342,7 +3354,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const tl = tile(k);
       if (solidAt(m, tx, ty) || (tl && (tl.o || tl.c)) || m.spots[k0] || [G.WATER, G.FOREST].includes(m.at(tx, ty))) { toast('Não dá para colocar aqui.'); sfx.no(); return; }
       if (s.id === 'caminho') { if (tl && tl.s) { toast('Desfaça a terra arada antes.'); return; } setTile(k, { f: 1 }); useHeld(1); sfx.hoe(); return; }
-      if (s.id !== 'irrigador' && tl && tl.s) { toast('Não dá para colocar em terra arada.'); return; }
+      if (!s.id.startsWith('irrigador') && tl && tl.s) { toast('Não dá para colocar em terra arada.'); return; }
       const o = { k: s.id };
       if (s.id === 'bau') o.items = Array(36).fill(null);
       if (s.id === 'colmeia') Object.assign(o, { in: 'flor', out: 'mel', ready: gm() + 4 * 1440 });
@@ -3357,7 +3369,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (o.k === 'bau' && o.items && o.items.some(Boolean)) { toast('Esvazie o baú antes de recolher.'); return; }
     if (o.in && o.ready > gm()) { toast('Espere terminar antes de recolher.'); return; }
     if (o.in) addItem(o.out, 1);
-    addItem(o.k, 1); setTile(k, tl.s ? { s: 1, w: tl.w } : null); sfx.pick();
+    addItem(o.k, 1); setTile(k, tl.s ? { s: 1, w: tl.w, ...(tl.fe ? { fe: tl.fe } : {}) } : null); sfx.pick();
   }
   function scythe(m, tx, ty) {
     let hit = false;
@@ -3369,7 +3381,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (tl.o && tl.o.k === 'weed') { setTile(k, null); if (Math.random() < 0.6) addItem('fibra', 1, true); hit = true; }
       else if (tl.o && tl.o.k === 'grass') { setTile(k, null); hit = true; if ((W.farm.hay || 0) < siloCap() && Math.random() < 0.6) { setFarmVal('hay', (W.farm.hay || 0) + 1); pickupNote('feno', 1); } }
       else if (tl.c && tl.c.dead) { setTile(k, { ...tl, c: undefined }); hit = true; }
-      else if (tl.c) { const d = CROPS[tl.c.id]; if (tl.c.g >= d.days && !(tl.c.rg > 0)) { harvest(k, tl); hit = true; } }
+      else if (tl.c) { if (tl.c.g >= cropDays(tl.c) && !(tl.c.rg > 0)) { harvest(k, tl); hit = true; } }
     }
     if (hit) sfx.chop(); else noise(0.1, 0.05, 2000);
     if (P.map === 'town') { /* mato da vila é decorativo */ }
@@ -3377,13 +3389,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function openEat() {
     const s = held(), it = item(s.id);
     const verb = it.drink ? 'Tomar' : 'Comer';
-    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
+    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${Math.round(it.energy * Q_ENERGY[s.q || 0])}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
       <div class="row"><button class="btn g" data-a="eat" type="button">${verb}</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
   }
   function eatHeld() {
     const s = held(); if (!s) return;
     const it = item(s.id);
-    P.energy = Math.min(P.maxEnergy, P.energy + it.energy); P.hp = Math.min(100, P.hp + Math.round(it.energy * 0.45));
+    const en = Math.round(it.energy * Q_ENERGY[s.q || 0]);
+    P.energy = Math.min(P.maxEnergy, P.energy + en); P.hp = Math.min(100, P.hp + Math.round(en * 0.45));
     afterEat(s.id); useHeld(1); sfx.eat(); closePanel();
   }
 
@@ -3529,11 +3542,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (Math.random() < dt * (0.6 + f.diff / 40)) f.target = clamp(f.fy + rnd(-1, 1) * (20 + f.diff), 6, 112);
     f.fv += ((f.target - f.fy) * (1 + f.diff / 30) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
+    if (inside) f.entered = true; else if (f.entered) f.miss = true;
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
-      if (addItem(f.id, 1)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3)); sfx.catch(); toast(`Você pescou: ${FISH[f.id].name}!`, 'big', f.id); }
+      const fq = !f.miss ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 ? 1 : 0;
+      if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
   }
@@ -3564,7 +3579,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const rainToday = W.meta.rain && !W.meta.snow;
       const t = clone(W.farm.t), m = MAPS.farm;
       const scare = Object.entries(t).filter(([k, v]) => v && v.o && v.o.k === 'espantalho' && !k.startsWith('g:')).map(([k]) => k.split(',').map(Number));
-      const sprinklers = Object.entries(t).filter(([, v]) => v && v.o && v.o.k === 'irrigador').map(([k]) => { const pre = k.startsWith('g:') ? 'g:' : ''; return [pre, ...k.slice(pre.length).split(',').map(Number)]; });
+      const sprinklers = Object.entries(t).filter(([, v]) => v && v.o && SPRINKLER_R[v.o.k]).map(([k, v]) => { const pre = k.startsWith('g:') ? 'g:' : ''; return [pre, ...k.slice(pre.length).split(',').map(Number), v.o.k]; });
       let crows = 0;
       for (const [k, v] of Object.entries(t)) {
         if (!v) { delete t[k]; continue; }
@@ -3574,14 +3589,15 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           if (!d) { delete v.c; continue; }
           if (!gh && newS !== oldS && !d.seasons.includes(newS)) { v.c.dead = true; continue; }
           if (v.w === day || (rainToday && !gh)) {
-            if (v.c.rg > 0) v.c.rg--; else if (v.c.g < d.days) v.c.g++;
+            if (v.c.rg > 0) v.c.rg--; else if (v.c.g < cropDays(v.c)) v.c.g++;
           }
           if (gh) continue;
           const [x, y] = k.split(',').map(Number);
           if (!scare.some(([sx, sy]) => Math.hypot(sx - x, sy - y) <= 8) && Math.random() < 0.012) { delete v.c; crows++; }
-        } else if (!gh && v.s && !v.c && !v.o && v.w !== day && !rainToday && Math.random() < (oldS === 'summer' ? 0.2 : 0.12)) { delete v.s; delete v.w; if (!v.f) delete t[k]; }
+        } else if (!gh && v.s && !v.c && !v.o && v.w !== day && !rainToday && Math.random() < (oldS === 'summer' ? 0.2 : 0.12)) { delete v.s; delete v.w; delete v.fe; if (!v.f) delete t[k]; }
       }
-      for (const [pre, x, y] of sprinklers) for (const [dx, dy] of DIRS) { const k = pre + (x + dx) + ',' + (y + dy); if (t[k] && t[k].s) t[k].w = nd; }
+      for (const [pre, x, y, kind] of sprinklers) for (const [dx, dy] of sprinklerTiles(kind)) { const k = pre + (x + dx) + ',' + (y + dy); if (t[k] && t[k].s) t[k].w = nd; }
+      const night = nightEvents(t, day, nd, newS);
       // mato e coletáveis novos
       const r = srand(nd * 977);
       const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19; };
@@ -3591,11 +3607,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (newS === 'winter' && oldS !== 'winter') for (const [k, v] of Object.entries(t)) if (v && v.c && !k.startsWith('g:') && !CROPS[v.c.id].mix) v.c.dead = true;
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
-      const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
+      const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
       await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null });
-      deepMerge(W.meta, meta);
+      deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};
       for (const [k, v] of Object.entries(W.meta.taken || {})) if (v && +k.split(':')[0] >= nd - 1) taken[k] = v;
@@ -3631,8 +3647,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ${passed ? '<p style="text-align:center">Você desmaiou de cansaço e acordou em casa com menos energia.</p>' : ''}
       <h3>Caixa de envio</h3>
       ${lines.length ? `<div class="list">${lines.map(l => `<div class="item"><span class="nm">${l}</span></div>`).join('')}</div><p class="big">+${fmt(total)} ₲</p>` : '<p>Nada foi enviado ontem.</p>'}
+      ${nightLines()}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
-      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
+      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
       <div class="row"><button class="btn g" data-a="close" type="button">Bom dia!</button></div>`);
   }
   // ================= interface =================
@@ -3665,7 +3682,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     input.jx = input.jy = 0;
   }
   function closePanel() { panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
-  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt=""><span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
+  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
     $('hotbar').innerHTML = P.inv.slice(0, 10).map((s, i) => slotHTML(s, i, i === P.sel, 'hot')).join('');
@@ -3694,7 +3711,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const min = nowMin(), h = Math.floor(min / 60) % 24, mm = String(min % 60).padStart(2, '0');
     const s = season();
     $('cDay').textContent = `${weekday()} ${dom()} · Ano ${year()}`;
-    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${W.meta.rain ? (W.meta.snow ? 'neve' : 'chuva') : 'sol'}`;
+    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${W.meta.rain ? (W.meta.snow ? 'neve' : W.meta.storm ? 'tempestade' : 'chuva') : 'sol'}`;
     $('cTime').textContent = `${h}:${mm}`;
     $('cGold').textContent = `${fmt(gold())} ₲`;
     $('enFill').style.height = clamp(P.energy / P.maxEnergy, 0, 1) * 100 + '%';
@@ -3729,7 +3746,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
       body = `<p style="text-align:center;font-size:13px">A primeira fileira é a barra de ferramentas. Toque num item e depois em outro lugar para trocar.</p>
         <div class="grid">${P.inv.map((s, i) => slotHTML(s, i, i === invSel)).join('')}</div>
-        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${it.energy} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}` : 'Toque num item para ver o que é.'}</div>
+        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}` : 'Toque num item para ver o que é.'}</div>
         ${s && it.cat !== 'tool' ? `<div class="row">${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
         <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button></div>`;
     } else if (invTab === 'craft') {
@@ -3794,7 +3811,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
-      case 'pedro': return [...SHOP_PEDRO(season()), ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
+      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return SHOP_CLAUDIO;
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
@@ -3847,8 +3864,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     } else if (shopTab === 'recipes') {
       body = `<div class="list">${COOK.filter(r => r.learn === 'lia').map(r => row(iconURL(r.id), 'Receita: ' + r.name, Object.entries(r.need).map(([k, n]) => `${n} ${needName(k)}`).join(', '), P.recipes.includes(r.id) ? '<small>Já sabe</small>' : `<span class="price">${fmt(r.price)} ₲</span><button class="btn g" data-a="brec" data-id="${r.id}" type="button" ${gold() >= r.price ? '' : 'disabled'}>Comprar</button>`)).join('')}</div>`;
     } else {
-      const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id) > 0);
-      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name} ×${s.n}<small>${fmt(sellPrice(s.id))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
+      const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id, s.q) > 0);
+      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}<small>${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
     }
     openPanel(`<h2>${info.title}</h2><p style="text-align:center;font-style:italic">${info.greet()}</p><div class="row"><button class="btn" data-a="talkTo" data-id="${who}" type="button">Conversar com ${NPCS[who].name}</button></div>${tabs}${body}<p style="text-align:center"><b>${fmt(gold())} ₲</b></p>`, 'shop', who);
   }
@@ -3866,12 +3883,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const items = tl.o.items || Array(36).fill(null);
     if (toChest) {
       const s = P.inv[i]; if (!s) return;
-      let j = items.findIndex(x => x && x.id === s.id && stackable(s.id));
+      let j = items.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0) && stackable(s.id));
       if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('O baú está cheio.'); return; } items[j] = s; }
       P.inv[i] = null;
     } else {
       const s = items[i]; if (!s) return;
-      const free = P.inv.findIndex(x => !x), same = P.inv.findIndex(x => x && x.id === s.id && stackable(s.id));
+      const free = P.inv.findIndex(x => !x), same = P.inv.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0) && stackable(s.id));
       if (same >= 0) P.inv[same].n += s.n; else if (free >= 0) P.inv[free] = s; else { toast('A mochila está cheia.'); return; }
       items[i] = null;
     }
@@ -3880,9 +3897,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ---------- outros painéis ----------
   function openSleep() { openPanel(`<h2>Dormir?</h2><p style="text-align:center">${online && peerPlayers().filter(p => !p.me).length ? 'O dia vira quando todo mundo que está jogando for dormir.' : 'Dormir encerra o dia e recupera a sua energia.'}</p><div class="row"><button class="btn g" data-a="sleep" type="button">Dormir</button><button class="btn" data-a="close" type="button">Ainda não</button></div>`, 'sleep'); }
   function openShipInfo() {
-    const tot = P.ship.reduce((a, s) => a + (s.p || sellPrice(s.id)) * s.n, 0);
+    const tot = P.ship.reduce((a, s) => a + (s.p || sellPrice(s.id, s.q)) * s.n, 0);
     openPanel(`<h2>Caixa de envio</h2><p>Segure um item na barra e toque em Usar na caixa para enviar a pilha inteira. O pagamento chega de manhã.</p>
-      ${P.ship.length ? `<div class="list">${P.ship.map((s, i) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${s.n}× ${item(s.id).name}<small>${fmt((s.p || sellPrice(s.id)) * s.n)} ₲</small></span><button class="btn" data-a="unship" data-i="${i}" type="button">Tirar</button></div>`).join('')}</div><p class="big">${fmt(tot)} ₲ amanhã</p>` : '<p style="text-align:center">A caixa está vazia.</p>'}`, 'ship');
+      ${P.ship.length ? `<div class="list">${P.ship.map((s, i) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${s.n}× ${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''}<small>${fmt((s.p || sellPrice(s.id, s.q)) * s.n)} ₲</small></span><button class="btn" data-a="unship" data-i="${i}" type="button">Tirar</button></div>`).join('')}</div><p class="big">${fmt(tot)} ₲ amanhã</p>` : '<p style="text-align:center">A caixa está vazia.</p>'}`, 'ship');
   }
   function openElevator() {
     const max = W.meta.mineMax || 0, floors = [];
@@ -3951,7 +3968,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       }
       case 'sell': {
         const i = +b.dataset.i, n = +b.dataset.n, s = P.inv[i];
-        if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
+        if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id, s.q); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
         renderShop(panelArg); break;
       }
       case 'upgrade': {
@@ -3962,7 +3979,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'chestIn': chestMove(panelArg, +b.dataset.i, true); break;
       case 'chestOut': chestMove(panelArg, +b.dataset.i, false); break;
       case 'sleep': P.sleep = true; dirty(); savePlayer(); closePanel(); toast(online && peerPlayers().filter(p => !p.me && !p.sleep).length ? 'Esperando a outra pessoa ir dormir...' : 'Boa noite!'); if (!online || !peerPlayers().some(p => !p.me && !p.sleep)) setTimeout(() => checkDayEnd(true), 600); break;
-      case 'unship': { const s = P.ship.splice(+b.dataset.i, 1)[0]; if (s) { addItem(s.id, s.n, true); recordSold(s.id, -s.n); } openShipInfo(); break; }
+      case 'unship': { const s = P.ship.splice(+b.dataset.i, 1)[0]; if (s) { addItem(s.id, s.n, true, s.q || 0); recordSold(s.id, -s.n); } openShipInfo(); break; }
       case 'floor': closePanel(); goMap('mine' + b.dataset.f, 0, 0, 1); break;
       case 'eat': eatHeld(); break;
       case 'look': look[b.dataset.k] = +b.dataset.v; if (b.dataset.k === 'shirt') { delete look.shirtC; delete look.plaid; delete look.jacket; } delete look.preset; { const nm = ($('nm') || {}).value; openStart(nm); } break;
@@ -4247,7 +4264,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (s && (s.id === 'balde' || s.id === 'tesoura')) {
       if (def.tool !== s.id) { toast(`${def.name} não precisa ${s.id === 'balde' ? 'do balde' : 'da tesoura'}.`); return; }
       if (!a.prod) { toast(`${a.name} ainda não tem ${def.tool === 'balde' ? 'leite' : 'lã'} pronta.`); return; }
-      if (!addItem(a.prod, 1)) return;
+      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; }
       swing(s.id, 0); sfx.pop(); gainXP('farming', 5);
       setFarm('a', id, { ...a, prod: null, fr: Math.min(1000, (a.fr || 0) + 5) });
       return;
@@ -4307,7 +4324,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const b = farmB()[m.bid]; if (!b || !b.items) return;
     const k = Math.floor(P.x / T) + ',' + Math.floor((P.y - 3) / T), id = b.items[k];
     if (!id) return;
-    if (!addItem(id, 1)) return;
+    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; }
     const items = { ...b.items }; delete items[k];
     setFarm('b', m.bid, { ...b, items });
     gainXP('farming', 5); sfx.pop();
@@ -4446,7 +4463,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (r.gifts.includes(d)) { openTalk(id, 'Você já me deu um presente hoje. Obrigado!'); return; }
     if (giftsThisWeek(id) >= 2 && !bd) { openTalk(id, 'Você já me deu dois presentes esta semana. Assim eu fico sem graça!'); return; }
     const tst = taste(id, s.id), base = { love: 80, like: 45, neutral: 20, dislike: -20, hate: -40 }[tst];
-    r.pts = clamp(r.pts + base * (bd ? 8 : 1), 0, 2500); r.gifts.push(d); r.gifts = r.gifts.filter(x => weekOf(x) >= weekOf(d) - 1);
+    r.pts = clamp(r.pts + Math.round(base * Q_GIFT[s.q || 0]) * (bd ? 8 : 1), 0, 2500); r.gifts.push(d); r.gifts = r.gifts.filter(x => weekOf(x) >= weekOf(d) - 1);
     useHeld(1); dirty(); sfx[tst === 'love' || tst === 'like' ? 'coin' : 'no']();
     openTalk(id, (bd && (tst === 'love' || tst === 'like') ? 'Um presente de aniversário! ' : '') + pick(GIFT_LINES[tst]));
   }
@@ -4549,12 +4566,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const items = fridge().map(s => (s ? { ...s } : null));
     if (toFridge) {
       const s = P.inv[i]; if (!s || !stackable(s.id)) return;
-      let j = items.findIndex(x => x && x.id === s.id);
-      if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('A geladeira está cheia.'); return; } items[j] = { id: s.id, n: s.n }; }
+      let j = items.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0));
+      if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('A geladeira está cheia.'); return; } items[j] = s.q ? { id: s.id, n: s.n, q: s.q } : { id: s.id, n: s.n }; }
       P.inv[i] = null;
     } else {
       const s = items[i]; if (!s) return;
-      if (addItem(s.id, s.n, true) < s.n) return;
+      if (addItem(s.id, s.n, true, s.q || 0) < s.n) return;
       items[i] = null;
     }
     setFarmVal('fridge', items); dirty(); renderHotbar(); renderFridge();
@@ -4657,11 +4674,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         if (an.kind === 'porco' && !outside) out = null;
         if (out) {
           an.last = nd;
-          if (def.tool) an.prod = out;
+          const oq = animalQuality(an);
+          if (def.tool) an.prod = withQ(out, oq);
           else {
             bb.items = bb.items || {};
             const im = buildAnimalHouse(an.b, bb), free = im.floorTiles.filter(([x, y]) => !bb.items[x + ',' + y]);
-            if (free.length) { const [x, y] = free[Math.floor(r() * free.length)]; bb.items[x + ',' + y] = out; }
+            if (free.length) { const [x, y] = free[Math.floor(r() * free.length)]; bb.items[x + ',' + y] = withQ(out, oq); }
           }
         }
       }
@@ -4723,7 +4741,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const s = animState(id, a, m.id), def = ANIMALS[a.kind];
       ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
     }
-    if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(id, x * T, y * T - 1); } }); } }
+    if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(splitQ(id)[0], x * T, y * T - 1); } }); } }
     for (const id of Object.keys(NPCS)) {
       const p = npcPos(id); if (!p || p.map !== m.id) continue;
       const q = W.meta.quest;
@@ -5125,6 +5143,199 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     return false;
   }
+
+  // ================= fazenda mais funda: qualidade, adubos, irrigadores, fazedor de sementes, para-raios e eventos da noite =================
+  // qualidade fica no próprio espaço da mochila (s.q: 0 normal, 1 prata, 2 ouro); o mesmo item com qualidades diferentes não se mistura
+  const Q_NAME = ['', 'prata', 'ouro'], Q_PRICE = [1, 1.25, 1.5], Q_ENERGY = [1, 1.4, 1.8], Q_GIFT = [1, 1.1, 1.25];
+  // produtos de animais guardados no chão ou no animal levam a qualidade junto: "ovo#2"
+  const splitQ = v => { const [id, q] = String(v).split('#'); return [id, +q || 0]; };
+  const withQ = (id, q) => (q ? id + '#' + q : id);
+  // chance de prata e ouro na colheita: nível de Lavoura e adubo na terra
+  function cropQuality(tl) {
+    const lvl = skillLv(P.skills.farming), fq = tl && tl.fe === 'adubobom' ? 2 : tl && tl.fe === 'adubo' ? 1 : 0;
+    const gold = 0.01 + 0.2 * (lvl / 10) + 0.2 * fq * ((lvl + 2) / 12), silver = Math.min(0.75, gold * 2), r = Math.random();
+    return r < gold ? 2 : r < silver ? 1 : 0;
+  }
+  // animais felizes dão produtos melhores
+  function animalQuality(a) {
+    const f = (a.fr || 0) / 1000, r = Math.random();
+    return r < f * 0.33 ? 2 : r < f * 0.75 ? 1 : 0;
+  }
+  // dias até a planta ficar pronta (o acelerador encurta em 25%)
+  const cropDays = c => c.d || CROPS[c.id].days;
+
+  Object.assign(ITEMS, {
+    adubo: { name: 'Adubo básico', cat: 'fert', sell: 2, desc: 'Na terra arada antes de plantar: mais chance de colheita prata e ouro.' },
+    adubobom: { name: 'Adubo de qualidade', cat: 'fert', sell: 10, desc: 'Na terra arada antes de plantar: muito mais chance de colheita prata e ouro.' },
+    acelerador: { name: 'Acelerador de crescimento', cat: 'fert', sell: 20, desc: 'Na terra arada antes de plantar: a planta fica pronta 25% mais rápido.' },
+    irrigadorbom: { name: 'Irrigador de qualidade', cat: 'place', desc: 'Molha os 8 quadrados em volta toda manhã.' },
+    irrigadorouro: { name: 'Irrigador de ouro', cat: 'place', desc: 'Molha 24 quadrados em volta (5×5) toda manhã.' },
+    fazedorsementes: { name: 'Fazedor de sementes', cat: 'place', desc: 'Coloque uma colheita: em 1 hora vira de 1 a 3 sementes dela.' },
+    pararaios: { name: 'Para-raios', cat: 'place', desc: 'Nas noites de tempestade, guarda a energia de um raio numa bateria.' },
+    bateria: { name: 'Bateria', cat: 'res', sell: 500, desc: 'Energia de um raio. Serve para fazer o irrigador de ouro.' },
+  });
+  RECIPES.push(
+    { id: 'adubo', need: { seiva: 2 }, skill: ['farming', 1] },
+    { id: 'acelerador', need: { seiva: 1, ameijoa: 1 }, skill: ['farming', 3] },
+    { id: 'pararaios', need: { barraferro: 1, quartzo: 1 }, skill: ['farming', 4] },
+    { id: 'fazedorsementes', need: { madeira: 25, carvao: 10, barraouro: 1 }, skill: ['farming', 5] },
+    { id: 'irrigadorbom', need: { barraferro: 1, barraouro: 1 }, skill: ['farming', 6] },
+    { id: 'adubobom', need: { seiva: 4, fibra: 5 }, skill: ['farming', 7] },
+    { id: 'irrigadorouro', need: { barraouro: 2, bateria: 1 }, skill: ['farming', 9] },
+  );
+  const FARM_SHOP = [{ id: 'adubo', price: 100 }, { id: 'acelerador', price: 100 }, { id: 'adubobom', price: 150 }];
+  MACHINES.push('fazedorsementes', 'pararaios');
+  PLACED.push('fazedorsementes', 'pararaios', 'irrigadorbom', 'irrigadorouro');
+  for (const k of ['fazedorsementes', 'pararaios', 'irrigadorbom', 'irrigadorouro', 'meteorito']) SOLID_OBJ.add(k);
+  const SPRINKLER_R = { irrigador: 'cross', irrigadorbom: 1, irrigadorouro: 2 };
+  // quadrados que cada irrigador molha
+  function sprinklerTiles(kind) {
+    const r = SPRINKLER_R[kind];
+    if (r === 'cross') return DIRS;
+    const out = []; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx || dy) out.push([dx, dy]);
+    return out;
+  }
+
+  // adubo: na terra arada, antes de a planta começar a crescer
+  function useFert(m, k, s) {
+    if (!farmable(m)) { toast('Use o adubo na terra arada da chacrinha ou da estufa.'); return; }
+    const tl = tile(k);
+    if (!tl || !tl.s) { toast('Prepare a terra com a enxada antes de pôr adubo.'); sfx.no(); return; }
+    if (tl.fe) { toast('Essa terra já tem adubo.'); sfx.no(); return; }
+    if (tl.c && (tl.c.g > 0 || tl.c.harvested)) { toast('O adubo vai na terra antes de a planta começar a crescer.'); sfx.no(); return; }
+    const nt = { ...tl, fe: s.id };
+    if (tl.c && s.id === 'acelerador') nt.c = { ...tl.c, d: Math.max(1, Math.round(CROPS[tl.c.id].days * 0.75)) };
+    setTile(k, nt); useHeld(1); sfx.hoe();
+  }
+  // ao plantar numa terra com acelerador, a planta já nasce sabendo que cresce mais rápido
+  const plantedCrop = (tl, id) => (tl.fe === 'acelerador' ? { id, g: 0, d: Math.max(1, Math.round(CROPS[id].days * 0.75)) } : { id, g: 0 });
+
+  // ================= eventos da noite (chamado na virada do dia, com a fazenda nova em t) =================
+  function nightEvents(t, day, nd, newS) {
+    const night = {};
+    // raios da tempestade carregam os para-raios
+    if (W.meta.storm) {
+      let n = 0;
+      for (const [k, v] of Object.entries(t)) if (v && v.o && v.o.k === 'pararaios' && !v.o.in && !k.startsWith('g:')) { v.o = { k: 'pararaios', in: 'raio', out: 'bateria', ready: 0 }; n++; }
+      if (n) night.raio = n;
+    }
+    const r = Math.random(), m = MAPS.farm;
+    if (newS !== 'winter' && r < 0.06) {
+      // a fada faz crescer na hora as plantas em volta de uma delas
+      const growing = Object.entries(t).filter(([k, v]) => !k.startsWith('g:') && v && v.c && !v.c.dead && !(v.c.g >= cropDays(v.c)));
+      if (growing.length) {
+        const [ck] = growing[Math.floor(Math.random() * growing.length)], [cx, cy] = ck.split(',').map(Number);
+        let n = 0;
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const v = t[(cx + dx) + ',' + (cy + dy)]; if (v && v.c && !v.c.dead && v.c.g < cropDays(v.c)) { v.c.g = cropDays(v.c); delete v.c.rg; n++; } }
+        if (n) night.fada = n;
+      }
+    } else if (r < 0.1) {
+      // cai um meteorito num lugar livre da chacrinha
+      for (let i = 0; i < 40; i++) {
+        const x = 4 + Math.floor(Math.random() * (m.w - 8)), y = 6 + Math.floor(Math.random() * (m.h - 10)), k = x + ',' + y;
+        if (t[k] || m.solid[y * m.w + x] || ![G.GRASS, G.FLOWERS, G.DIRT].includes(m.at(x, y)) || bGrid().has(k) || m.spots[k] || (x >= 5 && x <= 16 && y <= 12)) continue;
+        t[k] = { o: { k: 'meteorito', hp: 12 } }; night.meteoro = k; break;
+      }
+    }
+    return night;
+  }
+  function nightLines() {
+    const n = W.meta.night || {}, out = [];
+    if (n.fada) out.push(`✨ Uma fada visitou a chacrinha esta noite e fez ${n.fada} planta${n.fada > 1 ? 's' : ''} crescer${n.fada > 1 ? 'em' : ''} na hora!`);
+    if (n.meteoro) out.push('☄️ Um meteorito caiu na chacrinha esta noite! Quebre com a picareta para pegar os minérios.');
+    if (n.raio) out.push(`⚡ Os raios da tempestade carregaram ${n.raio} para-raios. Tem bateria esperando!`);
+    return out.map(l => `<p class="big" style="text-align:center">${l}</p>`).join('');
+  }
+  function breakMeteor(k, tl, o, power) {
+    const hp = o.hp - power; sfx.pick();
+    if (hp > 0) { setTile(k, { ...tl, o: { ...o, hp, shake: performance.now() + 250 } }); return; }
+    setTile(k, null);
+    addItem('ouro', rint(4, 7)); addItem('ferro', rint(5, 8)); addItem('pedra', rint(8, 12));
+    if (Math.random() < 0.5) addItem('geodomagma', 1);
+    if (Math.random() < 0.15) addItem('diamante', 1);
+    gainXP('mining', 25); toast('Você quebrou o meteorito!', 'big');
+  }
+
+  // ================= desenhos =================
+  function drawObj3(o, px, py) {
+    const t = performance.now() / 1000;
+    switch (o.k) {
+      case 'irrigadorbom': case 'irrigadorouro': {
+        const gold = o.k === 'irrigadorouro', a = gold ? ['#8a5a0a', '#d8a020', '#f8d860'] : ['#4a5a6a', '#8aa0b4', '#cfdde8'];
+        shadowAt(px + 8, py + 14, 6, 2);
+        R(px + 3, py + 9, 10, 6, a[0]); R(px + 4, py + 9, 8, 5, a[1]); R(px + 5, py + 10, 3, 1, a[2]);
+        R(px + 7, py + 3, 2, 7, a[0]); R(px + 7, py + 3, 1, 6, a[1]);
+        R(px + 4, py + 2, 8, 2, a[1]); R(px + 4, py + 2, 8, 1, a[2]); R(px + (gold ? 2 : 3), py + 4, gold ? 12 : 10, 1, a[0]);
+        for (const dx of [3, 12]) R(px + dx, py + 1, 1, 1, '#a8dcf8');
+        return true;
+      }
+      case 'fazedorsementes': {
+        const busy = o.in && o.ready > gm(), ready = o.in && o.ready <= gm();
+        shadowAt(px + 8, py + 15, 7, 2);
+        R(px + 2, py + 3, 12, 12, '#7a4a22'); R(px + 3, py + 4, 10, 10, '#a86a32'); R(px + 3, py + 4, 10, 2, '#c88a4a');
+        R(px + 5, py, 6, 4, '#5a5a62'); R(px + 6, py, 4, 1, '#9a9aa2');
+        R(px + 5, py + 8, 6, 4, '#3a2412'); R(px + 6, py + 9, 4, 2, busy ? '#f4c840' : ready ? '#7ad84a' : '#5a3a1a');
+        for (const [x, y] of [[5, 6], [9, 6], [11, 12]]) R(px + x, py + y, 1, 1, '#e8c87a');
+        if (busy && Math.sin(t * 8) > 0) R(px + 7, py - 2, 2, 2, '#c8a86a');
+        if (ready) readyBubble(px, py, o.out);
+        return true;
+      }
+      case 'pararaios': {
+        const ready = o.in && o.ready <= gm();
+        shadowAt(px + 8, py + 15, 5, 2);
+        R(px + 5, py + 11, 6, 4, '#5a5a62'); R(px + 5, py + 11, 6, 1, '#8a8a92');
+        R(px + 7, py - 8, 2, 20, '#8a8a92'); R(px + 7, py - 8, 1, 20, '#c8c8d0');
+        R(px + 6, py - 10, 4, 2, '#f4c840'); R(px + 7, py - 12, 2, 2, '#f8e070');
+        if (ready) { if (Math.sin(t * 10) > 0) { R(px + 4, py - 6, 1, 3, '#fff6a0'); R(px + 11, py - 2, 1, 3, '#fff6a0'); } readyBubble(px, py - 8, 'bateria'); }
+        return true;
+      }
+      case 'meteorito': {
+        const sh = o.shake > performance.now() ? Math.round(Math.sin(t * 60)) : 0;
+        shadowAt(px + 8, py + 15, 9, 3);
+        blit(bake('meteorito', 22, 20, () => {
+          oval(11, 11, 10, 8, '#3a2e3e'); oval(10, 10, 8.5, 6.5, '#5a4a5e'); oval(8, 8, 4, 2.6, '#7a6a80');
+          for (const [x, y, w] of [[5, 13, 4], [12, 6, 3], [14, 12, 4], [9, 10, 2]]) { R(x, y, w, 1, '#ff7a2a'); R(x + 1, y, Math.max(1, w - 2), 1, '#ffd060'); }
+          for (const [x, y] of [[4, 8], [15, 9], [11, 15]]) R(x, y, 2, 2, '#2a2030');
+        }), px - 3 + sh, py - 5);
+        if (Math.sin(t * 3) > 0.6) R(px + 9, py + 2, 1, 1, '#ffe080');
+        return true;
+      }
+    }
+    return false;
+  }
+  // pontinhos de adubo na terra arada
+  function drawFert(fe, px, py) {
+    const c = fe === 'adubobom' ? '#7ab8f0' : fe === 'acelerador' ? '#9ae86a' : '#e8d8a0';
+    for (const [x, y] of [[3, 3], [11, 5], [6, 10], [12, 12], [2, 12]]) R(px + x, py + y, 1, 1, c);
+  }
+  // relâmpagos nas tempestades (só lá fora)
+  let flashT = 0;
+  function drawStorm(dt) {
+    if (!W.meta.storm || W.meta.snow) return;
+    flashT -= dt;
+    if (flashT < -2 && Math.random() < dt * 0.12) { flashT = 0.35; if (typeof sfx.thunder === 'function') sfx.thunder(); }
+    if (flashT > 0) { ctx.fillStyle = `rgba(255,255,240,${(flashT / 0.35 * 0.55).toFixed(2)})`; ctx.fillRect(0, 0, VW, VH); }
+  }
+  function paintIcon3(id) {
+    const sackC = { adubo: ['#c8a86a', '#8a6a3a', '#e8d8a0'], adubobom: ['#6a9ad8', '#3a5a9a', '#cfe4fa'], acelerador: ['#6ab84a', '#3a7a2a', '#d8f8b0'] }[id];
+    if (sackC) {
+      poly([[3, 15], [2, 7], [5, 4], [11, 4], [14, 7], [13, 15]], sackC[0]); R(5, 2, 6, 3, sackC[1]); R(6, 1, 4, 1, '#6a4a2a');
+      R(4, 5, 2, 9, shade(sackC[0], 0.2)); R(5, 8, 6, 5, sackC[2]);
+      if (id === 'acelerador') { R(7, 9, 2, 3, '#3a7a2a'); R(6, 10, 4, 1, '#3a7a2a'); }
+      else for (const [x, y] of [[6, 9], [9, 10], [7, 11]]) R(x, y, 1, 1, sackC[1]);
+      return true;
+    }
+    if (id === 'irrigadorbom' || id === 'irrigadorouro') {
+      const a = id === 'irrigadorouro' ? ['#8a5a0a', '#d8a020', '#f8d860'] : ['#4a5a6a', '#8aa0b4', '#cfdde8'];
+      R(3, 9, 10, 6, a[0]); R(4, 9, 8, 5, a[1]); R(5, 10, 3, 1, a[2]); R(7, 4, 2, 6, a[0]); R(3, 2, 10, 3, a[1]); R(3, 2, 10, 1, a[2]);
+      for (const x of [2, 13]) R(x, 1, 1, 1, '#4a90d8');
+      return true;
+    }
+    if (id === 'fazedorsementes') { R(2, 4, 12, 11, '#7a4a22'); R(3, 5, 10, 9, '#a86a32'); R(5, 1, 6, 4, '#5a5a62'); R(5, 9, 6, 4, '#3a2412'); R(6, 10, 4, 2, '#7ad84a'); return true; }
+    if (id === 'pararaios') { R(7, 2, 2, 12, '#8a8a92'); R(7, 2, 1, 12, '#c8c8d0'); R(6, 1, 4, 2, '#f4c840'); R(5, 13, 6, 2, '#5a5a62'); R(11, 4, 2, 1, '#fff6a0'); R(12, 5, 1, 2, '#fff6a0'); return true; }
+    if (id === 'bateria') { R(4, 3, 8, 12, '#3a3a42'); R(5, 4, 6, 10, '#5ab84a'); R(5, 4, 6, 3, '#7ad86a'); R(6, 1, 4, 2, '#9a9aa2'); R(7, 8, 2, 4, '#f8f070'); R(6, 9, 4, 1, '#f8f070'); return true; }
+    return false;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -5229,6 +5440,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           R(px, py, T, T, wet ? '#5a3a1e' : '#9a6a3a');
           for (let k = 2; k < T; k += 4) R(px + 1, py + k, T - 2, 1, wet ? '#4a2e16' : '#7a5028');
           if (s === 'winter' && !m.gh) R(px + 2, py + 2, 4, 2, '#ffffff88');
+          if (tl.fe) drawFert(tl.fe, px, py);
         }
         if (tl.c) ents.push({ y: py + 14, f: () => drawCrop(tl.c, px, py) });
         if (tl.o && !(placing && placing.tree === pre + x + ',' + y)) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
@@ -5302,6 +5514,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         if (W.meta.snow) ctx.fillRect(d.x * VW, d.y * VH, 2, 2); else ctx.fillRect(d.x * VW, d.y * VH, 1, 5);
       }
       ctx.fillStyle = 'rgba(40,60,90,0.12)'; ctx.fillRect(0, 0, VW, VH);
+      drawStorm(dt);
     }
   }
 

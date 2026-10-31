@@ -155,14 +155,14 @@
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
-  function addItem(id, n = 1, silent) {
+  function addItem(id, n = 1, silent, q = 0) {
     let left = n;
-    if (stackable(id)) for (const s of P.inv) if (s && s.id === id && s.n < 999) { const k = Math.min(left, 999 - s.n); s.n += k; left -= k; if (!left) break; }
+    if (stackable(id)) for (const s of P.inv) if (s && s.id === id && (s.q || 0) === q && s.n < 999) { const k = Math.min(left, 999 - s.n); s.n += k; left -= k; if (!left) break; }
     while (left > 0) {
       const i = P.inv.findIndex(s => !s);
       if (i < 0) break;
       const k = stackable(id) ? Math.min(left, 999) : 1;
-      P.inv[i] = { id, n: k, lv: 0 }; left -= k;
+      P.inv[i] = q ? { id, n: k, lv: 0, q } : { id, n: k, lv: 0 }; left -= k;
     }
     dirty(); renderHotbar();
     if (!silent && n - left > 0) pickupNote(id, n - left);
@@ -172,7 +172,8 @@
   const count = id => P.inv.reduce((a, s) => a + (s && s.id === id ? s.n : 0), 0);
   function removeItem(id, n = 1) {
     if (count(id) < n) return false;
-    for (let i = P.inv.length - 1; i >= 0 && n > 0; i--) { const s = P.inv[i]; if (s && s.id === id) { const k = Math.min(n, s.n); s.n -= k; n -= k; if (!s.n) P.inv[i] = null; } }
+    // gasta primeiro os de qualidade mais baixa
+    for (let q = 0; q <= 2 && n > 0; q++) for (let i = P.inv.length - 1; i >= 0 && n > 0; i--) { const s = P.inv[i]; if (s && s.id === id && (s.q || 0) === q) { const k = Math.min(n, s.n); s.n -= k; n -= k; if (!s.n) P.inv[i] = null; } }
     dirty(); renderHotbar();
     return true;
   }

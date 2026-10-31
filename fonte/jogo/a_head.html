@@ -39,6 +39,10 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 .slot { position: relative; width: 40px; height: 40px; flex: 0 0 auto; background: #f8d59a; border: 2px solid #b8742e; border-radius: 3px; box-shadow: inset 2px 2px 0 #d8a060, inset -2px -2px 0 #fff0c8; display: grid; place-items: center; cursor: pointer; padding: 0; }
 .slot img { width: 32px; height: 32px; image-rendering: pixelated; pointer-events: none; }
 .slot .n { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
+.slot .q { position: absolute; left: 2px; bottom: 0; font-size: 13px; font-style: normal; line-height: 1; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
+.slot .q1, .qtag.q1 { color: #e4eaf2; }
+.slot .q2, .qtag.q2 { color: #ffd23a; }
+.qtag { font-style: normal; text-shadow: 0 1px 0 #3b1d0a; white-space: nowrap; }
 .slot.on { outline: 3px solid #e02a1a; outline-offset: -2px; background: #ffe2a8; }
 .hearts i { display: inline-block; width: 10px; height: 9px; margin: 0 1px; background: #d8c0a8; clip-path: polygon(50% 100%, 0 45%, 0 15%, 22% 0, 50% 18%, 78% 0, 100% 15%, 100% 45%); }
 .hearts i.on { background: #e83a6a; }

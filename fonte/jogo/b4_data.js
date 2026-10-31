@@ -34,7 +34,7 @@
     for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) {
       const d = Math.abs(dx) + Math.abs(dy); if (d > 5 || d >= bd) continue;
       const t = W.farm.t[pre + (x + dx) + ',' + (y + dy)], c = t && t.c;
-      if (c && !c.dead && FLOWERS[c.id] && c.g >= CROPS[c.id].days) { best = c.id; bd = d; }
+      if (c && !c.dead && FLOWERS[c.id] && c.g >= cropDays(c)) { best = c.id; bd = d; }
     }
     return best ? 'mel:' + best : 'mel';
   }

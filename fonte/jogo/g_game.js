@@ -167,7 +167,7 @@
     switch (sp.kind) {
       case 'bin': {
         const s = held();
-        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push({ id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name} na caixa (${fmt(sellPrice(s.id))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
+        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
         else openShipInfo();
         return true;
       }
@@ -194,7 +194,7 @@
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
     if (!tl) return false;
     const o = tl.o, c = tl.c;
-    if (c && !c.dead) { const d = CROPS[c.id]; if (c.g >= d.days && !(c.rg > 0)) { harvest(k, tl); return true; } }
+    if (c && !c.dead) { if (c.g >= cropDays(c) && !(c.rg > 0)) { harvest(k, tl); return true; } }
     if (o) {
       if (o.k === 'forage') { if (addItem(o.id, 1)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
       if (o.k === 'bau') { openChest(k); return true; }
@@ -208,7 +208,10 @@
   function harvest(k, tl) {
     const c = tl.c, d = CROPS[c.id];
     let n = d.n || 1; if (d.extra && Math.random() < d.extra) n++;
-    if (!addItem(d.mix ? pick(FORAGE.winter) : c.id, n)) return;
+    const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
+    // a primeira sai com a qualidade sorteada; as extras são normais
+    if (!addItem(id, 1, false, q)) return;
+    if (n > 1) addItem(id, n - 1, true);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
     const nt = clone(tl);
@@ -223,10 +226,12 @@
       setTile(k, { ...clone(tl), o: o.k === 'colmeia' ? { k: o.k, in: 'flor', out: 'mel', ready: gm() + 4 * 1440 } : { k: o.k } });
       return true;
     }
+    if (o.k === 'pararaios') { toast(item(o.k).desc); return true; }
     if (o.in) { const mins = o.ready - gm(); toast(`${item(o.out).name}: fica pronto em ${mins >= 60 ? Math.ceil(mins / 60) + ' h' : mins + ' min'}.`); return true; }
     const s = held();
     if (!s) { toast(item(o.k).desc); return true; }
-    let out = null, time = 0, n = 1;
+    let out = null, time = 0, n = 1, seedN = 0;
+    if (o.k === 'fazedorsementes') { const c = CROPS[s.id]; if (c && !c.mix && ITEMS['s_' + s.id]) { out = 's_' + s.id; time = 60; seedN = rint(1, 3); } }
     if (o.k === 'pote') { if (isFruit(s.id)) out = 'geleia:' + s.id; else if (isVeg(s.id)) out = 'conserva:' + s.id; time = 1200; }
     if (o.k === 'barril' && item(s.id).kind === 'mel') { out = 'hidromel'; time = 600; }
     else if (o.k === 'barril') { if (isFruit(s.id)) { out = 'vinho:' + s.id; time = 2400; } else if (isVeg(s.id)) { out = 'suco:' + s.id; time = 1200; } }
@@ -238,10 +243,10 @@
       if (bar) { if (s.n < 5 || count('carvao') < 1) { toast('A fornalha precisa de 5 minérios e 1 carvão.'); return true; } removeItem(s.id, 5); removeItem('carvao', 1); out = bar[0]; time = bar[1]; n = 0; }
       else { toast('Coloque minério (com carvão na mochila).'); return true; }
     }
-    if (!out) { toast(o.k === 'pote' || o.k === 'barril' ? 'Coloque uma fruta ou um legume.' : 'Isso não serve aqui.'); sfx.no(); return true; }
+    if (!out) { toast(o.k === 'pote' || o.k === 'barril' ? 'Coloque uma fruta ou um legume.' : o.k === 'fazedorsementes' ? 'Coloque uma colheita (fruta, legume, flor ou grão).' : 'Isso não serve aqui.'); sfx.no(); return true; }
     if (n) useHeld(1);
     item(out);
-    setTile(k, { ...clone(tl), o: { k: o.k, in: s.id, out, ready: gm() + time, outN: outN > 1 && simple ? outN : undefined } });
+    setTile(k, { ...clone(tl), o: { k: o.k, in: s.id, out, ready: gm() + time, outN: seedN || (outN > 1 && simple ? outN : undefined) } });
     toast(`${item(out).name} vai ficar pronto em ${time >= 60 ? Math.round(time / 60) + ' h' : time + ' min'}.`);
     sfx.pop();
     return true;
@@ -293,6 +298,7 @@
         sfx.no(); return;
       }
       if (s.id === 'pick') {
+        if (o && o.k === 'meteorito') { breakMeteor(k, tl, o, power); return; }
         if (o && o.k === 'rock') { const hp = o.hp - power; sfx.pick(); if (hp <= 0) { setTile(k, null); addItem('pedra', rint(1, 3)); gainXP('mining', 1); } else setTile(k, { ...tl, o: { ...o, hp } }); return; }
         if (o && o.k === 'twig') { setTile(k, null); addItem('madeira', 1); return; }
         if (o && PLACED.includes(o.k)) { pickUpPlaced(k, tl, o); return; }
@@ -302,13 +308,14 @@
       }
       return;
     }
+    if (it.cat === 'fert') { useFert(m, k, s); return; }
     if (it.cat === 'seed') {
       if (!farmable(m)) { toast('Plante as sementes na chacrinha ou na estufa.'); return; }
       const tl = tile(k), c = CROPS[it.crop];
       if (!tl || !tl.s) { toast('Prepare a terra com a enxada primeiro.'); sfx.no(); return; }
       if (tl.c) { sfx.no(); return; }
       if (!m.gh && !c.seasons.includes(season())) { toast(`${c.name} não cresce nesta estação. Na estufa cresce o ano todo!`); sfx.no(); return; }
-      setTile(k, { ...tl, c: { id: it.crop, g: 0 } }); useHeld(1); sfx.hoe();
+      setTile(k, { ...tl, c: plantedCrop(tl, it.crop) }); useHeld(1); sfx.hoe();
       return;
     }
     if (it.cat === 'sapling') {
@@ -334,7 +341,7 @@
       const tl = tile(k);
       if (solidAt(m, tx, ty) || (tl && (tl.o || tl.c)) || m.spots[k0] || [G.WATER, G.FOREST].includes(m.at(tx, ty))) { toast('Não dá para colocar aqui.'); sfx.no(); return; }
       if (s.id === 'caminho') { if (tl && tl.s) { toast('Desfaça a terra arada antes.'); return; } setTile(k, { f: 1 }); useHeld(1); sfx.hoe(); return; }
-      if (s.id !== 'irrigador' && tl && tl.s) { toast('Não dá para colocar em terra arada.'); return; }
+      if (!s.id.startsWith('irrigador') && tl && tl.s) { toast('Não dá para colocar em terra arada.'); return; }
       const o = { k: s.id };
       if (s.id === 'bau') o.items = Array(36).fill(null);
       if (s.id === 'colmeia') Object.assign(o, { in: 'flor', out: 'mel', ready: gm() + 4 * 1440 });
@@ -349,7 +356,7 @@
     if (o.k === 'bau' && o.items && o.items.some(Boolean)) { toast('Esvazie o baú antes de recolher.'); return; }
     if (o.in && o.ready > gm()) { toast('Espere terminar antes de recolher.'); return; }
     if (o.in) addItem(o.out, 1);
-    addItem(o.k, 1); setTile(k, tl.s ? { s: 1, w: tl.w } : null); sfx.pick();
+    addItem(o.k, 1); setTile(k, tl.s ? { s: 1, w: tl.w, ...(tl.fe ? { fe: tl.fe } : {}) } : null); sfx.pick();
   }
   function scythe(m, tx, ty) {
     let hit = false;
@@ -361,7 +368,7 @@
       if (tl.o && tl.o.k === 'weed') { setTile(k, null); if (Math.random() < 0.6) addItem('fibra', 1, true); hit = true; }
       else if (tl.o && tl.o.k === 'grass') { setTile(k, null); hit = true; if ((W.farm.hay || 0) < siloCap() && Math.random() < 0.6) { setFarmVal('hay', (W.farm.hay || 0) + 1); pickupNote('feno', 1); } }
       else if (tl.c && tl.c.dead) { setTile(k, { ...tl, c: undefined }); hit = true; }
-      else if (tl.c) { const d = CROPS[tl.c.id]; if (tl.c.g >= d.days && !(tl.c.rg > 0)) { harvest(k, tl); hit = true; } }
+      else if (tl.c) { if (tl.c.g >= cropDays(tl.c) && !(tl.c.rg > 0)) { harvest(k, tl); hit = true; } }
     }
     if (hit) sfx.chop(); else noise(0.1, 0.05, 2000);
     if (P.map === 'town') { /* mato da vila é decorativo */ }
@@ -369,13 +376,14 @@
   function openEat() {
     const s = held(), it = item(s.id);
     const verb = it.drink ? 'Tomar' : 'Comer';
-    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${it.energy}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
+    openPanel(`<h2>${verb} ${it.name}?</h2><p style="text-align:center">Recupera <b>${Math.round(it.energy * Q_ENERGY[s.q || 0])}</b> de energia${it.energy > 30 ? ' e um pouco de vida' : ''}${it.buff && it.desc ? '. ' + it.desc.replace(/\.$/, '') : ''}.</p>
       <div class="row"><button class="btn g" data-a="eat" type="button">${verb}</button><button class="btn" data-a="close" type="button">Agora não</button></div>`);
   }
   function eatHeld() {
     const s = held(); if (!s) return;
     const it = item(s.id);
-    P.energy = Math.min(P.maxEnergy, P.energy + it.energy); P.hp = Math.min(100, P.hp + Math.round(it.energy * 0.45));
+    const en = Math.round(it.energy * Q_ENERGY[s.q || 0]);
+    P.energy = Math.min(P.maxEnergy, P.energy + en); P.hp = Math.min(100, P.hp + Math.round(en * 0.45));
     afterEat(s.id); useHeld(1); sfx.eat(); closePanel();
   }
 
@@ -521,11 +529,13 @@
     if (Math.random() < dt * (0.6 + f.diff / 40)) f.target = clamp(f.fy + rnd(-1, 1) * (20 + f.diff), 6, 112);
     f.fv += ((f.target - f.fy) * (1 + f.diff / 30) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
+    if (inside) f.entered = true; else if (f.entered) f.miss = true;
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
-      if (addItem(f.id, 1)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3)); sfx.catch(); toast(`Você pescou: ${FISH[f.id].name}!`, 'big', f.id); }
+      const fq = !f.miss ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 ? 1 : 0;
+      if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
     } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
   }
@@ -556,7 +566,7 @@
       const rainToday = W.meta.rain && !W.meta.snow;
       const t = clone(W.farm.t), m = MAPS.farm;
       const scare = Object.entries(t).filter(([k, v]) => v && v.o && v.o.k === 'espantalho' && !k.startsWith('g:')).map(([k]) => k.split(',').map(Number));
-      const sprinklers = Object.entries(t).filter(([, v]) => v && v.o && v.o.k === 'irrigador').map(([k]) => { const pre = k.startsWith('g:') ? 'g:' : ''; return [pre, ...k.slice(pre.length).split(',').map(Number)]; });
+      const sprinklers = Object.entries(t).filter(([, v]) => v && v.o && SPRINKLER_R[v.o.k]).map(([k, v]) => { const pre = k.startsWith('g:') ? 'g:' : ''; return [pre, ...k.slice(pre.length).split(',').map(Number), v.o.k]; });
       let crows = 0;
       for (const [k, v] of Object.entries(t)) {
         if (!v) { delete t[k]; continue; }
@@ -566,14 +576,15 @@
           if (!d) { delete v.c; continue; }
           if (!gh && newS !== oldS && !d.seasons.includes(newS)) { v.c.dead = true; continue; }
           if (v.w === day || (rainToday && !gh)) {
-            if (v.c.rg > 0) v.c.rg--; else if (v.c.g < d.days) v.c.g++;
+            if (v.c.rg > 0) v.c.rg--; else if (v.c.g < cropDays(v.c)) v.c.g++;
           }
           if (gh) continue;
           const [x, y] = k.split(',').map(Number);
           if (!scare.some(([sx, sy]) => Math.hypot(sx - x, sy - y) <= 8) && Math.random() < 0.012) { delete v.c; crows++; }
-        } else if (!gh && v.s && !v.c && !v.o && v.w !== day && !rainToday && Math.random() < (oldS === 'summer' ? 0.2 : 0.12)) { delete v.s; delete v.w; if (!v.f) delete t[k]; }
+        } else if (!gh && v.s && !v.c && !v.o && v.w !== day && !rainToday && Math.random() < (oldS === 'summer' ? 0.2 : 0.12)) { delete v.s; delete v.w; delete v.fe; if (!v.f) delete t[k]; }
       }
-      for (const [pre, x, y] of sprinklers) for (const [dx, dy] of DIRS) { const k = pre + (x + dx) + ',' + (y + dy); if (t[k] && t[k].s) t[k].w = nd; }
+      for (const [pre, x, y, kind] of sprinklers) for (const [dx, dy] of sprinklerTiles(kind)) { const k = pre + (x + dx) + ',' + (y + dy); if (t[k] && t[k].s) t[k].w = nd; }
+      const night = nightEvents(t, day, nd, newS);
       // mato e coletáveis novos
       const r = srand(nd * 977);
       const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19; };
@@ -583,11 +594,11 @@
       if (newS === 'winter' && oldS !== 'winter') for (const [k, v] of Object.entries(t)) if (v && v.c && !k.startsWith('g:') && !CROPS[v.c.id].mix) v.c.dead = true;
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
-      const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
+      const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
       await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null });
-      deepMerge(W.meta, meta);
+      deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};
       for (const [k, v] of Object.entries(W.meta.taken || {})) if (v && +k.split(':')[0] >= nd - 1) taken[k] = v;
@@ -623,7 +634,8 @@
       ${passed ? '<p style="text-align:center">Você desmaiou de cansaço e acordou em casa com menos energia.</p>' : ''}
       <h3>Caixa de envio</h3>
       ${lines.length ? `<div class="list">${lines.map(l => `<div class="item"><span class="nm">${l}</span></div>`).join('')}</div><p class="big">+${fmt(total)} ₲</p>` : '<p>Nada foi enviado ontem.</p>'}
+      ${nightLines()}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
-      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
+      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
       <div class="row"><button class="btn g" data-a="close" type="button">Bom dia!</button></div>`);
   }

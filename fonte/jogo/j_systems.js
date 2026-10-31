@@ -263,7 +263,7 @@
     if (s && (s.id === 'balde' || s.id === 'tesoura')) {
       if (def.tool !== s.id) { toast(`${def.name} não precisa ${s.id === 'balde' ? 'do balde' : 'da tesoura'}.`); return; }
       if (!a.prod) { toast(`${a.name} ainda não tem ${def.tool === 'balde' ? 'leite' : 'lã'} pronta.`); return; }
-      if (!addItem(a.prod, 1)) return;
+      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; }
       swing(s.id, 0); sfx.pop(); gainXP('farming', 5);
       setFarm('a', id, { ...a, prod: null, fr: Math.min(1000, (a.fr || 0) + 5) });
       return;
@@ -323,7 +323,7 @@
     const b = farmB()[m.bid]; if (!b || !b.items) return;
     const k = Math.floor(P.x / T) + ',' + Math.floor((P.y - 3) / T), id = b.items[k];
     if (!id) return;
-    if (!addItem(id, 1)) return;
+    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; }
     const items = { ...b.items }; delete items[k];
     setFarm('b', m.bid, { ...b, items });
     gainXP('farming', 5); sfx.pop();
@@ -462,7 +462,7 @@
     if (r.gifts.includes(d)) { openTalk(id, 'Você já me deu um presente hoje. Obrigado!'); return; }
     if (giftsThisWeek(id) >= 2 && !bd) { openTalk(id, 'Você já me deu dois presentes esta semana. Assim eu fico sem graça!'); return; }
     const tst = taste(id, s.id), base = { love: 80, like: 45, neutral: 20, dislike: -20, hate: -40 }[tst];
-    r.pts = clamp(r.pts + base * (bd ? 8 : 1), 0, 2500); r.gifts.push(d); r.gifts = r.gifts.filter(x => weekOf(x) >= weekOf(d) - 1);
+    r.pts = clamp(r.pts + Math.round(base * Q_GIFT[s.q || 0]) * (bd ? 8 : 1), 0, 2500); r.gifts.push(d); r.gifts = r.gifts.filter(x => weekOf(x) >= weekOf(d) - 1);
     useHeld(1); dirty(); sfx[tst === 'love' || tst === 'like' ? 'coin' : 'no']();
     openTalk(id, (bd && (tst === 'love' || tst === 'like') ? 'Um presente de aniversário! ' : '') + pick(GIFT_LINES[tst]));
   }
@@ -565,12 +565,12 @@
     const items = fridge().map(s => (s ? { ...s } : null));
     if (toFridge) {
       const s = P.inv[i]; if (!s || !stackable(s.id)) return;
-      let j = items.findIndex(x => x && x.id === s.id);
-      if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('A geladeira está cheia.'); return; } items[j] = { id: s.id, n: s.n }; }
+      let j = items.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0));
+      if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('A geladeira está cheia.'); return; } items[j] = s.q ? { id: s.id, n: s.n, q: s.q } : { id: s.id, n: s.n }; }
       P.inv[i] = null;
     } else {
       const s = items[i]; if (!s) return;
-      if (addItem(s.id, s.n, true) < s.n) return;
+      if (addItem(s.id, s.n, true, s.q || 0) < s.n) return;
       items[i] = null;
     }
     setFarmVal('fridge', items); dirty(); renderHotbar(); renderFridge();
@@ -673,11 +673,12 @@
         if (an.kind === 'porco' && !outside) out = null;
         if (out) {
           an.last = nd;
-          if (def.tool) an.prod = out;
+          const oq = animalQuality(an);
+          if (def.tool) an.prod = withQ(out, oq);
           else {
             bb.items = bb.items || {};
             const im = buildAnimalHouse(an.b, bb), free = im.floorTiles.filter(([x, y]) => !bb.items[x + ',' + y]);
-            if (free.length) { const [x, y] = free[Math.floor(r() * free.length)]; bb.items[x + ',' + y] = out; }
+            if (free.length) { const [x, y] = free[Math.floor(r() * free.length)]; bb.items[x + ',' + y] = withQ(out, oq); }
           }
         }
       }
@@ -739,7 +740,7 @@
       const s = animState(id, a, m.id), def = ANIMALS[a.kind];
       ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
     }
-    if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(id, x * T, y * T - 1); } }); } }
+    if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(splitQ(id)[0], x * T, y * T - 1); } }); } }
     for (const id of Object.keys(NPCS)) {
       const p = npcPos(id); if (!p || p.map !== m.id) continue;
       const q = W.meta.quest;

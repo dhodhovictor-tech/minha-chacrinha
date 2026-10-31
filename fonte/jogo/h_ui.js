@@ -28,7 +28,7 @@
     input.jx = input.jy = 0;
   }
   function closePanel() { panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
-  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt=""><span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
+  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
     $('hotbar').innerHTML = P.inv.slice(0, 10).map((s, i) => slotHTML(s, i, i === P.sel, 'hot')).join('');
@@ -57,7 +57,7 @@
     const min = nowMin(), h = Math.floor(min / 60) % 24, mm = String(min % 60).padStart(2, '0');
     const s = season();
     $('cDay').textContent = `${weekday()} ${dom()} · Ano ${year()}`;
-    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${W.meta.rain ? (W.meta.snow ? 'neve' : 'chuva') : 'sol'}`;
+    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${W.meta.rain ? (W.meta.snow ? 'neve' : W.meta.storm ? 'tempestade' : 'chuva') : 'sol'}`;
     $('cTime').textContent = `${h}:${mm}`;
     $('cGold').textContent = `${fmt(gold())} ₲`;
     $('enFill').style.height = clamp(P.energy / P.maxEnergy, 0, 1) * 100 + '%';
@@ -92,7 +92,7 @@
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
       body = `<p style="text-align:center;font-size:13px">A primeira fileira é a barra de ferramentas. Toque num item e depois em outro lugar para trocar.</p>
         <div class="grid">${P.inv.map((s, i) => slotHTML(s, i, i === invSel)).join('')}</div>
-        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${it.energy} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}` : 'Toque num item para ver o que é.'}</div>
+        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}` : 'Toque num item para ver o que é.'}</div>
         ${s && it.cat !== 'tool' ? `<div class="row">${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
         <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button></div>`;
     } else if (invTab === 'craft') {
@@ -157,7 +157,7 @@
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
-      case 'pedro': return [...SHOP_PEDRO(season()), ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
+      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return SHOP_CLAUDIO;
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
@@ -210,8 +210,8 @@
     } else if (shopTab === 'recipes') {
       body = `<div class="list">${COOK.filter(r => r.learn === 'lia').map(r => row(iconURL(r.id), 'Receita: ' + r.name, Object.entries(r.need).map(([k, n]) => `${n} ${needName(k)}`).join(', '), P.recipes.includes(r.id) ? '<small>Já sabe</small>' : `<span class="price">${fmt(r.price)} ₲</span><button class="btn g" data-a="brec" data-id="${r.id}" type="button" ${gold() >= r.price ? '' : 'disabled'}>Comprar</button>`)).join('')}</div>`;
     } else {
-      const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id) > 0);
-      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name} ×${s.n}<small>${fmt(sellPrice(s.id))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
+      const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id, s.q) > 0);
+      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}<small>${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
     }
     openPanel(`<h2>${info.title}</h2><p style="text-align:center;font-style:italic">${info.greet()}</p><div class="row"><button class="btn" data-a="talkTo" data-id="${who}" type="button">Conversar com ${NPCS[who].name}</button></div>${tabs}${body}<p style="text-align:center"><b>${fmt(gold())} ₲</b></p>`, 'shop', who);
   }
@@ -229,12 +229,12 @@
     const items = tl.o.items || Array(36).fill(null);
     if (toChest) {
       const s = P.inv[i]; if (!s) return;
-      let j = items.findIndex(x => x && x.id === s.id && stackable(s.id));
+      let j = items.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0) && stackable(s.id));
       if (j >= 0) items[j].n += s.n; else { j = items.findIndex(x => !x); if (j < 0) { toast('O baú está cheio.'); return; } items[j] = s; }
       P.inv[i] = null;
     } else {
       const s = items[i]; if (!s) return;
-      const free = P.inv.findIndex(x => !x), same = P.inv.findIndex(x => x && x.id === s.id && stackable(s.id));
+      const free = P.inv.findIndex(x => !x), same = P.inv.findIndex(x => x && x.id === s.id && (x.q || 0) === (s.q || 0) && stackable(s.id));
       if (same >= 0) P.inv[same].n += s.n; else if (free >= 0) P.inv[free] = s; else { toast('A mochila está cheia.'); return; }
       items[i] = null;
     }
@@ -243,9 +243,9 @@
   // ---------- outros painéis ----------
   function openSleep() { openPanel(`<h2>Dormir?</h2><p style="text-align:center">${online && peerPlayers().filter(p => !p.me).length ? 'O dia vira quando todo mundo que está jogando for dormir.' : 'Dormir encerra o dia e recupera a sua energia.'}</p><div class="row"><button class="btn g" data-a="sleep" type="button">Dormir</button><button class="btn" data-a="close" type="button">Ainda não</button></div>`, 'sleep'); }
   function openShipInfo() {
-    const tot = P.ship.reduce((a, s) => a + (s.p || sellPrice(s.id)) * s.n, 0);
+    const tot = P.ship.reduce((a, s) => a + (s.p || sellPrice(s.id, s.q)) * s.n, 0);
     openPanel(`<h2>Caixa de envio</h2><p>Segure um item na barra e toque em Usar na caixa para enviar a pilha inteira. O pagamento chega de manhã.</p>
-      ${P.ship.length ? `<div class="list">${P.ship.map((s, i) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${s.n}× ${item(s.id).name}<small>${fmt((s.p || sellPrice(s.id)) * s.n)} ₲</small></span><button class="btn" data-a="unship" data-i="${i}" type="button">Tirar</button></div>`).join('')}</div><p class="big">${fmt(tot)} ₲ amanhã</p>` : '<p style="text-align:center">A caixa está vazia.</p>'}`, 'ship');
+      ${P.ship.length ? `<div class="list">${P.ship.map((s, i) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${s.n}× ${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''}<small>${fmt((s.p || sellPrice(s.id, s.q)) * s.n)} ₲</small></span><button class="btn" data-a="unship" data-i="${i}" type="button">Tirar</button></div>`).join('')}</div><p class="big">${fmt(tot)} ₲ amanhã</p>` : '<p style="text-align:center">A caixa está vazia.</p>'}`, 'ship');
   }
   function openElevator() {
     const max = W.meta.mineMax || 0, floors = [];
@@ -314,7 +314,7 @@
       }
       case 'sell': {
         const i = +b.dataset.i, n = +b.dataset.n, s = P.inv[i];
-        if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
+        if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id, s.q); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
         renderShop(panelArg); break;
       }
       case 'upgrade': {
@@ -325,7 +325,7 @@
       case 'chestIn': chestMove(panelArg, +b.dataset.i, true); break;
       case 'chestOut': chestMove(panelArg, +b.dataset.i, false); break;
       case 'sleep': P.sleep = true; dirty(); savePlayer(); closePanel(); toast(online && peerPlayers().filter(p => !p.me && !p.sleep).length ? 'Esperando a outra pessoa ir dormir...' : 'Boa noite!'); if (!online || !peerPlayers().some(p => !p.me && !p.sleep)) setTimeout(() => checkDayEnd(true), 600); break;
-      case 'unship': { const s = P.ship.splice(+b.dataset.i, 1)[0]; if (s) { addItem(s.id, s.n, true); recordSold(s.id, -s.n); } openShipInfo(); break; }
+      case 'unship': { const s = P.ship.splice(+b.dataset.i, 1)[0]; if (s) { addItem(s.id, s.n, true, s.q || 0); recordSold(s.id, -s.n); } openShipInfo(); break; }
       case 'floor': closePanel(); goMap('mine' + b.dataset.f, 0, 0, 1); break;
       case 'eat': eatHeld(); break;
       case 'look': look[b.dataset.k] = +b.dataset.v; if (b.dataset.k === 'shirt') { delete look.shirtC; delete look.plaid; delete look.jacket; } delete look.preset; { const nm = ($('nm') || {}).value; openStart(nm); } break;

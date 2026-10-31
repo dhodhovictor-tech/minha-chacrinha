@@ -391,7 +391,7 @@
   }
   function drawObj(o, px, py, k, nf) {
     const t = performance.now() / 1000;
-    if (drawObj2(o, px, py, k)) return;
+    if (drawObj2(o, px, py, k) || drawObj3(o, px, py)) return;
     switch (o.k) {
       case 'tree': drawTree(px + 8, py + 15, 1, o.v || 0, o.hp, o.shake > performance.now()); if (o.tap) drawTapper(px, py, o); break;
       case 'stump': shadowAt(px + 8, py + 15, 7, 2); blit(STUMP(), px - 1, py); break;
@@ -419,7 +419,7 @@
   // ================= plantações =================
   function cropCanvas(c) {
     const d = CROPS[c.id];
-    const st = c.dead ? 'dead' : c.g >= d.days && !(c.rg > 0) ? 'ripe' : c.g / d.days < 0.25 && !c.harvested ? 's0' : c.g / d.days < 0.6 && !c.harvested ? 's1' : 's2';
+    const dd = cropDays(c), st = c.dead ? 'dead' : c.g >= dd && !(c.rg > 0) ? 'ripe' : c.g / dd < 0.25 && !c.harvested ? 's0' : c.g / dd < 0.6 && !c.harvested ? 's1' : 's2';
     return bake(`crop|${c.id}|${st}|${season()}`, 18, 30, () => {
       ctx.translate(1, 12);
       const L = d.leaf, Ld = shade(L, -0.35), Ll = shade(L, 0.3), P = d.col, Pd = shade(P, -0.3), Pl = shade(P, 0.4);
