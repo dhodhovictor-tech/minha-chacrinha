@@ -95,7 +95,7 @@
         <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
         ${s && it.cat !== 'tool' ? `<div class="row">${it.cat === 'ring' || it.cat === 'boots' ? '<button class="btn g" data-a="equipSel" type="button">Equipar</button>' : ''}${it.cat === 'tackle' ? '<button class="btn g" data-a="tackleSel" type="button">Prender na vara</button>' : ''}${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
         ${gearHTML()}
-        <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button></div>`;
+        <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button><button class="btn" data-a="music" type="button">${musicOn ? 'Desligar a música' : 'Ligar a música'}</button></div>`;
     } else if (invTab === 'craft') {
       body = `<div class="list">${RECIPES.map(r => {
         const ok = !r.skill || skillLv(P.skills[r.skill[0]]) >= r.skill[1];
@@ -305,6 +305,7 @@
       case 'trash': if (invSel >= 0 && P.inv[invSel] && item(P.inv[invSel].id).cat !== 'tool') { P.inv[invSel] = null; invSel = -1; dirty(); renderHotbar(); renderInventory(); } break;
       case 'eatSel': if (invSel >= 0) { P.sel = invSel < 10 ? invSel : P.sel; const s = P.inv[invSel]; if (s) { const it = item(s.id), en0 = Math.round(it.energy * Q_ENERGY[s.q || 0]); P.energy = Math.min(P.maxEnergy, P.energy + en0); P.hp = Math.min(100, P.hp + Math.round(it.energy * 0.45)); afterEat(s.id); s.n--; if (!s.n) { P.inv[invSel] = null; invSel = -1; } sfx.eat(); dirty(); renderHotbar(); renderInventory(); } } break;
       case 'mute': muted = !muted; renderInventory(); break;
+      case 'music': toggleMusic(); renderInventory(); break;
       case 'craft': craft(b.dataset.id); break;
       case 'wipe': if (b.dataset.sure) { store.wipe(); location.reload(); } else { b.dataset.sure = 1; b.textContent = 'Toque de novo para apagar tudo'; } break;
       case 'stab': shopTab = b.dataset.t; renderShop(panelArg); break;
