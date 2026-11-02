@@ -14,11 +14,11 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const fishP = await ev(() => ({ sard: window.__sv.sellPrice('sardinha', 0) }));
   console.log('   sardinha hoje vale', fishP.sard, '(base 40 → 36)');
   // regador nível 2 rega 3 quadrados em fila
-  await ev(() => { const s = __sv; for (let x = 10; x <= 14; x++) s.setTile(x + ',20', { s: 1 }); s.P.inv[1] = { id: 'can', n: 1, lv: 2 }; s.P.water = 40; s.goMap('farm', 9 * 16 + 8, 20 * 16 + 12, 3); });
+  await ev(() => { const s = __sv; for (let x = 10; x <= 14; x++) s.setTile(x + ',20', { s: 1 }); s.P.inv[1] = { id: 'can', n: 1, lv: 2 }; s.P.water = 40; s.goMap('farm', 9 * 16 + 8, 21 * 16 + 12, 0); });
   await p.waitForTimeout(700);
-  await ev(() => { const P = __sv.P; P.x = 9 * 16 + 8; P.y = 20 * 16 + 12; P.dir = 3; P.sel = 1; __sv.act(); });
+  await ev(() => { const P = __sv.P; P.x = 11 * 16 + 8; P.y = 21 * 16 + 12; P.dir = 0; P.sel = 1; __sv.act(); });
   const wet = await ev(() => [10, 11, 12, 13].map(x => (__sv.tile(x + ',20') || {}).w === __sv.W.meta.day));
-  ok(wet[0] && wet[1] && wet[2] && !wet[3], 'regador de ferro (nível 2) molhou 3 quadrados em fila: ' + wet);
+  ok(wet[0] && wet[1] && wet[2] && !wet[3], 'regador de ferro (nível 2) molhou 3 quadrados lado a lado: ' + wet);
   // mover a fornalha trabalhando
   await ev(() => { const s = __sv; s.setTile('20,22', { o: { k: 'fornalha', in: 'cobre', out: 'barracobre', ready: 99999 } }); for (let y = 20; y <= 26; y++) for (let x = 22; x <= 28; x++) if (s.tile(x + ',' + y)) s.setTile(x + ',' + y, null); });
   await p.click('#bMenu'); await p.waitForTimeout(150); await p.click('[data-t="coop"]'); await p.waitForTimeout(150); await p.click('[data-a="moveStart"]'); await p.waitForTimeout(200);
@@ -31,7 +31,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await p.waitForTimeout(1500);
   const fed = await ev(() => { const s = __sv, P = s.P, pt = s.petSt; P.x = pt.x - 12; P.y = pt.y + 6; P.dir = 3; s.act(); return { love: P.pet.love, fed: P.pet.fedDay, left: s.count('petisco') }; });
   ok(fed.love >= 8 && fed.left === 2, 'Darth comeu o petisco: ' + JSON.stringify(fed));
-  const gift = await ev(() => { const R0 = Math.random; Math.random = () => 0.01; const n0 = __sv.P.inv.filter(Boolean).length; __sv.catMorningGift(); Math.random = R0; return __sv.P.inv.filter(Boolean).length > n0; });
+  const gift = await ev(() => { const P = __sv.P; __sv.W.meta.day = 5; P.pet.fedDay = 4; P.pet.giftDay = 0; const n0 = P.inv.filter(Boolean).reduce((a, x) => a + x.n, 0); __sv.catMorningGift(); return P.inv.filter(Boolean).reduce((a, x) => a + x.n, 0) > n0; });
   ok(gift, 'Darth bem tratado deixa presentinho de manhã');
   // cartinha para a outra pessoa
   await ev(() => { __sv.W.players.uB = { uid: 'uB', name: 'Victor', look: {}, feed: [] }; });
