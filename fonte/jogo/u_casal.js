@@ -94,16 +94,44 @@
     return true;
   }
   function petFedByPartner(from) { if (!P.pet) return; P.pet.love = Math.min(100, (P.pet.love || 0) + 8); P.pet.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(`${from} deu um petisco para o Darth! 😻`); }
-  // de manhã, um Darth bem tratado às vezes deixa um presentinho na porta
+  // de manhã, depois de um dia com petisco, o Darth sempre deixa um presentinho na porta (melhor quanto mais carinho)
+  let catGiftLine = '';
   function catMorningGift() {
-    const p = P && P.pet; if (!p) return;
-    const fedYesterday = p.fedDay >= W.meta.day - 1, love = p.love || 0;
-    if (!fedYesterday || Math.random() > 0.25 + love / 250) return;
-    const g = Math.random() < 0.04 ? 'frutaestelar' : pick(['sardinha', 'anchova', 'cogumelo', 'pena', 'narciso', 'avela', 'quartzo', 'amora']);
-    addItem(g, 1, true);
-    setTimeout(() => toast(`🐾 Darth deixou um presentinho na porta: ${item(g).name}!`, 'big'), 2200);
+    catGiftLine = '';
+    const p = P && P.pet; if (!p || !p.fedDay || p.fedDay >= W.meta.day || p.giftDay === p.fedDay) return;
+    p.giftDay = p.fedDay;
+    const love = p.love || 0, r = Math.random();
+    const g = r < 0.02 + love / 2500 ? 'frutaestelar' : love >= 60 && r < 0.3 ? pick(['diamante', 'esmeralda', 'trufa', 'pena']) : pick(['sardinha', 'anchova', 'cogumelo', 'narciso', 'avela', 'quartzo', 'amora', 'pena']);
+    addItem(g, 1, true); dirty();
+    catGiftLine = `<p class="big" style="text-align:center">🐾 Darth deixou um presentinho na porta: ${item(g).name}!</p>`;
   }
-
+  // carinho: o Darth reage de jeitos diferentes e mostra o quanto gosta de você
+  const loveBar = l => { const n = Math.min(5, Math.ceil(l / 20)); return '💚'.repeat(n) + '🤍'.repeat(5 - n); };
+  function catReact(st) {
+    st.react = { k: pick(['pulo', 'esfrega', 'rola']), t: 1.8 }; st.heart = 2.2;
+    tone(90, 70, 0.6, 'sawtooth', 0.025); tone(95, 75, 0.6, 'sawtooth', 0.02, 0.65);
+    return { pulo: 'Darth dá pulinhos de alegria!', esfrega: 'Darth se esfrega nas suas pernas.', rola: 'Darth rola de barriga pra cima!' }[st.react.k];
+  }
+  function petOwnCat() {
+    const p = P.pet; if (p.petDay !== W.meta.day) { p.love = Math.min(100, (p.love || 0) + 3); p.petDay = W.meta.day; } else p.love = Math.min(100, (p.love || 0) + 1);
+    dirty(); meow();
+    toast(`${catReact(petSt)} 💚 Carinho: ${loveBar(p.love)}`, 'big');
+  }
+  // desenha o Darth com a reação do carinho
+  function drawCatReact(st, x, y, dir, mv, pose) {
+    const r = st.react;
+    if (r && r.t > 0) {
+      r.t -= 1 / 60;
+      const k = 1.8 - r.t;
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk'); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk'); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit'); }
+      for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
+      if (r.t <= 0) st.react = null;
+      return true;
+    }
+    return false;
+  }
   // ---------- mudar máquinas e objetos de lugar ----------
   function objSpotOk(x, y, from, o) {
     const m = MAPS.farm, k = x + ',' + y;

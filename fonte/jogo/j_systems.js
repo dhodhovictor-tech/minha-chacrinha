@@ -636,6 +636,7 @@
     switch (d.type) {
       case 'give': if (typeof d.id === 'string' && item(d.id).name !== d.id) { addItem(d.id, clamp(+d.n || 1, 1, 999), true); toast(`${d.from} te deu: ${item(d.id).name}! 🎁`, 'big'); sfx.coin(); } break;
       case 'petfeed': petFedByPartner(d.from); break;
+      case 'petlove': if (P.pet) { P.pet.love = Math.min(100, (P.pet.love || 0) + 1); dirty(); toast(`${d.from} fez carinho no Darth! 💚`); } break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;

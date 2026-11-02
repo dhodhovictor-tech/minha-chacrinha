@@ -196,7 +196,7 @@
         const up = UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
         if (!up) return `<div class="item"><img src="${iconURL(id, s.lv)}" alt=""><span class="nm">${toolName(id, s.lv)}<small>Já está no máximo.</small></span></div>`;
         const ok = gold() >= up.gold && count(up.bar) >= 5;
-        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados em fila`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
+        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados lado a lado`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
         return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
       }).join('')}</div>`;
     } else if (shopTab === 'prices') {

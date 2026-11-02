@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'd094392'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = '7278ff9'; window.__APP_DATE = '02/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -3315,8 +3315,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.id === 'can') {
         if (P.water <= 0) { toast('O regador está vazio. Encha na lagoa.'); P.energy += 1; return; }
         P.water--; sfx.water();
-        const dd = DIRS[P.dir];
-        for (let i = 0; i <= lv; i++) { const kk = KP(m) + (tx + dd[0] * i) + ',' + (ty + dd[1] * i), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
+        // quadrados de lado, como a foice: 1, 2, 3 ou 4 conforme o nível
+        for (const o of [[0], [0, 1], [-1, 0, 1], [-1, 0, 1, 2]][Math.min(3, lv)]) { const kk = KP(m) + (tx + (P.dir >= 2 ? 0 : o)) + ',' + (ty + (P.dir >= 2 ? o : 0)), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
         dirty(); return;
       }
       if (s.id === 'axe') {
@@ -3700,6 +3700,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ${lines.length ? `<div class="list">${lines.map(l => `<div class="item"><span class="nm">${l}</span></div>`).join('')}</div><p class="big">+${fmt(total)} ₲</p>` : '<p>Nada foi enviado ontem.</p>'}
       ${nightLines()}
       ${festLine()}
+      ${catGiftLine}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
       <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
       ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}
@@ -3903,7 +3904,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         const up = UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
         if (!up) return `<div class="item"><img src="${iconURL(id, s.lv)}" alt=""><span class="nm">${toolName(id, s.lv)}<small>Já está no máximo.</small></span></div>`;
         const ok = gold() >= up.gold && count(up.bar) >= 5;
-        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados em fila`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
+        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados lado a lado`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
         return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
       }).join('')}</div>`;
     } else if (shopTab === 'prices') {
@@ -4698,6 +4699,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     switch (d.type) {
       case 'give': if (typeof d.id === 'string' && item(d.id).name !== d.id) { addItem(d.id, clamp(+d.n || 1, 1, 999), true); toast(`${d.from} te deu: ${item(d.id).name}! 🎁`, 'big'); sfx.coin(); } break;
       case 'petfeed': petFedByPartner(d.from); break;
+      case 'petlove': if (P.pet) { P.pet.love = Math.min(100, (P.pet.love || 0) + 1); dirty(); toast(`${d.from} fez carinho no Darth! 💚`); } break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;
@@ -5210,23 +5212,23 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function petEnts(m, ents) {
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
-      ents.push({ y: s.y, f: () => { drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
       r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25;
-      ents.push({ y: r.y, f: () => { drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) return true; P.pet.love = Math.min(100, (P.pet.love || 0) + 1); petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
-      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { r.heart = 2.2; return true; } r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
+      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { catReact(r); return true; } meow(); toast(catReact(r) + ' 💚', 'big'); emitP2P({ type: 'petlove', to: p.uid }); return true; }
     }
     return false;
   }
@@ -6316,16 +6318,44 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return true;
   }
   function petFedByPartner(from) { if (!P.pet) return; P.pet.love = Math.min(100, (P.pet.love || 0) + 8); P.pet.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(`${from} deu um petisco para o Darth! 😻`); }
-  // de manhã, um Darth bem tratado às vezes deixa um presentinho na porta
+  // de manhã, depois de um dia com petisco, o Darth sempre deixa um presentinho na porta (melhor quanto mais carinho)
+  let catGiftLine = '';
   function catMorningGift() {
-    const p = P && P.pet; if (!p) return;
-    const fedYesterday = p.fedDay >= W.meta.day - 1, love = p.love || 0;
-    if (!fedYesterday || Math.random() > 0.25 + love / 250) return;
-    const g = Math.random() < 0.04 ? 'frutaestelar' : pick(['sardinha', 'anchova', 'cogumelo', 'pena', 'narciso', 'avela', 'quartzo', 'amora']);
-    addItem(g, 1, true);
-    setTimeout(() => toast(`🐾 Darth deixou um presentinho na porta: ${item(g).name}!`, 'big'), 2200);
+    catGiftLine = '';
+    const p = P && P.pet; if (!p || !p.fedDay || p.fedDay >= W.meta.day || p.giftDay === p.fedDay) return;
+    p.giftDay = p.fedDay;
+    const love = p.love || 0, r = Math.random();
+    const g = r < 0.02 + love / 2500 ? 'frutaestelar' : love >= 60 && r < 0.3 ? pick(['diamante', 'esmeralda', 'trufa', 'pena']) : pick(['sardinha', 'anchova', 'cogumelo', 'narciso', 'avela', 'quartzo', 'amora', 'pena']);
+    addItem(g, 1, true); dirty();
+    catGiftLine = `<p class="big" style="text-align:center">🐾 Darth deixou um presentinho na porta: ${item(g).name}!</p>`;
   }
-
+  // carinho: o Darth reage de jeitos diferentes e mostra o quanto gosta de você
+  const loveBar = l => { const n = Math.min(5, Math.ceil(l / 20)); return '💚'.repeat(n) + '🤍'.repeat(5 - n); };
+  function catReact(st) {
+    st.react = { k: pick(['pulo', 'esfrega', 'rola']), t: 1.8 }; st.heart = 2.2;
+    tone(90, 70, 0.6, 'sawtooth', 0.025); tone(95, 75, 0.6, 'sawtooth', 0.02, 0.65);
+    return { pulo: 'Darth dá pulinhos de alegria!', esfrega: 'Darth se esfrega nas suas pernas.', rola: 'Darth rola de barriga pra cima!' }[st.react.k];
+  }
+  function petOwnCat() {
+    const p = P.pet; if (p.petDay !== W.meta.day) { p.love = Math.min(100, (p.love || 0) + 3); p.petDay = W.meta.day; } else p.love = Math.min(100, (p.love || 0) + 1);
+    dirty(); meow();
+    toast(`${catReact(petSt)} 💚 Carinho: ${loveBar(p.love)}`, 'big');
+  }
+  // desenha o Darth com a reação do carinho
+  function drawCatReact(st, x, y, dir, mv, pose) {
+    const r = st.react;
+    if (r && r.t > 0) {
+      r.t -= 1 / 60;
+      const k = 1.8 - r.t;
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk'); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk'); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit'); }
+      for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
+      if (r.t <= 0) st.react = null;
+      return true;
+    }
+    return false;
+  }
   // ---------- mudar máquinas e objetos de lugar ----------
   function objSpotOk(x, y, from, o) {
     const m = MAPS.farm, k = x + ',' + y;

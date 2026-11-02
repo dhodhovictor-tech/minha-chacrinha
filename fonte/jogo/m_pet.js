@@ -97,23 +97,23 @@
   function petEnts(m, ents) {
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
-      ents.push({ y: s.y, f: () => { drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
       r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25;
-      ents.push({ y: r.y, f: () => { drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) return true; P.pet.love = Math.min(100, (P.pet.love || 0) + 1); petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
-      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { r.heart = 2.2; return true; } r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
+      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { catReact(r); return true; } meow(); toast(catReact(r) + ' 💚', 'big'); emitP2P({ type: 'petlove', to: p.uid }); return true; }
     }
     return false;
   }

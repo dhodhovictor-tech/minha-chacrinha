@@ -280,8 +280,8 @@
       if (s.id === 'can') {
         if (P.water <= 0) { toast('O regador está vazio. Encha na lagoa.'); P.energy += 1; return; }
         P.water--; sfx.water();
-        const dd = DIRS[P.dir];
-        for (let i = 0; i <= lv; i++) { const kk = KP(m) + (tx + dd[0] * i) + ',' + (ty + dd[1] * i), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
+        // quadrados de lado, como a foice: 1, 2, 3 ou 4 conforme o nível
+        for (const o of [[0], [0, 1], [-1, 0, 1], [-1, 0, 1, 2]][Math.min(3, lv)]) { const kk = KP(m) + (tx + (P.dir >= 2 ? 0 : o)) + ',' + (ty + (P.dir >= 2 ? o : 0)), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
         dirty(); return;
       }
       if (s.id === 'axe') {
@@ -665,6 +665,7 @@
       ${lines.length ? `<div class="list">${lines.map(l => `<div class="item"><span class="nm">${l}</span></div>`).join('')}</div><p class="big">+${fmt(total)} ₲</p>` : '<p>Nada foi enviado ontem.</p>'}
       ${nightLines()}
       ${festLine()}
+      ${catGiftLine}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
       <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
       ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}
