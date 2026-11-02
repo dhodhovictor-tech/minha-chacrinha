@@ -104,6 +104,11 @@
     const peerId = 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const sala = 'salas/' + code + '/', peersRef = fdb.ref(sala + 'peers'), meRef = peersRef.child(peerId), evRef = fdb.ref(sala + 'ev');
     meRef.onDisconnect().remove();
+    // hora do servidor, para saber quais presenças são velhas (app fechado sem avisar deixa uma presença "fantasma" por um tempo)
+    let offset = 0;
+    fdb.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+    // ao entrar, apaga presenças antigas desta mesma pessoa (de vezes anteriores) e as muito velhas de qualquer um
+    peersRef.get().then(s => { const v = s.val() || {}, now = Date.now() + offset; for (const [k, x] of Object.entries(v)) if (k !== peerId && x && (x.uid === uid || (x.t && now - x.t > 120000))) peersRef.child(k).remove().catch(() => {}); }).catch(() => {});
     const parse = s => { try { return JSON.parse(s); } catch (e) { return null; } };
     const topics = {};
     let evOn = false;
@@ -121,11 +126,18 @@
       });
     }
     const room = {
-      presence: async pr => { await meRef.set({ uid, p: JSON.stringify(pr) }); },
+      presence: async pr => { await meRef.set({ uid, p: JSON.stringify(pr), t: firebase.database.ServerValue.TIMESTAMP }); },
       onPeers(fn, err) {
         peersRef.on('value', s => {
-          const v = s.val() || {};
-          fn({ peers: Object.entries(v).map(([peer, x]) => ({ peer, presence: parse(x.p), kind: 'viewer', isMe: peer === peerId, sameTab: peer === peerId, by: x.uid, guest: false })) });
+          const v = s.val() || {}, now = Date.now() + offset, best = {};
+          // uma presença por pessoa: a mais recente; as minhas de outras vezes e as paradas há mais de 30 s ficam de fora
+          for (const [peer, x] of Object.entries(v)) {
+            if (!x) continue;
+            if (peer !== peerId && (x.uid === uid || (x.t && now - x.t > 30000))) continue;
+            const b = best[x.uid];
+            if (!b || peer === peerId || (x.t || 0) > (b[1].t || 0)) best[x.uid] = [peer, x];
+          }
+          fn({ peers: Object.values(best).map(([peer, x]) => ({ peer, presence: parse(x.p), kind: 'viewer', isMe: peer === peerId, sameTab: peer === peerId, by: x.uid, guest: false })) });
         }, e => err && err({ code: 'unavailable', message: e.message }));
       },
       emit: async (topic, data) => { const r = evRef.push(); await r.set({ topic, d: JSON.stringify(data), by: uid, peer: peerId, t: Date.now() }); setTimeout(() => r.remove().catch(() => {}), 15000); },

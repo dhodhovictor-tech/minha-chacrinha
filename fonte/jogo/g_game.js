@@ -168,7 +168,7 @@
     switch (sp.kind) {
       case 'bin': {
         const s = held();
-        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
+        if (s && stackable(s.id) && sellPrice(s.id) > 0) { logAct('enviou', s.id, s.n); P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
         else openShipInfo();
         return true;
       }
@@ -214,6 +214,7 @@
     if (!addItem(id, 1, false, q)) return;
     if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
+    logAct('colheu', id, n);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
     const nt = clone(tl);
@@ -279,7 +280,8 @@
       if (s.id === 'can') {
         if (P.water <= 0) { toast('O regador está vazio. Encha na lagoa.'); P.energy += 1; return; }
         P.water--; sfx.water();
-        if (tl && tl.s) setTile(k, { ...tl, w: W.meta.day });
+        const dd = DIRS[P.dir];
+        for (let i = 0; i <= lv; i++) { const kk = KP(m) + (tx + dd[0] * i) + ',' + (ty + dd[1] * i), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
         dirty(); return;
       }
       if (s.id === 'axe') {
@@ -396,6 +398,7 @@
   function enterMine(n) {
     const m = getMap('mine' + n);
     P.x = m.start[0] * T + 8; P.y = m.start[1] * T + 12; P.dir = 1;
+    if (n > (P.mineFloor || 0)) logAct('mina', 'andar', n);
     P.mineFloor = Math.max(P.mineFloor || 0, n);
     if (n % 5 === 0 && n > (W.meta.mineMax || 0)) { W.meta.mineMax = n; queueUpdate('world/meta', { mineMax: n }); toast(`O elevador agora chega ao andar ${n}!`); }
     const r = srand(m.monSeed), list = [];
@@ -501,10 +504,10 @@
   function startFishing(m) {
     const w = waterAhead(m);
     if (!w) { toast('Fique de frente para a água para pescar.'); sfx.no(); return; }
-    if (!useEnergy(4)) return;
+    if (!useEnergy(4 * 1.17)) return;
     swing('rod', 0);
     const bait = count('isca') > 0; if (bait) removeItem('isca', 1);
-    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
+    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * 1.17 * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
     sfx.cast();
   }
   function pickFish(water) {
@@ -555,6 +558,7 @@
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
       P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
+      logAct('pescou', f.id, 1);
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();

@@ -105,7 +105,7 @@
           if (tl.fe) drawFert(tl.fe, px, py);
         }
         if (tl.c) ents.push({ y: py + 14, f: () => drawCrop(tl.c, px, py) });
-        if (tl.o && !(placing && placing.tree === pre + x + ',' + y)) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
+        if (tl.o && !(placing && (placing.tree === pre + x + ',' + y || placing.obj === pre + x + ',' + y))) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
       }
     }
     if (m.id === 'town') for (const f of townForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
@@ -194,7 +194,7 @@
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt);
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); feedCheck(dt); deliverLetters(dt);
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
@@ -248,7 +248,7 @@
   const fishUp = () => { if (fishing) fishing.hold = false; };
   fishEl.addEventListener('pointerup', fishUp); fishEl.addEventListener('pointercancel', fishUp);
   addEventListener('keydown', e => {
-    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     initAudio();
     input.keys[e.code] = true;
     if (!P) return;
@@ -260,6 +260,7 @@
     if (n >= 0) { P.sel = n; renderHotbar(); }
   });
   addEventListener('keyup', e => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     input.keys[e.code] = false;
     if (e.code === 'Space' || e.code === 'KeyJ' || e.code === 'KeyC' || e.code === 'Enter') { holdUse = false; if (fishing) fishing.hold = false; }
   });
@@ -294,6 +295,7 @@
   function loadMine(mine) {
     // os dados que chegam do banco são somente leitura: trabalha sempre numa cópia
     const m = clone(mine);
+    feedSince = m.seen || 0;
     P = deepMerge(newPlayer(myUid, m.name, clone(m.look) || {}), m);
     P.sleep = false; P.ride = false;
     setTimeout(petInit, 0);

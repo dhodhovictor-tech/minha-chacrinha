@@ -109,11 +109,11 @@
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) return true; P.pet.love = Math.min(100, (P.pet.love || 0) + 1); petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
-      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
+      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { r.heart = 2.2; return true; } r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
     }
     return false;
   }

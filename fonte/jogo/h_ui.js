@@ -121,7 +121,8 @@
         ${P.spouse ? `<p class="big" style="text-align:center">💍 Casados: ${esc(P.name)} e ${esc(P.spouseName || 'amor')}${P.flags.wedDay ? ` desde o dia ${P.flags.wedDay}` : ''}</p>` : ''}
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
-        <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções e árvores de lugar</button></div>
+        <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções, árvores e máquinas de lugar</button></div>
+        ${partner() ? `<div class="row"><button class="btn g" data-a="letterOpen" type="button">Escrever cartinha para ${esc(partner().name)} 💌</button></div>` : ''}
         ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
@@ -164,7 +165,7 @@
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
-      case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
+      case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'petisco', price: 30 }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
@@ -195,7 +196,7 @@
         const up = UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
         if (!up) return `<div class="item"><img src="${iconURL(id, s.lv)}" alt=""><span class="nm">${toolName(id, s.lv)}<small>Já está no máximo.</small></span></div>`;
         const ok = gold() >= up.gold && count(up.bar) >= 5;
-        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
+        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados em fila`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
         return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
       }).join('')}</div>`;
     } else if (shopTab === 'prices') {

@@ -94,12 +94,13 @@
     if (placing.pick) {
       const tg = pickTarget(), box = (x, y, w, h, c) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(x * T + 1, y * T + 1, w * T - 2, h * T - 2); };
       if (tg && tg.b) { const b = farmB()[tg.b], B = BUILDS[b.type]; ctx.fillStyle = 'rgba(255,220,80,0.3)'; ctx.fillRect(b.x * T, b.y * T, B.w * T, B.h * T); box(b.x, b.y, B.w, B.h, '#ffd84a'); }
-      else if (tg && tg.tree) { const [x, y] = tg.tree.split(',').map(Number); ctx.fillStyle = 'rgba(255,220,80,0.4)'; ctx.fillRect(x * T, y * T, T, T); box(x, y, 1, 1, '#ffd84a'); }
+      else if (tg && (tg.tree || tg.obj)) {
+        const kk = tg.tree || tg.obj; const [x, y] = kk.split(',').map(Number); ctx.fillStyle = 'rgba(255,220,80,0.4)'; ctx.fillRect(x * T, y * T, T, T); box(x, y, 1, 1, '#ffd84a'); }
       box(placing.x, placing.y, 1, 1, '#ffffff');
       return;
     }
-    if (placing.tree) {
-      const ok = treeSpotOk(placing.x, placing.y, placing.tree);
+    if (placing.tree || placing.obj) {
+      const ok = placing.obj ? objSpotOk(placing.x, placing.y, placing.obj, placing.o) : treeSpotOk(placing.x, placing.y, placing.tree);
       ctx.fillStyle = ok ? 'rgba(80,220,80,0.4)' : 'rgba(230,50,40,0.5)'; ctx.fillRect(placing.x * T + 1, placing.y * T + 1, T - 2, T - 2);
       ctx.globalAlpha = 0.7; drawObj(placing.o, placing.x * T, placing.y * T, placing.x + ',' + placing.y, 0); ctx.globalAlpha = 1;
       return;
@@ -115,7 +116,7 @@
     closePanel();
     const [px, py] = P.map === 'farm' ? ptile() : [18, 22];
     placing = { pick: true, x: px, y: Math.max(3, py - 1) };
-    toast('Toque numa construção ou árvore da chacrinha e aperte Usar. Mochila cancela.', 'big');
+    toast('Toque numa construção, árvore ou máquina da chacrinha e aperte Usar. Mochila cancela.', 'big');
   }
   // o que está no quadrado escolhido (ou logo abaixo: o desenho de prédios e árvores fica mais alto que o chão que ocupam)
   function pickTarget() {
@@ -124,6 +125,7 @@
       const k = placing.x + ',' + (placing.y + dy);
       if (g.has(k)) return { b: g.get(k).id };
       const tl = tile(k);
+      if (dy <= 1 && tl && tl.o && PLACED.includes(tl.o.k)) return { obj: k };
       if (tl && tl.o && (tl.o.k === 'tree' || tl.o.k === 'ftree')) return { tree: k };
     }
     return null;
@@ -147,7 +149,11 @@
     if (p.pick) {
       const tg = pickTarget();
       if (!tg) { toast('Aqui não tem construção nem árvore. Toque numa delas.'); sfx.no(); return; }
-      if (tg.b) {
+      if (tg.obj) {
+        const [x, y] = tg.obj.split(',').map(Number);
+        placing = { obj: tg.obj, o: clone(tile(tg.obj).o), x, y };
+        toast(`Escolha o lugar novo: ${item(placing.o.k).name}. Usar coloca aqui, Mochila cancela.`, 'big');
+      } else if (tg.b) {
         const b = farmB()[tg.b], name = BUILDS[b.type].names[(b.lv || 1) - 1];
         placing = { type: b.type, x: b.x, y: b.y, move: tg.b };
         toast(`Escolha o lugar novo: ${name}. Usar coloca aqui, Mochila cancela.`, 'big');
@@ -158,6 +164,7 @@
       }
       sfx.pop(); return;
     }
+    if (p.obj) { moveObject(p); return; }
     if (p.tree) {
       const from = tile(p.tree);
       if (!from || !from.o || !['tree', 'ftree'].includes(from.o.k)) { placing = null; toast('A árvore não está mais lá.'); return; }
@@ -178,7 +185,7 @@
     toast(`${BUILDS[b.type].names[(b.lv || 1) - 1]} mudou de lugar!`, 'big');
   }
   function confirmPlacing() {
-    if (placing.pick || placing.tree || placing.move) { confirmMoving(); return; }
+    if (placing.pick || placing.tree || placing.move || placing.obj) { confirmMoving(); return; }
     const p = placing, B = BUILDS[p.type], lv = buildLv(p.type), tiles = placeTiles(p.type, p.x, p.y);
     if (tiles.some(t => !t[2])) { toast('Não dá para construir aí: precisa de chão livre (vermelho está ocupado).'); sfx.no(); return; }
     if (!Object.entries(lv.need).every(([k, n]) => count(k) >= n) || !spend(lv.gold)) { toast('Faltam moedas ou materiais.'); placing = null; return; }
@@ -186,6 +193,7 @@
     for (const [x, y] of tiles) { const tl = tile(x + ',' + y); if (tl && tl.o) setTile(x + ',' + y, null); }
     const id = 'b' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
     setFarm('b', id, { type: p.type, lv: 1, x: p.x, y: p.y, ready: W.meta.day + 1, feed: 0, by: P.uid });
+    logAct('construiu', p.type, 1);
     placing = null; sfx.coin(); sfx.level();
     toast(`A Rosa vai construir ${B.names[0].toLowerCase() === 'poço' ? 'o poço' : 'o ' + B.names[0].toLowerCase()} durante a noite. Fica pronto amanhã!`, 'big');
   }
@@ -263,7 +271,7 @@
     if (s && (s.id === 'balde' || s.id === 'tesoura')) {
       if (def.tool !== s.id) { toast(`${def.name} não precisa ${s.id === 'balde' ? 'do balde' : 'da tesoura'}.`); return; }
       if (!a.prod) { toast(`${a.name} ainda não tem ${def.tool === 'balde' ? 'leite' : 'lã'} pronta.`); return; }
-      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; }
+      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; logAct('coletou', pid, 1); }
       swing(s.id, 0); sfx.pop(); gainXP('farming', 5);
       setFarm('a', id, { ...a, prod: null, fr: Math.min(1000, (a.fr || 0) + 5) });
       return;
@@ -323,7 +331,7 @@
     const b = farmB()[m.bid]; if (!b || !b.items) return;
     const k = Math.floor(P.x / T) + ',' + Math.floor((P.y - 3) / T), id = b.items[k];
     if (!id) return;
-    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; }
+    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; logAct('coletou', pid, 1); }
     const items = { ...b.items }; delete items[k];
     setFarm('b', m.bid, { ...b, items });
     gainXP('farming', 5); sfx.pop();
@@ -451,6 +459,7 @@
     ctx = saved;
   }
   function giveGift(id) {
+    logAct('presente', id, 1);
     const s = held(); if (!giftable(s)) return;
     const r = rel(id), d = W.meta.day, q = W.meta.quest;
     if (q && q.npc === id && !q.done && s.id === q.id) {
@@ -553,6 +562,7 @@
     const r = COOK.find(x => x.id === id);
     if (!r || !knows(r) || !Object.entries(r.need).every(([k, n]) => haveAny(k) >= n)) return;
     for (const [k, n] of Object.entries(r.need)) consumeAny(k, n);
+    logAct('cozinhou', id, 1);
     addItem(id, 1, true); sfx.eat(); toast(`Você cozinhou: ${r.name}!`);
     openCooking();
   }
@@ -625,6 +635,7 @@
     if (!P || d.to !== P.uid || msg.sameTab) return;
     switch (d.type) {
       case 'give': if (typeof d.id === 'string' && item(d.id).name !== d.id) { addItem(d.id, clamp(+d.n || 1, 1, 999), true); toast(`${d.from} te deu: ${item(d.id).name}! 🎁`, 'big'); sfx.coin(); } break;
+      case 'petfeed': petFedByPartner(d.from); break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;
@@ -706,7 +717,7 @@
   // cada pessoa, de manhã: cartas, receitas por nível, avisos de aniversário
   function onNewDayExtra() {
     P.buff = null;
-    deliverGifts();
+    deliverGifts(); catMorningGift();
     for (const r of COOK) if (r.learn.startsWith('skill:')) { const [, k, l] = r.learn.split(':'); if (skillLv(P.skills[k]) >= +l && !P.recipes.includes(r.id)) { P.recipes.push(r.id); toast(`Nova receita de cozinha: ${r.name}!`); } }
     checkMail();
     for (const id of Object.keys(NPCS)) if (isBday(id)) setTimeout(() => toast(`Hoje é aniversário de ${NPCS[id].name}! Um presente vale muito mais.`), 2500);

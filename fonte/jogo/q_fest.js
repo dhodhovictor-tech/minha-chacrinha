@@ -19,6 +19,7 @@
     const d = W.meta.day; W.meta.fest = W.meta.fest || {}; W.meta.fest[d] = W.meta.fest[d] || {}; W.meta.fest[d][P.uid] = data;
     queueUpdate('world/meta', { fest: { [d]: { [P.uid]: data } } });
     festDone(festOn());
+    if (festOn()) logAct('festa', festOn().name, 1);
   }
   const partner = () => Object.values(W.players).find(p => p && p.uid !== P.uid) || null;
   function festOthersHTML(fmtFn) {

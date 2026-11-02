@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '2c1eaeb'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = '6928298'; window.__APP_DATE = '02/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1237,11 +1237,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return inv;
   };
   function newPlayer(uid, name, look) {
-    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [], eq: {} };
+    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [], eq: {}, feed: [] };
   }
   function playerDoc() {
-    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof, eq } = P;
-    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], eq: eq || {}, pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
+    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof, eq, feed } = P;
+    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], eq: eq || {}, feed: feed || [], pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
@@ -2305,7 +2305,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const ANIM_COL = {
     galinha: [['#f8f4ec', '#d8d0c4'], ['#c87a3a', '#9a5a28']],
     pato: [['#ffffff', '#d8dce0']], coelho: [['#e8e0d8', '#b8b0a8'], ['#a88a6a', '#7a6248']],
-    vaca: [['#f8f4ec', '#2a2a2a'], ['#a86a3a', '#f4ece0']], cabra: [['#e8e0d0', '#b8ae9c']],
+    vaca: [['#f8f4ec', '#2a2a2a'], ['#a86a3a', '#f4ece0']], cabra: [['#ece6da', '#bdb3a0'], ['#b07a4a', '#7e5432']],
     ovelha: [['#f4f0e8', '#d8d0c4']], porco: [['#f0a8a8', '#c87878']],
   };
   function animalCanvas(kind, v, f, sheared) {
@@ -2341,9 +2341,23 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           break;
         }
         case 'cabra': {
-          for (const [x, l] of [[6, leg], [9, -leg], [17, -leg], [20, leg]]) { R(x, 14, 2, 6 + l, c); R(x, 19 + l, 2, 2, '#4a3a2a'); }
-          R(4, 7, 18, 8, c); R(4, 14, 18, 1, d); R(2, 7, 3, 3, c);
-          R(19, 2, 6, 8, c); R(21, 9, 2, 4, '#e8e0c8'); R(23, 4, 1, 1, '#1a1a1a'); R(18, 0, 2, 3, '#8a7a6a'); R(20, -1, 2, 2, '#8a7a6a'); R(17, 4, 2, 3, d);
+          const dd = shade(c, -0.22), ll = shade(c, 0.18), hoof = '#3e2e22', horn = '#8e7e66', hornL = '#c4b496';
+          // pernas de trás mais escuras, da frente mais claras, com cascos
+          for (const [x, l, back] of [[6, leg, 1], [9, -leg, 0], [16, -leg, 1], [19, leg, 0]]) { R(x, 14, 2, 5 + l, back ? d : c); R(x + 1, 14, 1, 5 + l, back ? dd : d); R(x, 18 + l, 2, 2, hoof); }
+          // corpo arredondado com luz em cima e sombra na barriga
+          oval(12, 11, 8.5, 4.4, c); oval(12, 13.2, 7, 2, d); oval(11, 8.6, 6, 1.6, ll);
+          R(11, 15, 3, 1, '#e8a8a8');
+          // rabinho levantado
+          R(3, 7, 2, 2, c); R(2, 6, 2, 1, ll); R(4, 9, 1, 1, d);
+          // pescoço e cabeça
+          poly([[16, 12], [18, 5], [21, 5], [20, 12]], c); R(17, 10, 2, 2, d);
+          oval(21, 5.5, 3.2, 2.7, c); R(22, 6, 3, 3, c); R(24, 7, 1, 1, '#4a3a30'); R(22, 8, 3, 1, d);
+          R(21, 4, 1, 1, '#1a1a1a'); R(22, 4, 1, 1, '#f4e8c8'); R(21, 3, 1, 1, ll);
+          // orelha caída e chifres curvos para trás
+          R(17, 5, 3, 2, d); R(16, 6, 2, 1, dd);
+          R(19, 1, 2, 2, horn); R(18, 0, 2, 1, horn); R(17, 1, 1, 1, horn); R(20, 1, 1, 1, hornL);
+          // barbicha
+          R(22, 9, 1, 3, d); R(23, 9, 1, 2, dd);
           break;
         }
         case 'ovelha': {
@@ -3189,7 +3203,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     switch (sp.kind) {
       case 'bin': {
         const s = held();
-        if (s && stackable(s.id) && sellPrice(s.id) > 0) { P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
+        if (s && stackable(s.id) && sellPrice(s.id) > 0) { logAct('enviou', s.id, s.n); P.ship.push(s.q ? { id: s.id, n: s.n, p: sellPrice(s.id, s.q), q: s.q } : { id: s.id, n: s.n, p: sellPrice(s.id) }); recordSold(s.id, s.n); toast(`${s.n}× ${item(s.id).name}${s.q ? ' (' + Q_NAME[s.q] + ')' : ''} na caixa (${fmt(sellPrice(s.id, s.q))} ₲ cada, preço de hoje). Paga de manhã.`); P.inv[P.sel] = null; dirty(); renderHotbar(); sfx.pop(); }
         else openShipInfo();
         return true;
       }
@@ -3235,6 +3249,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (!addItem(id, 1, false, q)) return;
     if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
+    logAct('colheu', id, n);
     gainXP('farming', Math.round(16 * Math.log(0.018 * d.sell + 1)));
     sfx.pop();
     const nt = clone(tl);
@@ -3300,7 +3315,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.id === 'can') {
         if (P.water <= 0) { toast('O regador está vazio. Encha na lagoa.'); P.energy += 1; return; }
         P.water--; sfx.water();
-        if (tl && tl.s) setTile(k, { ...tl, w: W.meta.day });
+        const dd = DIRS[P.dir];
+        for (let i = 0; i <= lv; i++) { const kk = KP(m) + (tx + dd[0] * i) + ',' + (ty + dd[1] * i), t2 = tile(kk); if (t2 && t2.s) setTile(kk, { ...t2, w: W.meta.day }); }
         dirty(); return;
       }
       if (s.id === 'axe') {
@@ -3417,6 +3433,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function enterMine(n) {
     const m = getMap('mine' + n);
     P.x = m.start[0] * T + 8; P.y = m.start[1] * T + 12; P.dir = 1;
+    if (n > (P.mineFloor || 0)) logAct('mina', 'andar', n);
     P.mineFloor = Math.max(P.mineFloor || 0, n);
     if (n % 5 === 0 && n > (W.meta.mineMax || 0)) { W.meta.mineMax = n; queueUpdate('world/meta', { mineMax: n }); toast(`O elevador agora chega ao andar ${n}!`); }
     const r = srand(m.monSeed), list = [];
@@ -3522,10 +3539,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function startFishing(m) {
     const w = waterAhead(m);
     if (!w) { toast('Fique de frente para a água para pescar.'); sfx.no(); return; }
-    if (!useEnergy(4)) return;
+    if (!useEnergy(4 * 1.17)) return;
     swing('rod', 0);
     const bait = count('isca') > 0; if (bait) removeItem('isca', 1);
-    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
+    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * 1.17 * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
     sfx.cast();
   }
   function pickFish(water) {
@@ -3576,6 +3593,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
       P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
+      logAct('pescou', f.id, 1);
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();
@@ -3810,7 +3828,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         ${P.spouse ? `<p class="big" style="text-align:center">💍 Casados: ${esc(P.name)} e ${esc(P.spouseName || 'amor')}${P.flags.wedDay ? ` desde o dia ${P.flags.wedDay}` : ''}</p>` : ''}
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
-        <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções e árvores de lugar</button></div>
+        <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções, árvores e máquinas de lugar</button></div>
+        ${partner() ? `<div class="row"><button class="btn g" data-a="letterOpen" type="button">Escrever cartinha para ${esc(partner().name)} 💌</button></div>` : ''}
         ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
@@ -3853,7 +3872,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
-      case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
+      case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'petisco', price: 30 }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
@@ -3884,7 +3903,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         const up = UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
         if (!up) return `<div class="item"><img src="${iconURL(id, s.lv)}" alt=""><span class="nm">${toolName(id, s.lv)}<small>Já está no máximo.</small></span></div>`;
         const ok = gold() >= up.gold && count(up.bar) >= 5;
-        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
+        const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados em fila`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
         return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
       }).join('')}</div>`;
     } else if (shopTab === 'prices') {
@@ -4137,12 +4156,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (placing.pick) {
       const tg = pickTarget(), box = (x, y, w, h, c) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(x * T + 1, y * T + 1, w * T - 2, h * T - 2); };
       if (tg && tg.b) { const b = farmB()[tg.b], B = BUILDS[b.type]; ctx.fillStyle = 'rgba(255,220,80,0.3)'; ctx.fillRect(b.x * T, b.y * T, B.w * T, B.h * T); box(b.x, b.y, B.w, B.h, '#ffd84a'); }
-      else if (tg && tg.tree) { const [x, y] = tg.tree.split(',').map(Number); ctx.fillStyle = 'rgba(255,220,80,0.4)'; ctx.fillRect(x * T, y * T, T, T); box(x, y, 1, 1, '#ffd84a'); }
+      else if (tg && (tg.tree || tg.obj)) {
+        const kk = tg.tree || tg.obj; const [x, y] = kk.split(',').map(Number); ctx.fillStyle = 'rgba(255,220,80,0.4)'; ctx.fillRect(x * T, y * T, T, T); box(x, y, 1, 1, '#ffd84a'); }
       box(placing.x, placing.y, 1, 1, '#ffffff');
       return;
     }
-    if (placing.tree) {
-      const ok = treeSpotOk(placing.x, placing.y, placing.tree);
+    if (placing.tree || placing.obj) {
+      const ok = placing.obj ? objSpotOk(placing.x, placing.y, placing.obj, placing.o) : treeSpotOk(placing.x, placing.y, placing.tree);
       ctx.fillStyle = ok ? 'rgba(80,220,80,0.4)' : 'rgba(230,50,40,0.5)'; ctx.fillRect(placing.x * T + 1, placing.y * T + 1, T - 2, T - 2);
       ctx.globalAlpha = 0.7; drawObj(placing.o, placing.x * T, placing.y * T, placing.x + ',' + placing.y, 0); ctx.globalAlpha = 1;
       return;
@@ -4158,7 +4178,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     closePanel();
     const [px, py] = P.map === 'farm' ? ptile() : [18, 22];
     placing = { pick: true, x: px, y: Math.max(3, py - 1) };
-    toast('Toque numa construção ou árvore da chacrinha e aperte Usar. Mochila cancela.', 'big');
+    toast('Toque numa construção, árvore ou máquina da chacrinha e aperte Usar. Mochila cancela.', 'big');
   }
   // o que está no quadrado escolhido (ou logo abaixo: o desenho de prédios e árvores fica mais alto que o chão que ocupam)
   function pickTarget() {
@@ -4167,6 +4187,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const k = placing.x + ',' + (placing.y + dy);
       if (g.has(k)) return { b: g.get(k).id };
       const tl = tile(k);
+      if (dy <= 1 && tl && tl.o && PLACED.includes(tl.o.k)) return { obj: k };
       if (tl && tl.o && (tl.o.k === 'tree' || tl.o.k === 'ftree')) return { tree: k };
     }
     return null;
@@ -4190,7 +4211,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (p.pick) {
       const tg = pickTarget();
       if (!tg) { toast('Aqui não tem construção nem árvore. Toque numa delas.'); sfx.no(); return; }
-      if (tg.b) {
+      if (tg.obj) {
+        const [x, y] = tg.obj.split(',').map(Number);
+        placing = { obj: tg.obj, o: clone(tile(tg.obj).o), x, y };
+        toast(`Escolha o lugar novo: ${item(placing.o.k).name}. Usar coloca aqui, Mochila cancela.`, 'big');
+      } else if (tg.b) {
         const b = farmB()[tg.b], name = BUILDS[b.type].names[(b.lv || 1) - 1];
         placing = { type: b.type, x: b.x, y: b.y, move: tg.b };
         toast(`Escolha o lugar novo: ${name}. Usar coloca aqui, Mochila cancela.`, 'big');
@@ -4201,6 +4226,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       }
       sfx.pop(); return;
     }
+    if (p.obj) { moveObject(p); return; }
     if (p.tree) {
       const from = tile(p.tree);
       if (!from || !from.o || !['tree', 'ftree'].includes(from.o.k)) { placing = null; toast('A árvore não está mais lá.'); return; }
@@ -4221,7 +4247,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     toast(`${BUILDS[b.type].names[(b.lv || 1) - 1]} mudou de lugar!`, 'big');
   }
   function confirmPlacing() {
-    if (placing.pick || placing.tree || placing.move) { confirmMoving(); return; }
+    if (placing.pick || placing.tree || placing.move || placing.obj) { confirmMoving(); return; }
     const p = placing, B = BUILDS[p.type], lv = buildLv(p.type), tiles = placeTiles(p.type, p.x, p.y);
     if (tiles.some(t => !t[2])) { toast('Não dá para construir aí: precisa de chão livre (vermelho está ocupado).'); sfx.no(); return; }
     if (!Object.entries(lv.need).every(([k, n]) => count(k) >= n) || !spend(lv.gold)) { toast('Faltam moedas ou materiais.'); placing = null; return; }
@@ -4229,6 +4255,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (const [x, y] of tiles) { const tl = tile(x + ',' + y); if (tl && tl.o) setTile(x + ',' + y, null); }
     const id = 'b' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
     setFarm('b', id, { type: p.type, lv: 1, x: p.x, y: p.y, ready: W.meta.day + 1, feed: 0, by: P.uid });
+    logAct('construiu', p.type, 1);
     placing = null; sfx.coin(); sfx.level();
     toast(`A Rosa vai construir ${B.names[0].toLowerCase() === 'poço' ? 'o poço' : 'o ' + B.names[0].toLowerCase()} durante a noite. Fica pronto amanhã!`, 'big');
   }
@@ -4306,7 +4333,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (s && (s.id === 'balde' || s.id === 'tesoura')) {
       if (def.tool !== s.id) { toast(`${def.name} não precisa ${s.id === 'balde' ? 'do balde' : 'da tesoura'}.`); return; }
       if (!a.prod) { toast(`${a.name} ainda não tem ${def.tool === 'balde' ? 'leite' : 'lã'} pronta.`); return; }
-      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; }
+      { const [pid, pq] = splitQ(a.prod); if (!addItem(pid, 1, false, pq)) return; logAct('coletou', pid, 1); }
       swing(s.id, 0); sfx.pop(); gainXP('farming', 5);
       setFarm('a', id, { ...a, prod: null, fr: Math.min(1000, (a.fr || 0) + 5) });
       return;
@@ -4366,7 +4393,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const b = farmB()[m.bid]; if (!b || !b.items) return;
     const k = Math.floor(P.x / T) + ',' + Math.floor((P.y - 3) / T), id = b.items[k];
     if (!id) return;
-    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; }
+    { const [pid, pq] = splitQ(id); if (!addItem(pid, 1, false, pq)) return; logAct('coletou', pid, 1); }
     const items = { ...b.items }; delete items[k];
     setFarm('b', m.bid, { ...b, items });
     gainXP('farming', 5); sfx.pop();
@@ -4494,6 +4521,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     ctx = saved;
   }
   function giveGift(id) {
+    logAct('presente', id, 1);
     const s = held(); if (!giftable(s)) return;
     const r = rel(id), d = W.meta.day, q = W.meta.quest;
     if (q && q.npc === id && !q.done && s.id === q.id) {
@@ -4596,6 +4624,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const r = COOK.find(x => x.id === id);
     if (!r || !knows(r) || !Object.entries(r.need).every(([k, n]) => haveAny(k) >= n)) return;
     for (const [k, n] of Object.entries(r.need)) consumeAny(k, n);
+    logAct('cozinhou', id, 1);
     addItem(id, 1, true); sfx.eat(); toast(`Você cozinhou: ${r.name}!`);
     openCooking();
   }
@@ -4668,6 +4697,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (!P || d.to !== P.uid || msg.sameTab) return;
     switch (d.type) {
       case 'give': if (typeof d.id === 'string' && item(d.id).name !== d.id) { addItem(d.id, clamp(+d.n || 1, 1, 999), true); toast(`${d.from} te deu: ${item(d.id).name}! 🎁`, 'big'); sfx.coin(); } break;
+      case 'petfeed': petFedByPartner(d.from); break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;
@@ -4749,7 +4779,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // cada pessoa, de manhã: cartas, receitas por nível, avisos de aniversário
   function onNewDayExtra() {
     P.buff = null;
-    deliverGifts();
+    deliverGifts(); catMorningGift();
     for (const r of COOK) if (r.learn.startsWith('skill:')) { const [, k, l] = r.learn.split(':'); if (skillLv(P.skills[k]) >= +l && !P.recipes.includes(r.id)) { P.recipes.push(r.id); toast(`Nova receita de cozinha: ${r.name}!`); } }
     checkMail();
     for (const id of Object.keys(NPCS)) if (isBday(id)) setTimeout(() => toast(`Hoje é aniversário de ${NPCS[id].name}! Um presente vale muito mais.`), 2500);
@@ -5054,6 +5084,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
       case 'moveStart': startMoving(); break;
+      case 'letterOpen': letterGift = -1; openLetter(); break;
+      case 'letterGift': { const ta = document.getElementById('lettertxt'); if (ta) window.__letterDraft = ta.value; const i = +b.dataset.i; letterGift = letterGift === i ? -1 : i; openLetter(); break; }
+      case 'letterSend': sendLetter(); break;
       case 'festGo': { const f = festOn(); if (!f) break; if (f.id === 'ovo') startEggHunt(); else if (f.id === 'gelo') startIceFishing(); else if (f.id === 'flores') flowerDance(); else if (f.id === 'espiritos') enterMaze(); break; }
       case 'festSoup': addToSoup(+b.dataset.i); break;
       case 'festPick': { const i = +b.dataset.i; if (fairPick.includes(i)) fairPick = fairPick.filter(x => x !== i); else if (fairPick.length < 9) fairPick.push(i); openFest(); break; }
@@ -5189,11 +5222,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) return true; P.pet.love = Math.min(100, (P.pet.love || 0) + 1); petSt.heart = 1.6; petSt.idle = 3; meow(); toast(pick(['Darth ronrona alto. 💚', 'Darth se espreguiça e pisca devagar.', 'Darth esfrega a cabeça na sua mão.', 'Darth mia baixinho: “mrrr”.'])); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
-      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
+      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { r.heart = 2.2; return true; } r.heart = 1.6; meow(); toast(pick(['Darth ronrona pra você. 💚', 'Darth te olha com os olhos verdinhos.', 'Darth deita de barriga pra cima.'])); return true; }
     }
     return false;
   }
@@ -5680,6 +5713,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     W.meta.bosses = W.meta.bosses || {}; W.meta.bosses[mo.floor] = P.uid;
     queueUpdate('world/meta', { bosses: { [mo.floor]: P.uid } });
     gainXP('combat', 120);
+    logAct('chefe', B.name, 1);
     const names = [];
     for (const [id, n] of B.loot) { addItem(id, n, true); names.push(`${n}× ${item(id).name}`); }
     monsters = monsters.filter(x => x === mo || x.kind === 'boss');
@@ -5783,6 +5817,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const d = W.meta.day; W.meta.fest = W.meta.fest || {}; W.meta.fest[d] = W.meta.fest[d] || {}; W.meta.fest[d][P.uid] = data;
     queueUpdate('world/meta', { fest: { [d]: { [P.uid]: data } } });
     festDone(festOn());
+    if (festOn()) logAct('festa', festOn().name, 1);
   }
   const partner = () => Object.values(W.players).find(p => p && p.uid !== P.uid) || null;
   function festOthersHTML(fmtFn) {
@@ -6182,6 +6217,134 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // o iPhone pausa o som quando o app sai da tela; volta no próximo toque
   document.addEventListener('visibilitychange', () => { if (!AC) return; if (document.hidden) AC.suspend().catch(() => {}); else AC.resume().catch(() => {}); });
   document.addEventListener('pointerdown', () => { if (AC && AC.state !== 'running') AC.resume().catch(() => {}); }, true);
+
+  // ================= para vocês dois: "enquanto você estava fora", cartinhas e petiscos do Darth =================
+
+  // ---------- registro do que cada um fez (fica no documento da pessoa, P.feed) ----------
+  function logAct(k, id, n = 1) {
+    if (!P) return;
+    const f = P.feed || (P.feed = []), now = Date.now(), last = f[f.length - 1];
+    if (last && last.k === k && last.id === id && now - last.t < 15 * 60000) { last.n += n; last.t = now; }
+    else f.push({ t: now, k, id, n });
+    if (f.length > 150) f.splice(0, f.length - 150);
+    dirty();
+  }
+  const FEED_TXT = {
+    colheu: (l) => `colheu ${l.map(([id, n]) => `${n}× ${item(id).name}`).join(', ')}`,
+    pescou: (l) => `pescou ${l.reduce((a, x) => a + x[1], 0)} peixe(s): ${l.map(([id, n]) => `${n}× ${item(id).name}`).join(', ')}`,
+    coletou: (l) => `pegou dos bichos ${l.map(([id, n]) => `${n}× ${item(id).name}`).join(', ')}`,
+    enviou: (l) => `mandou ${l.reduce((a, x) => a + x[1], 0)} itens na caixa de envio`,
+    cozinhou: (l) => `cozinhou ${l.map(([id, n]) => `${n}× ${item(id).name}`).join(', ')}`,
+    construiu: (l) => `mandou construir ${l.map(([id]) => BUILDS[id] ? BUILDS[id].names[0] : id).join(', ')}`,
+    mina: (l) => `desceu até o andar ${Math.max(...l.map(x => x[1]))} da mina`,
+    chefe: (l) => `venceu ${l.map(([id]) => id).join(', ')} na mina`,
+    festa: (l) => `foi ${l.map(([id]) => 'à ' + id).join(', ')}`,
+    presente: (l) => `deu presente para ${l.map(([id]) => (NPCS[id] || {}).name || id).join(', ')}`,
+    darth: (l) => `deu ${l.reduce((a, x) => a + x[1], 0)} petisco(s) para o Darth`,
+  };
+  // resume o que a outra pessoa fez depois de um momento
+  function feedSummary(p, since) {
+    const groups = {};
+    for (const e of p.feed || []) {
+      if (e.t <= since) continue;
+      const g = groups[e.k] || (groups[e.k] = {});
+      g[e.id] = e.k === 'mina' ? Math.max(g[e.id] || 0, e.n) : (g[e.id] || 0) + e.n;
+    }
+    return Object.entries(groups).filter(([k]) => FEED_TXT[k]).map(([k, g]) => FEED_TXT[k](Object.entries(g)));
+  }
+  let feedSince = 0, feedShown = false, feedT = 0;
+  function feedCheck(dt) {
+    feedT -= dt; if (feedT > 0 || feedShown || !P || panelOpen || placing || fishing) return; feedT = 1.5;
+    feedShown = true;
+    const pt = partner(); if (!pt) return;
+    const seen = (P.flags.feedSeen && P.flags.feedSeen[pt.uid]) || feedSince || 0;
+    const lines = feedSummary(pt, seen);
+    P.flags.feedSeen = { ...(P.flags.feedSeen || {}), [pt.uid]: Date.now() }; dirty();
+    if (!lines.length) return;
+    openPanel(`<h2>Enquanto você estava fora</h2><p style="text-align:center">${esc(pt.name)}:</p><div class="list">${lines.map(l => `<div class="item"><span class="nm">• ${esc(l)}</span></div>`).join('')}</div><div class="row"><button class="btn g" data-a="close" type="button">Que bom!</button></div>`, 'feed');
+  }
+
+  // ---------- cartinhas entre vocês (W.meta.letters[para][id]) ----------
+  let letterGift = -1;
+  function openLetter() {
+    const pt = partner(); if (!pt) { toast('Quando a outra pessoa entrar na chacrinha, dá para mandar cartinhas.'); return; }
+    const opts = P.inv.map((s, i) => [s, i]).filter(([s]) => s && item(s.id).cat !== 'tool');
+    openPanel(`<h2>Cartinha para ${esc(pt.name)} 💌</h2>
+      <textarea id="lettertxt" maxlength="400" rows="5" placeholder="Escreva aqui..." style="width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;padding:8px;border:2px solid #6b3410;border-radius:6px;background:#fffaf0">${esc((window.__letterDraft || ''))}</textarea>
+      <p style="text-align:center;font-size:13px">Presente junto (opcional):</p>
+      <div class="list">${opts.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''}</span><button class="btn ${letterGift === i ? 'g' : ''}" data-a="letterGift" data-i="${i}" type="button">${letterGift === i ? '✓' : '+'}</button></div>`).join('') || '<p>Mochila vazia.</p>'}</div>
+      <div class="row"><button class="btn g" data-a="letterSend" type="button">Enviar cartinha</button></div>`, 'letter');
+  }
+  function sendLetter() {
+    const pt = partner(), ta = document.getElementById('lettertxt'), text = ta ? ta.value.trim().slice(0, 400) : '';
+    if (!pt) return;
+    if (!text) { toast('Escreva alguma coisa na cartinha.'); return; }
+    let gift = null;
+    if (letterGift >= 0 && P.inv[letterGift]) { const s = P.inv[letterGift]; gift = { id: s.id, n: 1 }; s.n--; if (s.n <= 0) P.inv[letterGift] = null; renderHotbar(); }
+    const id = 'c' + Date.now().toString(36), L = { from: P.name, text, gift, day: W.meta.day };
+    W.meta.letters = W.meta.letters || {}; W.meta.letters[pt.uid] = { ...(W.meta.letters[pt.uid] || {}), [id]: L };
+    queueUpdate('world/meta', { letters: { [pt.uid]: { [id]: L } } });
+    letterGift = -1; window.__letterDraft = ''; dirty(); sfx.level(); closePanel();
+    toast(`Cartinha enviada para ${pt.name}! 💌`, 'big');
+  }
+  let letterT = 0;
+  function deliverLetters(dt = 99) {
+    letterT -= dt; if (letterT > 0 || !P || !W.meta) return; letterT = 3;
+    const mine = (W.meta.letters || {})[P.uid]; if (!mine) return;
+    for (const [id, L] of Object.entries(mine)) {
+      if (!L) continue;
+      sendMail('carta:' + id, L.from, '💌 ' + L.text, L.gift ? { items: [[L.gift.id, L.gift.n || 1]] } : {});
+      toast(`💌 Chegou uma cartinha de ${L.from}! Veja na caixa de correio.`, 'big'); sfx.level();
+      queueUpdate('world/meta', { letters: { [P.uid]: { [id]: null } } });
+    }
+    delete W.meta.letters[P.uid];
+  }
+
+  // ---------- petiscos e presentinhos do Darth ----------
+  ITEMS.petisco = { name: 'Petisco do Darth', cat: 'res', sell: 10, desc: 'Um petisco de gato. Segure e toque no Darth para dar. Peixes também servem!' };
+  const isTreat = s => s && (s.id === 'petisco' || item(s.id).cat === 'fish');
+  // dar petisco para o próprio Darth (dono) ou para o Darth da outra pessoa (vai por mensagem)
+  function feedCat(own, peerUid) {
+    const s = held(); if (!isTreat(s)) return false;
+    useHeld(1); meow(); logAct('darth', 'petisco', 1);
+    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco! 😻', 'Darth comeu tudo e lambeu os bigodes. 😺', 'Darth ronrona de barriguinha cheia. 💚']), 'big'); }
+    else { emitP2P({ type: 'petfeed', to: peerUid }); toast('Darth adorou o petisco! 😻', 'big'); }
+    return true;
+  }
+  function petFedByPartner(from) { if (!P.pet) return; P.pet.love = Math.min(100, (P.pet.love || 0) + 8); P.pet.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(`${from} deu um petisco para o Darth! 😻`); }
+  // de manhã, um Darth bem tratado às vezes deixa um presentinho na porta
+  function catMorningGift() {
+    const p = P && P.pet; if (!p) return;
+    const fedYesterday = p.fedDay >= W.meta.day - 1, love = p.love || 0;
+    if (!fedYesterday || Math.random() > 0.25 + love / 250) return;
+    const g = Math.random() < 0.04 ? 'frutaestelar' : pick(['sardinha', 'anchova', 'cogumelo', 'pena', 'narciso', 'avela', 'quartzo', 'amora']);
+    addItem(g, 1, true);
+    setTimeout(() => toast(`🐾 Darth deixou um presentinho na porta: ${item(g).name}!`, 'big'), 2200);
+  }
+
+  // ---------- mudar máquinas e objetos de lugar ----------
+  function objSpotOk(x, y, from, o) {
+    const m = MAPS.farm, k = x + ',' + y;
+    if (x < 1 || y < 1 || x > m.w - 2 || y > m.h - 2) return false;
+    if (![G.GRASS, G.DIRT, G.FLOWERS].includes(m.at(x, y)) || m.solid[y * m.w + x] || bGrid().has(k) || m.spots[k]) return false;
+    if (m.warps.some(w => x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1))) return false;
+    const tl = tile(k);
+    if (k === from || !tl) return true;
+    if (tl.c || (tl.o && !['weed', 'grass', 'twig', 'forage'].includes(tl.o.k))) return false;
+    if (tl.s && !String(o.k).startsWith('irrigador')) return false;
+    return true;
+  }
+  function moveObject(p) {
+    const from = tile(p.obj);
+    if (!from || !from.o || from.o.k !== p.o.k) { placing = null; toast('Isso não está mais lá.'); return; }
+    if (!objSpotOk(p.x, p.y, p.obj, from.o)) { toast('Não dá para colocar aí: precisa de chão livre.'); sfx.no(); return; }
+    const k = p.x + ',' + p.y;
+    if (k !== p.obj) { const rest = { ...from }; delete rest.o; const dest = tile(k); setTile(p.obj, Object.keys(rest).length ? rest : null); setTile(k, { ...(dest && dest.s ? { s: dest.s, w: dest.w, ...(dest.fe ? { fe: dest.fe } : {}) } : {}), o: from.o }); }
+    placing = null; sfx.hoe(); toast(`${item(from.o.k).name} mudou de lugar!`, 'big');
+  }
+
+  // ---------- pescaria um pouco mais difícil: peixes 10% mais baratos ----------
+  for (const k of Object.keys(FISH)) if (ITEMS[k]) ITEMS[k].sell = Math.round(ITEMS[k].sell * 0.9);
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -6289,7 +6452,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           if (tl.fe) drawFert(tl.fe, px, py);
         }
         if (tl.c) ents.push({ y: py + 14, f: () => drawCrop(tl.c, px, py) });
-        if (tl.o && !(placing && placing.tree === pre + x + ',' + y)) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
+        if (tl.o && !(placing && (placing.tree === pre + x + ',' + y || placing.obj === pre + x + ',' + y))) ents.push({ y: py + 15 + (tl.o.k === 'forage' ? -2 : 0), f: () => drawObj(tl.o, px, py, pre + x + ',' + y, nf) });
       }
     }
     if (m.id === 'town') for (const f of townForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
@@ -6378,7 +6541,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt);
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); feedCheck(dt); deliverLetters(dt);
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
@@ -6432,7 +6595,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const fishUp = () => { if (fishing) fishing.hold = false; };
   fishEl.addEventListener('pointerup', fishUp); fishEl.addEventListener('pointercancel', fishUp);
   addEventListener('keydown', e => {
-    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     initAudio();
     input.keys[e.code] = true;
     if (!P) return;
@@ -6444,6 +6607,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (n >= 0) { P.sel = n; renderHotbar(); }
   });
   addEventListener('keyup', e => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     input.keys[e.code] = false;
     if (e.code === 'Space' || e.code === 'KeyJ' || e.code === 'KeyC' || e.code === 'Enter') { holdUse = false; if (fishing) fishing.hold = false; }
   });
@@ -6478,6 +6642,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function loadMine(mine) {
     // os dados que chegam do banco são somente leitura: trabalha sempre numa cópia
     const m = clone(mine);
+    feedSince = m.seen || 0;
     P = deepMerge(newPlayer(myUid, m.name, clone(m.look) || {}), m);
     P.sleep = false; P.ride = false;
     setTimeout(petInit, 0);

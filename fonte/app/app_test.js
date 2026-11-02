@@ -46,6 +46,7 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   await B.click('[data-u=""]'); await B.waitForTimeout(2000);
   ok(/Alguém já está cuidando/.test(await ev(B, () => document.querySelector('.win').innerText)), 'B vê que a chacrinha já existe');
   await B.click('[data-v="casaco"]'); await B.fill('#nm', 'Ela'); await B.click('[data-a="start"]'); await B.waitForTimeout(1500);
+  const uidA = await ev(A, () => __sv.P.uid), uidB = await ev(B, () => __sv.P.uid);
   const hA = await ev(A, () => __sv.host), hB = await ev(B, () => __sv.host);
   ok(hA !== hB, `só uma pessoa controla o relógio (A ${hA}, B ${hB})`);
   await ev(A, () => __sv.goMap('farm', 10 * 16 + 8, 9 * 16 + 4, 3)); await ev(B, () => __sv.goMap('farm', 12 * 16 + 8, 9 * 16 + 4, 2));
@@ -108,7 +109,11 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   ok(!peersLeft, 'ao fechar o app, a pessoa sai da sala: ' + JSON.stringify(peersLeft));
   const ck = await rest('GET', `chacrinhas/${code}/world/clock`);
   await rest('PATCH', `chacrinhas/${code}/world/clock`, { at: ck.at - 3 * 3600 * 1000 });
+  // presenças "fantasmas" de vezes anteriores (app fechado sem avisar) não podem duplicar ninguém
+  const pres = JSON.stringify({ uid: uidB, name: 'Ela', look: {}, map: 'house', x: 40, y: 80, dir: 1, hb: 1 });
+  await rest('PATCH', `salas/${code}/peers`, { velhoB: { uid: uidB, p: pres, t: Date.now() - 50000 }, velhoA: { uid: uidA, p: pres.replace(uidB, uidA), t: Date.now() - 300000 } });
   B = await open(dB); await B.waitForTimeout(2500);
+  ok((await ev(B, () => __sv.peerPlayers().length)) === 1, 'presenças antigas não aparecem como personagens duplicados: ' + await ev(B, () => __sv.peerPlayers().map(p => p.name).join(',')));
   ok(await ev(B, () => !!__sv.P && __sv.P.name === 'Ela'), 'B voltou direto, sem pedir código de novo');
   ok(/batata/.test(await ev(B, () => JSON.stringify(__sv.tile('17,12')))), 'B vê o que A plantou enquanto B estava fora');
   const minB = await ev(B, () => __sv.nowMin());

@@ -217,7 +217,7 @@
   const ANIM_COL = {
     galinha: [['#f8f4ec', '#d8d0c4'], ['#c87a3a', '#9a5a28']],
     pato: [['#ffffff', '#d8dce0']], coelho: [['#e8e0d8', '#b8b0a8'], ['#a88a6a', '#7a6248']],
-    vaca: [['#f8f4ec', '#2a2a2a'], ['#a86a3a', '#f4ece0']], cabra: [['#e8e0d0', '#b8ae9c']],
+    vaca: [['#f8f4ec', '#2a2a2a'], ['#a86a3a', '#f4ece0']], cabra: [['#ece6da', '#bdb3a0'], ['#b07a4a', '#7e5432']],
     ovelha: [['#f4f0e8', '#d8d0c4']], porco: [['#f0a8a8', '#c87878']],
   };
   function animalCanvas(kind, v, f, sheared) {
@@ -253,9 +253,23 @@
           break;
         }
         case 'cabra': {
-          for (const [x, l] of [[6, leg], [9, -leg], [17, -leg], [20, leg]]) { R(x, 14, 2, 6 + l, c); R(x, 19 + l, 2, 2, '#4a3a2a'); }
-          R(4, 7, 18, 8, c); R(4, 14, 18, 1, d); R(2, 7, 3, 3, c);
-          R(19, 2, 6, 8, c); R(21, 9, 2, 4, '#e8e0c8'); R(23, 4, 1, 1, '#1a1a1a'); R(18, 0, 2, 3, '#8a7a6a'); R(20, -1, 2, 2, '#8a7a6a'); R(17, 4, 2, 3, d);
+          const dd = shade(c, -0.22), ll = shade(c, 0.18), hoof = '#3e2e22', horn = '#8e7e66', hornL = '#c4b496';
+          // pernas de trás mais escuras, da frente mais claras, com cascos
+          for (const [x, l, back] of [[6, leg, 1], [9, -leg, 0], [16, -leg, 1], [19, leg, 0]]) { R(x, 14, 2, 5 + l, back ? d : c); R(x + 1, 14, 1, 5 + l, back ? dd : d); R(x, 18 + l, 2, 2, hoof); }
+          // corpo arredondado com luz em cima e sombra na barriga
+          oval(12, 11, 8.5, 4.4, c); oval(12, 13.2, 7, 2, d); oval(11, 8.6, 6, 1.6, ll);
+          R(11, 15, 3, 1, '#e8a8a8');
+          // rabinho levantado
+          R(3, 7, 2, 2, c); R(2, 6, 2, 1, ll); R(4, 9, 1, 1, d);
+          // pescoço e cabeça
+          poly([[16, 12], [18, 5], [21, 5], [20, 12]], c); R(17, 10, 2, 2, d);
+          oval(21, 5.5, 3.2, 2.7, c); R(22, 6, 3, 3, c); R(24, 7, 1, 1, '#4a3a30'); R(22, 8, 3, 1, d);
+          R(21, 4, 1, 1, '#1a1a1a'); R(22, 4, 1, 1, '#f4e8c8'); R(21, 3, 1, 1, ll);
+          // orelha caída e chifres curvos para trás
+          R(17, 5, 3, 2, d); R(16, 6, 2, 1, dd);
+          R(19, 1, 2, 2, horn); R(18, 0, 2, 1, horn); R(17, 1, 1, 1, horn); R(20, 1, 1, 1, hornL);
+          // barbicha
+          R(22, 9, 1, 3, d); R(23, 9, 1, 2, dd);
           break;
         }
         case 'ovelha': {

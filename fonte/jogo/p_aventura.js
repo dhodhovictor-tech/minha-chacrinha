@@ -189,6 +189,7 @@
     W.meta.bosses = W.meta.bosses || {}; W.meta.bosses[mo.floor] = P.uid;
     queueUpdate('world/meta', { bosses: { [mo.floor]: P.uid } });
     gainXP('combat', 120);
+    logAct('chefe', B.name, 1);
     const names = [];
     for (const [id, n] of B.loot) { addItem(id, n, true); names.push(`${n}× ${item(id).name}`); }
     monsters = monsters.filter(x => x === mo || x.kind === 'boss');

@@ -156,6 +156,9 @@
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
       case 'moveStart': startMoving(); break;
+      case 'letterOpen': letterGift = -1; openLetter(); break;
+      case 'letterGift': { const ta = document.getElementById('lettertxt'); if (ta) window.__letterDraft = ta.value; const i = +b.dataset.i; letterGift = letterGift === i ? -1 : i; openLetter(); break; }
+      case 'letterSend': sendLetter(); break;
       case 'festGo': { const f = festOn(); if (!f) break; if (f.id === 'ovo') startEggHunt(); else if (f.id === 'gelo') startIceFishing(); else if (f.id === 'flores') flowerDance(); else if (f.id === 'espiritos') enterMaze(); break; }
       case 'festSoup': addToSoup(+b.dataset.i); break;
       case 'festPick': { const i = +b.dataset.i; if (fairPick.includes(i)) fairPick = fairPick.filter(x => x !== i); else if (fairPick.length < 9) fairPick.push(i); openFest(); break; }
