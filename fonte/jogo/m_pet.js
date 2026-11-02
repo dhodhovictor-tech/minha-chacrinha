@@ -58,10 +58,11 @@
     else { s.mv = 0; s.idle += dt; }
     if (p.mode === 'come' && d < 22) { p.mode = 'follow'; meow(); toast('Darth chegou! 💚'); dirty(); updatePetButton(); }
   }
-  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0] : null);
+  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0] : null);
   // desenho: de lado, andando, sentado ou dormindo enroladinho
-  function catCanvas(pose, f) {
-    return bake(`cat|${pose}|${f}`, 20, 16, () => {
+  function catCanvas(pose, f, coat) {
+    return bake(`cat|${pose}|${f}|${coat ? 1 : 0}`, 20, 16, () => {
+      const body = () => {
       const c = '#1c1c24', l = '#34343f', eye = '#5ae05a';
       if (pose === 'sleep') {
         oval(10, 11, 8, 4.5, c); oval(9, 10, 6, 3, l); disc(15, 10, 3.5, c); poly([[13, 7], [14, 4], [16, 7]], c); poly([[16, 7], [18, 4], [18, 8]], c);
@@ -81,11 +82,14 @@
       disc(15.5, 6, 3.4, c); poly([[13, 4], [13.5, 0.5], [15.5, 3]], c); poly([[16.5, 3], [18.5, 0.5], [18.5, 4.5]], c);
       R(16, 5, 2, 2, eye); R(17, 5, 1, 2, '#0a1a0a'); R(18, 7, 1, 1, '#e88a9a');
       ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 8); ctx.quadraticCurveTo(0, f ? 6 : 8, 1, 2); ctx.stroke();
+      };
+      body();
+      if (coat) drawCatCoat(pose, f);
     });
   }
-  function drawCat(x, y, dir, mv, pose) {
+  function drawCat(x, y, dir, mv, pose, coat) {
     const f = mv ? Math.floor(performance.now() / 120) % 2 : 0;
-    const c = catCanvas(mv ? 'walk' : pose || 'walk', f);
+    const c = catCanvas(mv ? 'walk' : pose || 'walk', f, coat);
     x = Math.round(x); y = Math.round(y);
     shadowAt(x, y, 6, 1.6);
     ctx.save(); ctx.translate(x, y - 15);
@@ -97,19 +101,20 @@
   function petEnts(m, ents) {
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
-      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      s.coat = darthDeCapa(m.id);
+      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
-      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25;
-      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25; r.coat = !!p.pt[6];
+      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (vestirDarth()) return true; if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };

@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'c7b6a6b'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = '3c58c3d'; window.__APP_DATE = '02/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1786,7 +1786,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const SHIRTS = ['#d84a3a', '#3a8ad8', '#5ab83a', '#e8b83a', '#a85ad8', '#f08ab0', '#3a3a4a', '#f4f0e0'];
   const SKINS = ['#f8d8b8', '#eab894', '#c88a5e', '#8e5c3c', '#5e3c26'];
   function farmerCanvas(look, dir, frame) {
-    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${dir}|${frame}`;
+    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${look.rc ? 1 : 0}|${dir}|${frame}`;
     return bake(key, 18, 35, () => {
       ctx.translate(1, 2);
       const hair = HAIRS[look.hair || 0], hD = shade(hair, -0.35), hL = shade(hair, 0.3);
@@ -1876,6 +1876,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         for (let x = hx; x < hx + 12; x += 2) R(x, 3, 1, 3, '#16161a');
         R(hx + 2, -1, 3, 1, '#3a3a44');
       }
+      if (look.rc) drawRaincoat(look, dir, step);
     });
   }
   function drawFarmer(cx, fy, look, dir, walk, opts = {}) {
@@ -1883,7 +1884,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     shadowAt(cx, fy, 6, 2);
     if (opts.sleep) return;
     const frame = walk ? Math.floor(walk * 8) % 4 : 0, bob = frame % 2 ? -1 : 0;
-    blit(farmerCanvas(look || {}, dir, frame), cx - 9, fy - 33 + bob);
+    blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 33 + bob);
     if (opts.item) { const ix = cx - 8; drawIconAt(opts.item, ix, fy - 50 + bob, 1); }
     if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0);
   }
@@ -2623,7 +2624,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon5(id)) return;
+    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon5(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
@@ -3298,6 +3299,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (it.cat === 'tool') {
       const isWater = m.at(tx, ty) === G.WATER;
       if (s.id === 'rod') { startFishing(m); return; }
+      if (s.id === 'rede') { swingNet(); return; }
       if (s.id === 'balde' || s.id === 'tesoura') { toast(s.id === 'balde' ? 'Fique de frente para uma vaca ou cabra.' : 'Fique de frente para uma ovelha.'); return; }
       if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
@@ -3585,13 +3587,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     f.fv += ((f.target - f.fy) * (1 + f.diff / 30) * (hasProf('calmo') ? 0.75 : 1) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
     if (inside) f.entered = true; else if (f.entered) f.miss = true;
-    if (inside && tackle() === 'anzolfarpado') f.bar += ((f.fy - f.barH / 2) - f.bar) * 1.6 * dt;
+    if (inside && !f.bug && tackle() === 'anzolfarpado') f.bar += ((f.fy - f.barH / 2) - f.bar) * 1.6 * dt;
     if (f.chestAt >= 0 && f.tt >= f.chestAt && !f.chest) f.chest = { y: rnd(12, 106), p: 0 };
     if (f.chest && !f.chest.got) { const inC = f.chest.y > f.bar && f.chest.y < f.bar + f.barH; f.chest.p = clamp(f.chest.p + (inC ? 0.45 * (tackle() === 'imatesouro' ? 1.5 : 1) : -0.25) * dt, 0, 1); if (f.chest.p >= 1) { f.chest.got = true; sfx.coin(); } }
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
+      if (f.bug) { fishing = null; bugCaught(f); return; }
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
       P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
@@ -3599,9 +3602,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();
-      if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
+      if (addItem(f.id, 1, true, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
-    } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
+    } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast(f.bug ? 'Escapou da rede!' : 'O peixe escapou!'); sfx.no(); }
   }
   const fcv = document.getElementById('fishcv'), fctx = fcv.getContext('2d');
   function drawFishGame() {
@@ -3609,8 +3612,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     c.clearRect(0, 0, 50, 120);
     c.fillStyle = '#6b3410'; c.fillRect(0, 0, 50, 120);
     c.fillStyle = '#e09c4a'; c.fillRect(1, 1, 48, 118);
-    c.fillStyle = '#2a6ab8'; c.fillRect(6, 2, 22, 116);
-    c.fillStyle = '#3a8ad8'; for (let y = 4; y < 118; y += 10) c.fillRect(8, y + (Math.floor(f.tt * 6) % 10), 18, 2);
+    c.fillStyle = f.bug ? '#7ac8f0' : '#2a6ab8'; c.fillRect(6, 2, 22, 116);
+    if (f.bug) { c.fillStyle = '#ffffffaa'; for (let y = 10; y < 118; y += 28) c.fillRect(8 + ((y + Math.floor(f.tt * 8)) % 10), y, 10, 3); c.fillStyle = '#5aa83a'; c.fillRect(6, 110, 22, 8); }
+    else { c.fillStyle = '#3a8ad8'; for (let y = 4; y < 118; y += 10) c.fillRect(8, y + (Math.floor(f.tt * 6) % 10), 18, 2); }
     c.fillStyle = (f.fy > f.bar && f.fy < f.bar + f.barH) ? '#7ae84a' : '#5ab83a'; c.fillRect(7, Math.round(f.bar), 20, Math.round(f.barH));
     c.fillStyle = '#ffffff55'; c.fillRect(7, Math.round(f.bar), 20, 2);
     const fx = 12, fy = Math.round(f.fy) - 4;
@@ -3873,7 +3877,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
-      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
+      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
@@ -4815,7 +4819,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); stallEnts(m, ents); luauDecor(m, ents, t);
+    festEnts(m, ents, t); stallEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -4841,7 +4845,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m.id === 'beach') for (const f of beachForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
   }
   function drawPlayerEnt(t) {
-    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null };
+    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
     if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, P.look, P.dir, 0, opts); }
     else drawFarmer(P.x, P.y, P.look, P.dir, walkT, opts);
     if (loveFx > 0) for (let k = 0; k < 3; k++) drawHeart(P.x - 8 + k * 8, P.y - 40 - ((t * 20 + k * 7) % 14));
@@ -5183,10 +5187,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     else { s.mv = 0; s.idle += dt; }
     if (p.mode === 'come' && d < 22) { p.mode = 'follow'; meow(); toast('Darth chegou! 💚'); dirty(); updatePetButton(); }
   }
-  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0] : null);
+  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0] : null);
   // desenho: de lado, andando, sentado ou dormindo enroladinho
-  function catCanvas(pose, f) {
-    return bake(`cat|${pose}|${f}`, 20, 16, () => {
+  function catCanvas(pose, f, coat) {
+    return bake(`cat|${pose}|${f}|${coat ? 1 : 0}`, 20, 16, () => {
+      const body = () => {
       const c = '#1c1c24', l = '#34343f', eye = '#5ae05a';
       if (pose === 'sleep') {
         oval(10, 11, 8, 4.5, c); oval(9, 10, 6, 3, l); disc(15, 10, 3.5, c); poly([[13, 7], [14, 4], [16, 7]], c); poly([[16, 7], [18, 4], [18, 8]], c);
@@ -5206,11 +5211,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       disc(15.5, 6, 3.4, c); poly([[13, 4], [13.5, 0.5], [15.5, 3]], c); poly([[16.5, 3], [18.5, 0.5], [18.5, 4.5]], c);
       R(16, 5, 2, 2, eye); R(17, 5, 1, 2, '#0a1a0a'); R(18, 7, 1, 1, '#e88a9a');
       ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 8); ctx.quadraticCurveTo(0, f ? 6 : 8, 1, 2); ctx.stroke();
+      };
+      body();
+      if (coat) drawCatCoat(pose, f);
     });
   }
-  function drawCat(x, y, dir, mv, pose) {
+  function drawCat(x, y, dir, mv, pose, coat) {
     const f = mv ? Math.floor(performance.now() / 120) % 2 : 0;
-    const c = catCanvas(mv ? 'walk' : pose || 'walk', f);
+    const c = catCanvas(mv ? 'walk' : pose || 'walk', f, coat);
     x = Math.round(x); y = Math.round(y);
     shadowAt(x, y, 6, 1.6);
     ctx.save(); ctx.translate(x, y - 15);
@@ -5222,19 +5230,20 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function petEnts(m, ents) {
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
-      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      s.coat = darthDeCapa(m.id);
+      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
-      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25;
-      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk'); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25; r.coat = !!p.pt[6];
+      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (vestirDarth()) return true; if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
@@ -6358,9 +6367,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (r && r.t > 0) {
       r.t -= 1 / 60;
       const k = 1.8 - r.t;
-      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk'); }
-      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk'); }
-      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit'); }
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat); }
       for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
       if (r.t <= 0) st.react = null;
       return true;
@@ -6435,6 +6444,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     let f = 1;
     if (eqHas('galochas') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.75;
     if (eqHas('cachecol') && season() === 'winter') f *= 0.9;
+    if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
     return f;
   }
   // barraca da Bia na praça
@@ -6623,6 +6633,215 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (food) { food(); return true; }
     return false;
   }
+  // ================= borboletas e libélulas (rede) e capas de chuva =================
+
+  // ---------- os insetos ----------
+  // k: 'b' borboleta, 'm' mariposa, 'l' libélula · de/até em minutos do dia · agua: aparece perto da água · chuva: só na chuva
+  const BUGS = {
+    borbbranca: { name: 'Borboleta-branca', k: 'b', col: '#f4f4ec', col2: '#3a3a3a', seasons: ['spring', 'summer'], maps: ['farm', 'town'], de: 360, ate: 1080, diff: 12, sell: 35 },
+    borbamarela: { name: 'Borboleta-amarela', k: 'b', col: '#f4d43a', col2: '#b8860a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 420, ate: 1080, diff: 22, sell: 50 },
+    monarca: { name: 'Borboleta-monarca', k: 'b', col: '#f08a1a', col2: '#1a1a1a', seasons: ['summer', 'fall'], maps: ['farm', 'town', 'beach'], de: 480, ate: 1020, diff: 36, sell: 95 },
+    morpho: { name: 'Borboleta-azul', k: 'b', col: '#3a8af0', col2: '#14244a', seasons: ['summer'], maps: ['town', 'beach'], de: 360, ate: 660, diff: 60, sell: 240 },
+    mariposa: { name: 'Mariposa-lua', k: 'm', col: '#bfe8a8', col2: '#6aa04a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 1140, ate: 1560, diff: 50, sell: 170 },
+    libvermelha: { name: 'Libélula-vermelha', k: 'l', col: '#e8402a', col2: '#8a1a10', seasons: ['summer', 'fall'], maps: ['farm', 'town'], de: 480, ate: 1140, agua: true, diff: 38, sell: 110 },
+    libazul: { name: 'Libélula-azul', k: 'l', col: '#3ab0e8', col2: '#145a8a', seasons: ['spring', 'summer'], maps: ['farm', 'town', 'beach'], de: 420, ate: 1080, agua: true, diff: 45, sell: 130 },
+    libesmeralda: { name: 'Libélula-esmeralda', k: 'l', col: '#3ad87a', col2: '#0a6a3a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 360, ate: 1260, agua: true, chuva: true, diff: 70, sell: 280 },
+  };
+  const BUG_WHERE = { farm: 'chacrinha', town: 'vila', beach: 'praia' };
+  for (const [k, b] of Object.entries(BUGS)) {
+    const quando = b.de >= 1080 ? 'à noite' : b.ate <= 720 ? 'de manhã' : 'de dia';
+    const est = b.seasons.map(s => SEASONS[SEASON_ID.indexOf(s)].toLowerCase()).join(', ');
+    ITEMS[k] = { name: b.name, cat: 'inseto', sell: b.sell, desc: `${b.chuva ? 'Só na chuva, ' : ''}${quando}, ${b.agua ? 'perto da água, ' : ''}${b.maps.map(m => BUG_WHERE[m]).join(' e ')} · ${est}.`.replace(/^./, c => c.toUpperCase()) };
+  }
+  ITEMS.rede = { name: 'Rede de borboleta', cat: 'tool', desc: 'Chegue pertinho de uma borboleta ou libélula e use a rede.' };
+  ITEMS.capadarth = { name: 'Capinha de chuva do Darth', cat: 'acessorio', sell: 500, desc: 'Segure e toque no Darth para ele usar (ou tirar). Ele só veste quando chove.' };
+  ROUPAS.capachuva = { name: 'Capa de chuva', slot: 'cp', price: 4500, desc: 'Na chuva, tudo gasta 10% menos energia. E você fica sequinho.' };
+  ITEMS.capachuva = { name: 'Capa de chuva', cat: 'roupa', slot: 'cp', sell: 1125, desc: ROUPAS.capachuva.desc };
+  CLOTHES_SHOP.push({ id: 'capachuva', price: 4500, one: true }, { id: 'capadarth', price: 2500, one: true });
+
+  const chovendo = () => !!(W.meta && W.meta.rain && !W.meta.snow);
+  const aoArLivre = () => { const m = curMap(); return m && m.outdoor; };
+  // a pessoa aparece de capa amarela quando está com ela e chove lá fora
+  const comCapa = () => eqHas('capachuva') && chovendo() && aoArLivre();
+  // o Darth usa a capinha quando chove e ele está lá fora
+  const darthDeCapa = map => !!(P && P.pet && P.pet.capa && chovendo() && getMap(map) && getMap(map).outdoor);
+  function vestirDarth() {
+    const s = held(); if (!s || s.id !== 'capadarth' || !P.pet) return false;
+    P.pet.capa = !P.pet.capa; dirty(); meow(); catReact(petSt);
+    toast(P.pet.capa ? (chovendo() ? 'Darth está de capinha de chuva! Fica uma graça.' : 'Pronto! Quando chover, o Darth vai de capinha.') : 'Você tirou a capinha do Darth.', 'big', null, 'darth');
+    return true;
+  }
+
+  // ---------- insetos voando pelo mapa (cada pessoa vê os seus) ----------
+  let bugs = [], bugMap = null, bugSpawnT = 0, bugHint = false;
+  function bugPool(m) {
+    const s = season(), min = nowMin(), rain = chovendo();
+    return Object.entries(BUGS).filter(([, b]) => b.maps.includes(m.id) && b.seasons.includes(s) && min >= b.de && min <= b.ate && (b.chuva ? rain : !rain || b.k === 'l' && Math.random() < 0.15));
+  }
+  function bugSpot(m, b) {
+    const px = Math.floor(P.x / T), py = Math.floor(P.y / T);
+    for (let tries = 0; tries < 30; tries++) {
+      const x = px + Math.floor(rnd(-7, 8)), y = py + Math.floor(rnd(-4, 5));
+      if (x < 1 || y < 1 || x >= m.w - 1 || y >= m.h - 1 || Math.hypot(x - px, y - py) < 3) continue;
+      if (m.at(x, y) === G.WATER) continue;
+      if (b.agua) { let w = false; for (let dy = -2; dy <= 2 && !w; dy++) for (let dx = -2; dx <= 2; dx++) if (m.at(x + dx, y + dy) === G.WATER) { w = true; break; } if (!w) continue; }
+      return [x * T + 8, y * T + 8];
+    }
+    return null;
+  }
+  function updateBugs(dt) {
+    const m = curMap();
+    if (!m || bugMap !== m.id) { bugs = []; bugMap = m && m.id; bugSpawnT = 1.5; }
+    if (!m || !m.outdoor || m.cave) return;
+    const t = performance.now() / 1000;
+    for (const b of bugs) {
+      b.life -= dt;
+      const d = BUGS[b.id];
+      // borboleta: zigue-zague mole; libélula: para no ar e dá arrancadas
+      if (d.k === 'l') {
+        b.wait -= dt;
+        if (b.wait <= 0) { b.tx = b.hx + rnd(-26, 26); b.ty = b.hy + rnd(-18, 18); b.wait = rnd(0.8, 2.2); }
+        b.x += (b.tx - b.x) * Math.min(1, dt * 5); b.y += (b.ty - b.y) * Math.min(1, dt * 5);
+      } else {
+        b.a += rnd(-2.5, 2.5) * dt; const sp = 16;
+        b.x += Math.cos(b.a) * sp * dt; b.y += Math.sin(b.a) * sp * 0.7 * dt;
+        if (Math.hypot(b.x - b.hx, b.y - b.hy) > 40) b.a = Math.atan2(b.hy - b.y, b.hx - b.x);
+      }
+      // foge um pouco se alguém chega correndo sem a rede
+      const pd = Math.hypot(P.x - b.x, P.y - 12 - b.y), s = held();
+      if (pd < 18 && walkT > 0 && !(s && s.id === 'rede')) { b.hx += (b.x - P.x) * 0.05; b.hy += (b.y - P.y) * 0.05; }
+      b.h = 10 + Math.sin(t * 2 + b.ph) * 3;
+    }
+    bugs = bugs.filter(b => b.life > 0);
+    bugSpawnT -= dt;
+    if (bugSpawnT <= 0) {
+      bugSpawnT = rnd(5, 9);
+      const max = season() === 'summer' ? 4 : 3;
+      const pool = bugPool(m);
+      if (pool.length && bugs.length < max) {
+        // os mais difíceis aparecem menos
+        const w = pool.map(([k, b]) => [k, 100 - b.diff]), tot = w.reduce((a, x) => a + x[1], 0);
+        let r = Math.random() * tot, id = pool[0][0];
+        for (const [k, v] of w) { r -= v; if (r <= 0) { id = k; break; } }
+        const sp = bugSpot(m, BUGS[id]);
+        if (sp) bugs.push({ id, x: sp[0], y: sp[1], hx: sp[0], hy: sp[1], tx: sp[0], ty: sp[1], a: rnd(0, TAU), ph: rnd(0, TAU), wait: 0, h: 10, life: rnd(50, 90) });
+      }
+    }
+  }
+  function drawBug(b, t) {
+    const d = BUGS[b.id], x = Math.round(b.x), y = Math.round(b.y - b.h);
+    shadowAt(b.x, b.y, 2, 0.8);
+    if (d.k === 'l') {
+      const f = Math.floor(t * 30 + b.ph) % 2, wc = f ? '#ffffffdd' : '#ffffff88';
+      R(x - 5, y - 2, 5, 1, wc); R(x + 1, y - 2, 5, 1, wc); R(x - 4, y, 4, 1, wc); R(x + 1, y, 4, 1, wc);
+      R(x, y - 4, 1, 9, d.col); R(x - 1, y - 4, 3, 2, d.col2); R(x, y + 3, 1, 2, d.col2);
+    } else {
+      const open = Math.sin(t * (d.k === 'm' ? 14 : 18) + b.ph) > 0;
+      if (open) { R(x - 4, y - 3, 4, 4, d.col); R(x + 1, y - 3, 4, 4, d.col); R(x - 3, y + 1, 3, 3, d.col2); R(x + 1, y + 1, 3, 3, d.col2); R(x - 4, y - 3, 1, 1, d.col2); R(x + 4, y - 3, 1, 1, d.col2); }
+      else { R(x - 2, y - 3, 2, 5, d.col); R(x + 1, y - 3, 2, 5, d.col); }
+      R(x, y - 3, 1, 6, '#2a1a12'); R(x - 1, y - 5, 1, 2, '#2a1a12'); R(x + 1, y - 5, 1, 2, '#2a1a12');
+      if (d.k === 'm' && nightF() > 0.3) { ctx.globalAlpha = 0.25; disc(x, y, 4, '#dfffcf'); ctx.globalAlpha = 1; }
+    }
+  }
+  function bugEnts(m, ents) {
+    if (m.id !== bugMap) return;
+    const t = performance.now() / 1000;
+    for (const b of bugs) ents.push({ y: b.y + 2, f: () => drawBug(b, t) });
+  }
+  function bugLights(m, light) { if (m.id === bugMap) for (const b of bugs) if (BUGS[b.id].k === 'm') light(b.x, b.y - b.h, 10, 0.25); }
+
+  // ---------- usar a rede ----------
+  function swingNet() {
+    if (!useEnergy(2)) return;
+    swing('rede', 0, 0.32);
+    const d = DIRS[P.dir], fx = P.x + d[0] * 14, fy = P.y - 10 + d[1] * 12;
+    let best = null, bd = 20;
+    for (const b of bugs) { const dist = Math.hypot(b.x - fx, b.y - b.h - fy); if (dist < bd) { bd = dist; best = b; } }
+    if (!best) {
+      sfx.no();
+      if (!bugHint) { bugHint = true; toast(bugs.length ? 'Chegue mais pertinho e vire para ela.' : 'Nenhum bichinho por perto. Procure perto das flores e da água.', '', null, 'rede'); }
+      return;
+    }
+    bugs = bugs.filter(b => b !== best);
+    const bd2 = BUGS[best.id], lv = skillLv(P.skills.foraging);
+    fishing = { phase: 'game', bug: true, id: best.id, diff: bd2.diff, barH: 30 + lv * 2.5 + buffLv('foraging') * 4, bv: 0, fy: 80, fv: 0, target: 60, prog: 0.3, hold: false, tt: 0, chestAt: -1 };
+    fishing.bar = 120 - fishing.barH - 2;
+    document.getElementById('fish').hidden = false;
+    sfx.cast();
+  }
+  function bugCaught(f) {
+    const fq = !f.miss ? 2 : Math.random() < skillLv(P.skills.foraging) * 0.06 ? 1 : 0;
+    if (!addItem(f.id, 1, true, fq)) return;
+    const st = P.stats, nova = !(st.bugs && st.bugs[f.id]);
+    st.bugs = { ...(st.bugs || {}), [f.id]: 1 }; st.bugN = (st.bugN || 0) + 1;
+    gainXP('foraging', Math.round(3 + f.diff / 4) + (fq === 2 ? 4 : 0)); sfx.catch(); dirty();
+    toast(`${!f.miss ? 'Na mosca! ' : ''}Você pegou: ${BUGS[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id);
+    if (nova) { const n = Object.keys(st.bugs).length; setTimeout(() => toast(`Espécie nova na coleção! ${n} de ${Object.keys(BUGS).length}`, '', null, 'colecao'), 700); }
+  }
+  // conquista do casal
+  ACH.push(['insetos', 'Colecionadores de asas', 'Pegar as 8 borboletas e libélulas.', () => { const got = new Set(); for (const p of [P, ...Object.values(W.players || {})]) for (const k of Object.keys(((p || {}).stats || {}).bugs || {})) got.add(k); return Object.keys(BUGS).every(k => got.has(k)); }]);
+
+  // ---------- desenhos: capa de chuva na pessoa e no Darth ----------
+  function drawRaincoat(look, dir, step) {
+    const Y = '#f4c020', D = '#c8901a', L = '#ffe070', side = dir === 2 || dir === 3, hx = side ? 3 : 2;
+    // corpo e mangas
+    R(2, 14, 12, 10, Y); R(2, 14, 12, 1, L); R(12, 15, 2, 9, D); R(2, 23, 12, 1, D);
+    if (!side) {
+      R(0, 15 + step, 3, 7, Y); R(0, 15 + step, 1, 7, L); R(13, 15 - step, 3, 7, D);
+      if (dir === 1) { R(7, 15, 1, 8, D); for (const y of [16, 19, 22]) R(6, y, 1, 1, '#ffffff'); }
+    } else { const a = step * 2; R(7 + a, 15, 4, 7, D); R(8 + a, 15, 2, 6, Y); }
+    // capuz
+    if (dir === 0) { R(hx - 1, -1, 14, 14, Y); R(hx, -1, 12, 1, L); R(hx + 10, 1, 3, 11, D); }
+    else if (side) { R(hx - 1, -1, 13, 5, Y); R(hx - 1, 3, 6, 10, Y); R(hx, -1, 10, 1, L); R(hx - 1, 8, 2, 5, D); }
+    else { R(hx - 1, -1, 14, 4, Y); R(hx, -1, 12, 1, L); R(hx - 1, 3, 2, 10, Y); R(hx + 11, 3, 2, 10, D); }
+  }
+  function drawCatCoat(pose, f) {
+    const Y = '#f4c020', D = '#c8901a';
+    if (pose === 'sleep') { oval(9, 9, 6.5, 3, Y); R(4, 10, 11, 1, D); return; }
+    if (pose === 'sit') { oval(8, 9.5, 4.5, 3.5, Y); R(5, 12, 7, 1, D); poly([[10.5, 3.5], [12, 2.2], [13.5, 3.5], [13.5, 4.5], [10.5, 4.5]], Y); return; }
+    oval(10, 7.8, 6, 2.8, Y); R(5, 9, 11, 1, D); R(7, 6, 5, 1, '#ffe070');
+    poly([[14, 3.5], [15.5, 2], [17, 3.5], [17, 4.5], [14, 4.5]], Y);
+  }
+
+  // ---------- ícones ----------
+  function paintIcon6(id) {
+    const b = BUGS[id];
+    if (b) {
+      if (b.k === 'l') {
+        for (const [x, y] of [[1, 5], [10, 5], [2, 8], [10, 8]]) { R(x, y, 5, 2, '#d8f0ff'); R(x, y, 5, 1, '#ffffff'); }
+        R(7, 2, 2, 13, b.col); R(7, 2, 2, 3, b.col2); R(6, 3, 1, 1, '#1a1a1a'); R(9, 3, 1, 1, '#1a1a1a'); R(7, 11, 2, 1, b.col2);
+      } else {
+        const low = b.k === 'm' ? shade(b.col, -0.12) : id === 'borbbranca' ? '#e8e8dc' : shade(b.col, -0.18), M = pts => pts.map(([x, y]) => [16 - x, y]);
+        const up = [[8, 5], [4, 1], [1, 1], [0, 4], [1, 8], [8, 9]], lo = [[8, 9], [3, 9], [2, 12], [4, 15], [8, 12]];
+        poly(up, b.col); poly(M(up), b.col); poly(lo, low); poly(M(lo), low);
+        // bordas e manchas
+        if (id === 'monarca' || id === 'morpho') { for (const sx of [0, 1]) { const f = x => sx ? 15 - x : x; R(f(0), 2, 1, 6, b.col2); R(Math.min(f(1), f(3)), 1, 3, 1, b.col2); R(Math.min(f(3), f(5)), 9, 3, 1, b.col2); R(f(2), 11, 1, 3, b.col2); } }
+        if (id === 'monarca') { for (const [x, y] of [[1, 3], [14, 3], [1, 6], [14, 6]]) R(x, y, 1, 1, '#ffffff'); R(4, 4, 1, 4, b.col2); R(11, 4, 1, 4, b.col2); }
+        if (id === 'morpho') { R(3, 4, 2, 2, '#9ad8ff'); R(11, 4, 2, 2, '#9ad8ff'); }
+        if (id === 'borbbranca' || id === 'borbamarela') { R(1, 2, 2, 2, b.col2); R(13, 2, 2, 2, b.col2); R(4, 5, 1, 1, b.col2); R(11, 5, 1, 1, b.col2); }
+        if (b.k === 'm') { disc(5, 11, 1.3, '#f4e04a'); disc(11, 11, 1.3, '#f4e04a'); R(3, 14, 1, 2, b.col); R(12, 14, 1, 2, b.col); }
+        R(7, 3, 2, 10, '#2a1a12'); R(7, 2, 2, 1, '#4a3a2a'); R(6, 0, 1, 2, '#2a1a12'); R(9, 0, 1, 2, '#2a1a12');
+      }
+      return true;
+    }
+    if (id === 'rede') {
+      R(2, 9, 2, 2, '#7a4a22'); for (let k = 0; k < 6; k++) R(3 + k, 10 - k, 2, 2, '#a86a32');
+      ctx.strokeStyle = '#d8d8d0'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(11, 5, 4.2, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = 0.5; R(8, 3, 6, 1, '#ffffff'); R(8, 5, 6, 1, '#ffffff'); R(8, 7, 6, 1, '#ffffff'); R(9, 2, 1, 7, '#ffffff'); R(12, 2, 1, 7, '#ffffff'); ctx.globalAlpha = 1;
+      return true;
+    }
+    if (id === 'capachuva') {
+      poly([[4, 4], [12, 4], [14, 15], [2, 15]], '#f4c020'); R(5, 1, 6, 4, '#f4c020'); R(6, 2, 4, 3, '#c8901a');
+      R(8, 6, 1, 9, '#c8901a'); for (const y of [7, 10, 13]) R(7, y, 1, 1, '#ffffff'); R(3, 14, 11, 1, '#c8901a');
+      return true;
+    }
+    if (id === 'capadarth') {
+      oval(8, 10, 6.5, 4, '#f4c020'); R(2, 12, 13, 1, '#c8901a'); poly([[10, 3], [12, 1], [14, 3], [14, 7], [10, 7]], '#f4c020');
+      R(11, 4, 1, 1, '#1c1c24'); R(13, 4, 1, 1, '#1c1c24'); R(6, 9, 1, 1, '#ffffff'); R(9, 9, 1, 1, '#ffffff');
+      return true;
+    }
+    return false;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -6638,7 +6857,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   let lastPres = '';
   function pushPresence(force) {
     if (!room || !P) return;
-    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
+    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
     const s = JSON.stringify(pr);
     if (s === lastPres && !force) return;
     lastPres = s;
@@ -6749,7 +6968,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (p.me || p.map !== P.map || p.x == null) continue;
       let r = remote.get(p.peer); if (!r) { r = { x: p.x, y: p.y, t: 0 }; remote.set(p.peer, r); }
       const k = Math.min(1, dt * 10); r.x += (p.x - r.x) * k; r.y += (p.y - r.y) * k; if (p.mv) r.t += dt; else r.t = 0;
-      ents.push({ y: r.y, f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1 }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
+      ents.push({ y: r.y, f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1, rc: p.rc }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
     }
     if (P.map === m.id) ents.push({ y: P.y, f: () => drawPlayerEnt(t) });
     ents.sort((a, b) => a.y - b.y);
@@ -6779,7 +6998,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -6820,8 +7039,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt);
-      if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
+      updateFishing(dt); updateBugs(dt);
+      if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }
       presT -= dt; if (presT <= 0) { presT = window.__PRES_DT || 0.1; pushPresence(); }

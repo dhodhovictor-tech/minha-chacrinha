@@ -163,7 +163,7 @@
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
-      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
+      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();

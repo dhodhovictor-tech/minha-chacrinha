@@ -502,7 +502,7 @@
   const SHIRTS = ['#d84a3a', '#3a8ad8', '#5ab83a', '#e8b83a', '#a85ad8', '#f08ab0', '#3a3a4a', '#f4f0e0'];
   const SKINS = ['#f8d8b8', '#eab894', '#c88a5e', '#8e5c3c', '#5e3c26'];
   function farmerCanvas(look, dir, frame) {
-    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${dir}|${frame}`;
+    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${look.rc ? 1 : 0}|${dir}|${frame}`;
     return bake(key, 18, 35, () => {
       ctx.translate(1, 2);
       const hair = HAIRS[look.hair || 0], hD = shade(hair, -0.35), hL = shade(hair, 0.3);
@@ -592,6 +592,7 @@
         for (let x = hx; x < hx + 12; x += 2) R(x, 3, 1, 3, '#16161a');
         R(hx + 2, -1, 3, 1, '#3a3a44');
       }
+      if (look.rc) drawRaincoat(look, dir, step);
     });
   }
   function drawFarmer(cx, fy, look, dir, walk, opts = {}) {
@@ -599,7 +600,7 @@
     shadowAt(cx, fy, 6, 2);
     if (opts.sleep) return;
     const frame = walk ? Math.floor(walk * 8) % 4 : 0, bob = frame % 2 ? -1 : 0;
-    blit(farmerCanvas(look || {}, dir, frame), cx - 9, fy - 33 + bob);
+    blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 33 + bob);
     if (opts.item) { const ix = cx - 8; drawIconAt(opts.item, ix, fy - 50 + bob, 1); }
     if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0);
   }

@@ -123,9 +123,9 @@
     if (r && r.t > 0) {
       r.t -= 1 / 60;
       const k = 1.8 - r.t;
-      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk'); }
-      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk'); }
-      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit'); }
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat); }
       for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
       if (r.t <= 0) st.react = null;
       return true;

@@ -13,7 +13,7 @@
   let lastPres = '';
   function pushPresence(force) {
     if (!room || !P) return;
-    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
+    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
     const s = JSON.stringify(pr);
     if (s === lastPres && !force) return;
     lastPres = s;
@@ -124,7 +124,7 @@
       if (p.me || p.map !== P.map || p.x == null) continue;
       let r = remote.get(p.peer); if (!r) { r = { x: p.x, y: p.y, t: 0 }; remote.set(p.peer, r); }
       const k = Math.min(1, dt * 10); r.x += (p.x - r.x) * k; r.y += (p.y - r.y) * k; if (p.mv) r.t += dt; else r.t = 0;
-      ents.push({ y: r.y, f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1 }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
+      ents.push({ y: r.y, f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1, rc: p.rc }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
     }
     if (P.map === m.id) ents.push({ y: P.y, f: () => drawPlayerEnt(t) });
     ents.sort((a, b) => a.y - b.y);
@@ -154,7 +154,7 @@
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -195,8 +195,8 @@
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt);
-      if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
+      updateFishing(dt); updateBugs(dt);
+      if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }
       presT -= dt; if (presT <= 0) { presT = window.__PRES_DT || 0.1; pushPresence(); }

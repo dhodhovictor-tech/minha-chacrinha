@@ -263,6 +263,7 @@
     if (it.cat === 'tool') {
       const isWater = m.at(tx, ty) === G.WATER;
       if (s.id === 'rod') { startFishing(m); return; }
+      if (s.id === 'rede') { swingNet(); return; }
       if (s.id === 'balde' || s.id === 'tesoura') { toast(s.id === 'balde' ? 'Fique de frente para uma vaca ou cabra.' : 'Fique de frente para uma ovelha.'); return; }
       if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
@@ -550,13 +551,14 @@
     f.fv += ((f.target - f.fy) * (1 + f.diff / 30) * (hasProf('calmo') ? 0.75 : 1) - f.fv * 3) * dt; f.fy = clamp(f.fy + f.fv * dt, 4, 114);
     const inside = f.fy > f.bar && f.fy < f.bar + f.barH;
     if (inside) f.entered = true; else if (f.entered) f.miss = true;
-    if (inside && tackle() === 'anzolfarpado') f.bar += ((f.fy - f.barH / 2) - f.bar) * 1.6 * dt;
+    if (inside && !f.bug && tackle() === 'anzolfarpado') f.bar += ((f.fy - f.barH / 2) - f.bar) * 1.6 * dt;
     if (f.chestAt >= 0 && f.tt >= f.chestAt && !f.chest) f.chest = { y: rnd(12, 106), p: 0 };
     if (f.chest && !f.chest.got) { const inC = f.chest.y > f.bar && f.chest.y < f.bar + f.barH; f.chest.p = clamp(f.chest.p + (inC ? 0.45 * (tackle() === 'imatesouro' ? 1.5 : 1) : -0.25) * dt, 0, 1); if (f.chest.p >= 1) { f.chest.got = true; sfx.coin(); } }
     f.prog = clamp(f.prog + (inside ? 0.34 : -0.24 - f.diff / 600) * dt, 0, 1);
     drawFishGame();
     if (f.prog >= 1) {
       document.getElementById('fish').hidden = true;
+      if (f.bug) { fishing = null; bugCaught(f); return; }
       const lucky = hasProf('sortudo'), fq = !f.miss ? 2 : lucky && Math.random() < 0.15 ? 2 : Math.random() < skillLv(P.skills.fishing) * 0.06 * (lucky ? 2 : 1) ? 1 : 0;
       festFishCaught();
       P.stats.caught = { ...(P.stats.caught || {}), [f.id]: 1 };
@@ -564,9 +566,9 @@
       if (FISH[f.id].legend) { P.flags.lend = { ...(P.flags.lend || {}), [f.id]: W.meta.day }; setTimeout(() => toast(`🏆 Peixe lendário! ${FISH[f.id].name}`, 'big'), 400); }
       if (f.chest && f.chest.got) setTimeout(giveTreasure, 800);
       useTackle();
-      if (addItem(f.id, 1, false, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
+      if (addItem(f.id, 1, true, fq)) { P.stats.fish = (P.stats.fish || 0) + 1; gainXP('fishing', Math.round(3 + f.diff / 3) + (fq === 2 ? 5 : 0)); sfx.catch(); toast(`${!f.miss ? 'Pesca perfeita! ' : ''}Você pescou: ${FISH[f.id].name}${fq ? ' (' + Q_NAME[fq] + ')' : ''}!`, 'big', f.id); }
       fishing = null;
-    } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast('O peixe escapou!'); sfx.no(); }
+    } else if (f.prog <= 0) { document.getElementById('fish').hidden = true; fishing = null; toast(f.bug ? 'Escapou da rede!' : 'O peixe escapou!'); sfx.no(); }
   }
   const fcv = document.getElementById('fishcv'), fctx = fcv.getContext('2d');
   function drawFishGame() {
@@ -574,8 +576,9 @@
     c.clearRect(0, 0, 50, 120);
     c.fillStyle = '#6b3410'; c.fillRect(0, 0, 50, 120);
     c.fillStyle = '#e09c4a'; c.fillRect(1, 1, 48, 118);
-    c.fillStyle = '#2a6ab8'; c.fillRect(6, 2, 22, 116);
-    c.fillStyle = '#3a8ad8'; for (let y = 4; y < 118; y += 10) c.fillRect(8, y + (Math.floor(f.tt * 6) % 10), 18, 2);
+    c.fillStyle = f.bug ? '#7ac8f0' : '#2a6ab8'; c.fillRect(6, 2, 22, 116);
+    if (f.bug) { c.fillStyle = '#ffffffaa'; for (let y = 10; y < 118; y += 28) c.fillRect(8 + ((y + Math.floor(f.tt * 8)) % 10), y, 10, 3); c.fillStyle = '#5aa83a'; c.fillRect(6, 110, 22, 8); }
+    else { c.fillStyle = '#3a8ad8'; for (let y = 4; y < 118; y += 10) c.fillRect(8, y + (Math.floor(f.tt * 6) % 10), 18, 2); }
     c.fillStyle = (f.fy > f.bar && f.fy < f.bar + f.barH) ? '#7ae84a' : '#5ab83a'; c.fillRect(7, Math.round(f.bar), 20, Math.round(f.barH));
     c.fillStyle = '#ffffff55'; c.fillRect(7, Math.round(f.bar), 20, 2);
     const fx = 12, fy = Math.round(f.fy) - 4;

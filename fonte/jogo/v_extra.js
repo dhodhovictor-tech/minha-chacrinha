@@ -29,6 +29,7 @@
     let f = 1;
     if (eqHas('galochas') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.75;
     if (eqHas('cachecol') && season() === 'winter') f *= 0.9;
+    if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
     return f;
   }
   // barraca da Bia na praça
