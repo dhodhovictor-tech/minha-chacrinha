@@ -112,10 +112,11 @@
   }
   function festHud() {
     let el = document.getElementById('festhud');
-    if (!festRun) { if (el) el.hidden = true; return; }
+    if (!festRun) { if (el && !el.hidden) el.hidden = true; return; }
     if (!el) { el = document.createElement('div'); el.id = 'festhud'; el.className = 'frame'; el.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top, 0px));z-index:30;padding:4px 12px;font-size:15px;pointer-events:none'; document.getElementById('game').appendChild(el); }
     el.hidden = false;
-    el.textContent = `${festRun.kind === 'ovo' ? '🥚 ' + festRun.n + ' ovos' : '🐟 ' + festRun.n + ' peixes'} · ${Math.ceil(festRun.t)} s`;
+    const txt = `${festRun.kind === 'ovo' ? '🥚 ' + festRun.n + ' ovos' : '🐟 ' + festRun.n + ' peixes'} · ${Math.ceil(festRun.t)} s`;
+    if (el.textContent !== txt) el.textContent = txt;
   }
   const festFishCaught = () => { if (festRun && festRun.kind === 'gelo') festRun.n++; };
 

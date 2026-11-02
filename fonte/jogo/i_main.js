@@ -83,7 +83,7 @@
     camY = m.h * T <= VH ? (m.h * T - VH) / 2 : clamp(ty, 0, m.h * T - VH);
     camX = Math.round(camX); camY = Math.round(camY);
     ctx.translate(-camX, -camY);
-    ctx.drawImage(groundFor(m), 0, 0);
+    { const gc = groundFor(m), sx = Math.max(0, camX), sy = Math.max(0, camY), sw = Math.min(gc.width - sx, VW), sh = Math.min(gc.height - sy, VH); if (sw > 0 && sh > 0) ctx.drawImage(gc, sx, sy, sw, sh, sx, sy, sw, sh); }
     const x0 = Math.max(0, Math.floor(camX / T) - 1), x1 = Math.min(m.w - 1, Math.ceil((camX + VW) / T) + 1);
     const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(m.h - 1, Math.ceil((camY + VH) / T) + 2);
     // brilho na água
@@ -150,7 +150,7 @@
       ctx.fillStyle = `rgba(20, 16, 60, ${nf})`; ctx.fillRect(0, 0, VW, VH);
       ctx.globalCompositeOperation = 'lighter';
       const light = (x, y, r, a, col = '255,200,120') => { const g = ctx.createRadialGradient(x - camX, y - camY, 2, x - camX, y - camY, r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.fillRect(x - camX - r, y - camY - r, r * 2, r * 2); };
-      if (m.id === 'farm') for (const [k, v] of Object.entries(W.farm.t)) if (v && v.o && v.o.k === 'tocha') { const [x, y] = k.split(',').map(Number); light(x * T + 8, y * T + 4, 40, nf * 0.6); }
+      if (m.id === 'farm') for (const [x, y] of torchList()) light(x * T + 8, y * T + 4, 40, nf * 0.6);
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
@@ -194,7 +194,7 @@
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); feedCheck(dt); deliverLetters(dt);
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
@@ -295,7 +295,6 @@
   function loadMine(mine) {
     // os dados que chegam do banco são somente leitura: trabalha sempre numa cópia
     const m = clone(mine);
-    feedSince = m.seen || 0;
     P = deepMerge(newPlayer(myUid, m.name, clone(m.look) || {}), m);
     P.sleep = false; P.ride = false;
     setTimeout(petInit, 0);

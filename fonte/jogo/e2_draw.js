@@ -374,7 +374,7 @@
         const busy = o.in && o.ready > gm(), ready = o.in && o.ready <= gm();
         shadowAt(px + 8, py + 15, 7, 2);
         blit(obj2Canvas(o.k, ready ? 'ready' : busy ? 'on' : ''), px - 1, py - 8);
-        if (ready && !(o.k === 'colmeia' && season() === 'winter' && !(k || '').startsWith('g:'))) readyBubble(px, py - 2, o.k === 'colmeia' ? honeyAt(k) : o.out);
+        if (ready && !(o.k === 'colmeia' && season() === 'winter' && !(k || '').startsWith('g:'))) readyBubble(px, py - 2, o.k === 'colmeia' ? honeyAtCached(k) : o.out);
         if (o.k === 'colmeia' && season() !== 'winter') for (let k = 0; k < 2; k++) { const a = t * 3 + k * 3; R(px + 8 + Math.cos(a) * 7, py - 2 + Math.sin(a * 1.3) * 4, 1, 1, '#2a2a1a'); }
         return true;
       }

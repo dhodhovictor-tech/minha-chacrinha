@@ -3,6 +3,7 @@
 
   // ---------- registro do que cada um fez (fica no documento da pessoa, P.feed) ----------
   function logAct(k, id, n = 1) {
+    return; // o resumo "enquanto você estava fora" foi tirado
     if (!P) return;
     const f = P.feed || (P.feed = []), now = Date.now(), last = f[f.length - 1];
     if (last && last.k === k && last.id === id && now - last.t < 15 * 60000) { last.n += n; last.t = now; }
@@ -126,3 +127,17 @@
 
   // ---------- pescaria um pouco mais difícil: peixes 10% mais baratos ----------
   for (const k of Object.keys(FISH)) if (ITEMS[k]) ITEMS[k].sell = Math.round(ITEMS[k].sell * 0.9);
+
+  // ---------- leveza: coisas que não precisam ser recalculadas a cada quadro ----------
+  let torchCache = [], torchT = 0;
+  function torchList() {
+    const now = performance.now(); if (now - torchT < 1000) return torchCache; torchT = now;
+    torchCache = []; for (const [k, v] of Object.entries(W.farm.t)) if (v && v.o && v.o.k === 'tocha' && !k.startsWith('g:')) torchCache.push(k.split(',').map(Number));
+    return torchCache;
+  }
+  const honeyCache = new Map();
+  function honeyAtCached(k) {
+    const now = performance.now(), c = honeyCache.get(k);
+    if (c && now - c[0] < 2000) return c[1];
+    const v = honeyAt(k); honeyCache.set(k, [now, v]); return v;
+  }

@@ -201,9 +201,11 @@
   function bossBarUpdate() {
     let el = document.getElementById('bossbar');
     const b = curMap().rocks && monsters.find(x => x.kind === 'boss');
-    if (!b) { if (el) el.hidden = true; return; }
+    if (!b) { if (el && !el.hidden) el.hidden = true; return; }
     if (!el) { el = document.createElement('div'); el.id = 'bossbar'; el.className = 'frame'; el.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top, 0px));z-index:6;padding:4px 10px;min-width:180px;text-align:center;font-size:13px;pointer-events:none'; document.getElementById('game').appendChild(el); }
     el.hidden = false;
+    const key = b.name + Math.round(b.hp / b.max * 100);
+    if (el.dataset.k === key) return; el.dataset.k = key;
     el.innerHTML = `<b>${b.name}</b><div style="height:8px;margin-top:3px;background:#3a1010;border:2px solid #3b1d0a;border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.max(0, b.hp / b.max * 100).toFixed(1)}%;background:#e8402a"></div></div>`;
   }
   function drawBoss(mo) {

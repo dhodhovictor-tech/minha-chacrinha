@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '6928298'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = 'd094392'; window.__APP_DATE = '02/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1237,11 +1237,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return inv;
   };
   function newPlayer(uid, name, look) {
-    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [], eq: {}, feed: [] };
+    return { uid, name, look, map: 'house', x: 6 * T + 8, y: 5 * T + 8, dir: 1, inv: NEW_INV(), sel: 0, energy: 270, maxEnergy: 270, hp: 100, skills: { farming: 0, fishing: 0, mining: 0, foraging: 0, combat: 0 }, earned: 0, spent: 0, ship: [], water: 40, lastDay: 1, sleep: false, mineFloor: 0, stats: { shipped: 0, fish: 0 }, recipes: [], rel: {}, mail: [], flags: {}, buff: null, spouse: null, spouseName: '', ride: false, pet: null, prof: [], eq: {} };
   }
   function playerDoc() {
-    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof, eq, feed } = P;
-    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], eq: eq || {}, feed: feed || [], pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
+    const { uid, name, look, map, x, y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, pet, prof, eq } = P;
+    return clone({ uid, name, look, map: map.startsWith('mine') && map !== 'minetop' ? 'minetop' : map, x: map.startsWith('mine') && map !== 'minetop' ? 8 * T + 8 : x, y: map.startsWith('mine') && map !== 'minetop' ? 9 * T + 8 : y, dir, inv, sel, energy, maxEnergy, hp, skills, earned, spent, ship, water, lastDay, mineFloor, stats, recipes, rel, mail, flags, buff, spouse, spouseName, prof: prof || [], eq: eq || {}, pet: pet ? { ...pet, map: (petSt.map || '').startsWith('mine') && petSt.map !== 'minetop' ? 'minetop' : petSt.map, x: Math.round(petSt.x), y: Math.round(petSt.y) } : null, seen: Date.now() });
   }
   // ================= inventário =================
   const stackable = id => item(id).cat !== 'tool';
@@ -2462,7 +2462,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         const busy = o.in && o.ready > gm(), ready = o.in && o.ready <= gm();
         shadowAt(px + 8, py + 15, 7, 2);
         blit(obj2Canvas(o.k, ready ? 'ready' : busy ? 'on' : ''), px - 1, py - 8);
-        if (ready && !(o.k === 'colmeia' && season() === 'winter' && !(k || '').startsWith('g:'))) readyBubble(px, py - 2, o.k === 'colmeia' ? honeyAt(k) : o.out);
+        if (ready && !(o.k === 'colmeia' && season() === 'winter' && !(k || '').startsWith('g:'))) readyBubble(px, py - 2, o.k === 'colmeia' ? honeyAtCached(k) : o.out);
         if (o.k === 'colmeia' && season() !== 'winter') for (let k = 0; k < 2; k++) { const a = t * 3 + k * 3; R(px + 8 + Math.cos(a) * 7, py - 2 + Math.sin(a * 1.3) * 4, 1, 1, '#2a2a1a'); }
         return true;
       }
@@ -5725,9 +5725,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function bossBarUpdate() {
     let el = document.getElementById('bossbar');
     const b = curMap().rocks && monsters.find(x => x.kind === 'boss');
-    if (!b) { if (el) el.hidden = true; return; }
+    if (!b) { if (el && !el.hidden) el.hidden = true; return; }
     if (!el) { el = document.createElement('div'); el.id = 'bossbar'; el.className = 'frame'; el.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top, 0px));z-index:6;padding:4px 10px;min-width:180px;text-align:center;font-size:13px;pointer-events:none'; document.getElementById('game').appendChild(el); }
     el.hidden = false;
+    const key = b.name + Math.round(b.hp / b.max * 100);
+    if (el.dataset.k === key) return; el.dataset.k = key;
     el.innerHTML = `<b>${b.name}</b><div style="height:8px;margin-top:3px;background:#3a1010;border:2px solid #3b1d0a;border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.max(0, b.hp / b.max * 100).toFixed(1)}%;background:#e8402a"></div></div>`;
   }
   function drawBoss(mo) {
@@ -5910,10 +5912,11 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function festHud() {
     let el = document.getElementById('festhud');
-    if (!festRun) { if (el) el.hidden = true; return; }
+    if (!festRun) { if (el && !el.hidden) el.hidden = true; return; }
     if (!el) { el = document.createElement('div'); el.id = 'festhud'; el.className = 'frame'; el.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top, 0px));z-index:30;padding:4px 12px;font-size:15px;pointer-events:none'; document.getElementById('game').appendChild(el); }
     el.hidden = false;
-    el.textContent = `${festRun.kind === 'ovo' ? '🥚 ' + festRun.n + ' ovos' : '🐟 ' + festRun.n + ' peixes'} · ${Math.ceil(festRun.t)} s`;
+    const txt = `${festRun.kind === 'ovo' ? '🥚 ' + festRun.n + ' ovos' : '🐟 ' + festRun.n + ' peixes'} · ${Math.ceil(festRun.t)} s`;
+    if (el.textContent !== txt) el.textContent = txt;
   }
   const festFishCaught = () => { if (festRun && festRun.kind === 'gelo') festRun.n++; };
 
@@ -6222,6 +6225,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ---------- registro do que cada um fez (fica no documento da pessoa, P.feed) ----------
   function logAct(k, id, n = 1) {
+    return; // o resumo "enquanto você estava fora" foi tirado
     if (!P) return;
     const f = P.feed || (P.feed = []), now = Date.now(), last = f[f.length - 1];
     if (last && last.k === k && last.id === id && now - last.t < 15 * 60000) { last.n += n; last.t = now; }
@@ -6345,6 +6349,20 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ---------- pescaria um pouco mais difícil: peixes 10% mais baratos ----------
   for (const k of Object.keys(FISH)) if (ITEMS[k]) ITEMS[k].sell = Math.round(ITEMS[k].sell * 0.9);
+
+  // ---------- leveza: coisas que não precisam ser recalculadas a cada quadro ----------
+  let torchCache = [], torchT = 0;
+  function torchList() {
+    const now = performance.now(); if (now - torchT < 1000) return torchCache; torchT = now;
+    torchCache = []; for (const [k, v] of Object.entries(W.farm.t)) if (v && v.o && v.o.k === 'tocha' && !k.startsWith('g:')) torchCache.push(k.split(',').map(Number));
+    return torchCache;
+  }
+  const honeyCache = new Map();
+  function honeyAtCached(k) {
+    const now = performance.now(), c = honeyCache.get(k);
+    if (c && now - c[0] < 2000) return c[1];
+    const v = honeyAt(k); honeyCache.set(k, [now, v]); return v;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -6430,7 +6448,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     camY = m.h * T <= VH ? (m.h * T - VH) / 2 : clamp(ty, 0, m.h * T - VH);
     camX = Math.round(camX); camY = Math.round(camY);
     ctx.translate(-camX, -camY);
-    ctx.drawImage(groundFor(m), 0, 0);
+    { const gc = groundFor(m), sx = Math.max(0, camX), sy = Math.max(0, camY), sw = Math.min(gc.width - sx, VW), sh = Math.min(gc.height - sy, VH); if (sw > 0 && sh > 0) ctx.drawImage(gc, sx, sy, sw, sh, sx, sy, sw, sh); }
     const x0 = Math.max(0, Math.floor(camX / T) - 1), x1 = Math.min(m.w - 1, Math.ceil((camX + VW) / T) + 1);
     const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(m.h - 1, Math.ceil((camY + VH) / T) + 2);
     // brilho na água
@@ -6497,7 +6515,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ctx.fillStyle = `rgba(20, 16, 60, ${nf})`; ctx.fillRect(0, 0, VW, VH);
       ctx.globalCompositeOperation = 'lighter';
       const light = (x, y, r, a, col = '255,200,120') => { const g = ctx.createRadialGradient(x - camX, y - camY, 2, x - camX, y - camY, r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.fillRect(x - camX - r, y - camY - r, r * 2, r * 2); };
-      if (m.id === 'farm') for (const [k, v] of Object.entries(W.farm.t)) if (v && v.o && v.o.k === 'tocha') { const [x, y] = k.split(',').map(Number); light(x * T + 8, y * T + 4, 40, nf * 0.6); }
+      if (m.id === 'farm') for (const [x, y] of torchList()) light(x * T + 8, y * T + 4, 40, nf * 0.6);
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
@@ -6541,7 +6559,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updateAnimals(dt);
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
-      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); feedCheck(dt); deliverLetters(dt);
+      updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
       updateFishing(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod') act(); }
       render(dt);
@@ -6642,7 +6660,6 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function loadMine(mine) {
     // os dados que chegam do banco são somente leitura: trabalha sempre numa cópia
     const m = clone(mine);
-    feedSince = m.seen || 0;
     P = deepMerge(newPlayer(myUid, m.name, clone(m.look) || {}), m);
     P.sleep = false; P.ride = false;
     setTimeout(petInit, 0);
