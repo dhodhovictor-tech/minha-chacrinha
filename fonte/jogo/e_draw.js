@@ -342,7 +342,7 @@
       poly([[4, 10], [5, 6 - big], [9, 4 - big], [12, 5], [11, 9], [7, 11]], p[2]);
       R(6, 5 - big, 3, 1, p[3]); R(5, 6 - big, 1, 2, p[3]);
       R(11, 10, 3, 1, p[0]); R(13, 9, 1, 1, p[0]);
-      const spec = { cobre: ['#c86a2a', '#f4a060'], ferro: ['#a8b0b8', '#ffffff'], ouro: ['#d8a020', '#fff080'], coal: ['#141414', '#4a4a4a'] }[kind];
+      const spec = { cobre: ['#c86a2a', '#f4a060'], ferro: ['#c4d0dc', '#ffffff'], ouro: ['#d8a020', '#fff080'], coal: ['#141414', '#4a4a4a'] }[kind];
       if (spec) for (const [x, y] of [[5, 9], [10, 7], [8, 12], [12, 11], [7, 6]]) { R(x, y, 2, 2, spec[0]); R(x, y, 1, 1, spec[1]); }
       if (kind.startsWith('gem')) { const gc = { quartzo: '#f0f0ff', ametista: '#b05ae0', topazio: '#f4b83a', esmeralda: '#3ae07a', diamante: '#bff8ff' }[kind.split(':')[1]]; for (const [x, y] of [[5, 8], [10, 7], [8, 11]]) { poly([[x + 1, y - 1], [x + 3, y + 1], [x + 1, y + 3], [x - 1, y + 1]], gc); R(x, y, 1, 1, '#ffffff'); } }
     });
