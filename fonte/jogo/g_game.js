@@ -299,7 +299,7 @@
           const hp = (o.hp || 10) - power * (hasProf('mestrelenhador') ? 2 : 1); sfx.chop();
           if (o.k === 'ftree' && o.age < 7) { setTile(k, null); addItem('m_' + o.id, 1); return; }
           if (hp <= 0 && o.tap) addItem('extrator', 1);
-          if (hp <= 0) { P.stats.trees = (P.stats.trees || 0) + 1; setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(rint(8, 12) * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
+          if (hp <= 0) { P.stats.trees = (P.stats.trees || 0) + 1; setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(3 * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
           else setTile(k, { ...tl, o: { ...o, hp, shake: performance.now() + 300 } });
           return;
         }
@@ -312,7 +312,7 @@
       }
       if (s.id === 'pick') {
         if (o && o.k === 'meteorito') { breakMeteor(k, tl, o, power); return; }
-        if (o && o.k === 'rock') { const hp = o.hp - power; sfx.pick(); if (hp <= 0) { setTile(k, null); addItem('pedra', rint(1, 3)); gainXP('mining', 1); } else setTile(k, { ...tl, o: { ...o, hp } }); return; }
+        if (o && o.k === 'rock') { const hp = o.hp - power; sfx.pick(); if (hp <= 0) { setTile(k, null); addItem('pedra', 1); gainXP('mining', 1); } else setTile(k, { ...tl, o: { ...o, hp } }); return; }
         if (o && o.k === 'twig') { setTile(k, null); addItem('madeira', 1); return; }
         if (o && PLACED.includes(o.k)) { pickUpPlaced(k, tl, o); return; }
         if (tl && tl.s && !tl.c) { setTile(k, tl.f ? { f: 1 } : null); sfx.hoe(); return; }

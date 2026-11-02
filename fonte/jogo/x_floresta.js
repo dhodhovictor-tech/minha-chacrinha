@@ -196,7 +196,7 @@
     switch (o.kind) {
       case 'galho': add('madeira', rint(1, 2)); if (Math.random() < 0.3) add('fibra', 1); break;
       case 'arbusto': add('fibra', rint(1, 2)); if (Math.random() < 0.5) add('madeira', 1); if (Math.random() < 0.25) add(pick(MATA_FORAGE[season()]), 1); break;
-      case 'arvore': add('madeira', Math.round(rint(5, 8) * lj)); add(wood, rint(1, 3)); if (Math.random() < 0.5) add('seiva', rint(1, 2)); if (season() === 'winter' && Math.random() < 0.3) add('pinha', 1); break;
+      case 'arvore': add('madeira', Math.round(3 * lj)); add(wood, rint(1, 3)); if (Math.random() < 0.5) add('seiva', rint(1, 2)); if (season() === 'winter' && Math.random() < 0.3) add('pinha', 1); break;
       case 'toco': add('madeira', rint(2, 3)); if (Math.random() < 0.03) add('trufa', 1); else if (Math.random() < 0.45) add(pick(['cogumelo', 'melsilvestre', 'pena', 'resina', 'avela']), 1); break;
       case 'tronco': add('madeira', Math.round(rint(3, 5) * lj)); add(wood, rint(1, 2)); if (Math.random() < 0.35) add(pick(['cogumelo', 'morchela', 'seiva', 'resina']), 1); break;
       case 'antigo': add('madeiralei', rint(2, 3)); add('madeira', Math.round(8 * lj)); add(wood, 2); break;

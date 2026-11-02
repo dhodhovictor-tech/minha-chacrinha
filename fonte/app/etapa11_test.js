@@ -117,6 +117,12 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   // pescar gasta 45% a mais
   const fishE = await ev(() => { const s = __sv, P = s.P, m = s.getMap('farm'); s.goMap('farm', 38 * 16 + 8, 24 * 16 + 12, 1); P.map = 'farm'; P.x = 38 * 16 + 8; P.y = 24 * 16 + 12; P.dir = 1; P.energy = 200; for (const k of ['38,25', '38,26']) if (s.tile(k)) s.setTile(k, null); s.startFishing(m); return 200 - P.energy; });
   ok(Math.abs(fishE - 4 * 1.17 * 1.45) < 0.01, 'lançar a linha gasta 45% a mais: ' + fishE.toFixed(2));
+  // árvore normal dá 3 madeiras e pedra dá 1 pedra (na chacrinha)
+  await p.waitForTimeout(600); await ev(() => { if (__sv.fishing) __sv.act(); }); await p.waitForTimeout(300);
+  const yields = await ev(() => { const s = __sv, P = s.P; s.setTile('30,20', { o: { k: 'tree', hp: 1, v: 0 } }); s.setTile('31,20', { o: { k: 'rock', hp: 1, v: 0 } }); P.x = 30 * 16 + 8; P.y = 21 * 16 + 10; P.dir = 0; P.energy = 200; P.sel = P.inv.findIndex(i => i && i.id === 'axe'); const m0 = s.count('madeira'); s.act(); return { m: s.count('madeira') - m0 }; });
+  await p.waitForTimeout(400);
+  const rockY = await ev(() => { const s = __sv, P = s.P; P.x = 31 * 16 + 8; P.y = 21 * 16 + 10; P.dir = 0; P.sel = P.inv.findIndex(i => i && i.id === 'pick'); const p0 = s.count('pedra'); s.act(); return s.count('pedra') - p0; });
+  ok(yields.m === 3 && rockY === 1, `árvore normal dá 3 madeiras (${yields.m}) e pedra dá 1 pedra (${rockY})`);
   // fogueira na chacrinha
   await p.waitForTimeout(600); await ev(() => { if (__sv.fishing) __sv.act(); }); await p.waitForTimeout(300);
   await ev(() => { const s = __sv, P = s.P; s.setTile('30,22', { o: { k: 'fogueira' } }); P.x = 30 * 16 + 8; P.y = 23 * 16 + 10; P.dir = 0; P.sel = 8; P.inv[8] = null; P.energy = 100; s.W.clock.min = 1260; s.W.clock.at = Date.now(); });
