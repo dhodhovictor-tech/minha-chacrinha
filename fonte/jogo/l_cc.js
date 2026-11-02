@@ -152,6 +152,7 @@
   }
 
   function panelAction3(a, b) {
+    if (diaryAction(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;

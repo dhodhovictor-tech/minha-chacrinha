@@ -13,11 +13,10 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const actN = async n => { for (let i = 0; i < n; i++) { await ev(() => __sv.act()); await p.waitForTimeout(270); } };
   await closeAll(); await p.waitForTimeout(1200);
   await ev(() => { const s = __sv; s.W.meta.day = 37; s.P.lastDay = 37; s.W.clock.min = 600; s.W.clock.at = Date.now(); s.W.meta.rain = false; s.earn(50000); });
-  // trilha no alto da chacrinha
-  await ev(() => __sv.goMap('farm', 24.9 * 16, 3 * 16 + 10, 0)); await p.waitForTimeout(600);
-  await ev(() => { const s = __sv, P = s.P; for (const k of ['24,1', '25,1', '24,2', '25,2', '24,3', '25,3']) if (s.tile(k)) s.setTile(k, null); P.x = 24.9 * 16; P.y = 2 * 16 + 4; });
-  await p.keyboard.down('ArrowUp'); await p.waitForTimeout(900); await p.keyboard.up('ArrowUp'); await p.waitForTimeout(700);
-  ok(await ev(() => __sv.P.map) === 'mata', 'a trilha no alto da chacrinha leva à Mata do Vale: ' + await ev(() => __sv.P.map));
+  // a mata fica à direita da vila
+  await ev(() => __sv.goMap('town', 47.5 * 16, 18 * 16 + 10, 3)); await p.waitForTimeout(600);
+  await p.keyboard.down('ArrowRight'); await p.waitForTimeout(900); await p.keyboard.up('ArrowRight'); await p.waitForTimeout(700);
+  ok(await ev(() => __sv.P.map) === 'mata', 'seguindo a rua da vila para a direita chega à Mata do Vale: ' + await ev(() => __sv.P.map));
   await ev(() => __sv.goMap('mata', 11.5 * 16, 11 * 16 + 8, 0)); await p.waitForTimeout(700); await clearToasts();
   await p.screenshot({ path: SHOTS + 'e11_entrada.png' });
   // fogueira: descansar e assar

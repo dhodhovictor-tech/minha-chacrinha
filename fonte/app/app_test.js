@@ -93,6 +93,14 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
     await ev(A, gk => __sv.breakMata(__sv.curMap(), gk, true), gk); await A.waitForTimeout(1000);
     ok(await ev(B, () => __sv.count('madeiralei')) > lei0, 'árvore gigante: B, que também cortava, ganhou a parte dele');
   }
+  // diário: fica guardado no banco, mas só quem escreveu lê
+  await ev(A, async () => { const s = __sv; s.diary = { e: { d1: { t: 'segredo da A', s: '', r: '' } } }; s.openInventory('diario'); await new Promise(r => setTimeout(r, 200)); });
+  await ev(A, () => document.querySelector('[data-a="diarySave"]').click()); await A.waitForTimeout(1200);
+  const diaB = await ev(B, async () => { const s = __sv; s.diary = null; s.openInventory('diario'); await new Promise(r => setTimeout(r, 1200)); return document.querySelector('.win').innerText + ' ' + ((document.getElementById('diarytxt') || {}).value || ''); });
+  ok(!/segredo da A/.test(diaB) && /Diário de/.test(diaB), 'o diário de A não aparece no aparelho de B');
+  const diaA = await ev(A, async () => { const s = __sv; s.diary = null; s.renderInventory(); await new Promise(r => setTimeout(r, 1200)); return document.querySelector('.win').innerText + ' ' + ((document.getElementById('diarytxt') || {}).value || ''); });
+  ok(/segredo da A/.test(diaA), 'A abre o diário de novo e lê o que escreveu (veio do banco)');
+  await ev(A, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click())); await ev(B, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click()));
   const ta = await ev(A, () => __sv.nowMin()), tb = await ev(B, () => __sv.nowMin());
   ok(Math.abs(ta - tb) <= 10, `relógio igual nos dois (${ta} / ${tb})`);
   // dormir

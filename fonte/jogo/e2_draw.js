@@ -1,6 +1,6 @@
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -22,6 +22,24 @@
     return bake(`b2|${type}|${w}|${h}|${night ? 1 : 0}|${s}|${extra}`, w + 16, h + 40, () => {
       ctx.translate(8, 36);
       switch (type) {
+        case 'atelie': {
+          R(2, 18, w - 4, h - 18, '#f4dce4');
+          for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');
+          R(2, h - 8, w - 4, 8, '#9a6a7a'); R(2, h - 8, w - 4, 1, '#b88a9a');
+          shingleRoof(-6, -12, w + 12, 32, snow ? '#e8eef4' : '#7a4a8a'); R(-6, 18, w + 12, 3, '#4a2a5a');
+          // placa com um vestidinho
+          R(w / 2 - 20, -6, 40, 17, '#5a3418'); R(w / 2 - 18, -4, 36, 13, '#f8e8f0');
+          R(w / 2 - 1, -3, 2, 2, '#8a6a4a'); poly([[w / 2 - 4, -1], [w / 2 + 4, -1], [w / 2 + 7, 8], [w / 2 - 7, 8]], '#d84a8a'); R(w / 2 - 4, 2, 8, 1, '#f8e8f0');
+          // toldo listrado
+          for (let k = 0; k < 9; k++) R(3 + k * ((w - 6) / 9), 23, (w - 6) / 9 + 1, 6, k % 2 ? '#f8f0f4' : '#b04a8a');
+          for (let k = 0; k < 9; k++) disc(3 + (k + 0.5) * ((w - 6) / 9), 29, (w - 6) / 18, k % 2 ? '#f8f0f4' : '#b04a8a');
+          // vitrine com vestido no manequim
+          winPx(7, 36, 22, 26, true, '#f4e8f0');
+          R(17, 40, 2, 3, '#e8d8c0'); poly([[14, 43], [22, 43], [24, 58], [12, 58]], '#d84a8a'); R(14, 46, 8, 1, '#f8e8f0'); R(17, 58, 2, 3, '#5a3a2a');
+          doorPx(2 * T + 1, h - 22, '#8a4a6a');
+          R(w - 26, h - 15, 20, 6, '#6a4a2a'); for (let k = 0; k < 5; k++) disc(w - 23 + k * 4, h - 16, 2.2, ['#ff8ac8', '#f4d040', '#ffffff', '#c86ad8', '#ff8ac8'][k]);
+          break;
+        }
         case 'carpentry': {
           planks(2, 18, w - 4, h - 18, '#c8884a');
           gable(2, -22, w - 4, 42, '#c8884a', '#4a7a3a', snow);

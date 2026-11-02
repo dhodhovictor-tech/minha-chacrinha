@@ -145,7 +145,6 @@
     if (placing) { confirmPlacing(); return; }
     if (fishing) { fishAction(); return; }
     if (nearBooth()) { openFest(); return; }
-    if (nearStall()) { openShop('roupas'); return; }
     const m = curMap();
     let [tx, ty] = target || facing();
     const k = tx + ',' + ty;
@@ -218,6 +217,7 @@
     const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
     // a primeira sai com a qualidade sorteada; as extras são normais
     if (!addItem(id, 1, false, q)) return;
+    P.stats.harv = (P.stats.harv || 0) + n;
     if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
     logAct('colheu', id, n);

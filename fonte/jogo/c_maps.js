@@ -52,12 +52,15 @@
     m.rect(0, 17, 48, 19, G.COBBLE); m.rect(23, 3, 25, 29, G.COBBLE);
     m.rect(1, 30, 48, 33, G.WATER); m.rect(1, 34, 48, 34, G.SAND); m.rect(1, 29, 48, 29, G.SAND);
     m.rect(23, 29, 25, 34, G.BRIDGE);
-    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE);
+    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE); m.rect(27, 14, 29, 16, G.COBBLE);
+    m.rect(49, 17, 49, 19, G.COBBLE);
     const r = srand(7);
     for (let k = 0; k < 70; k++) { const x = 1 + Math.floor(r() * 47), y = 3 + Math.floor(r() * 25); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
     sprite(m, 'store', 6, 8, 9, 6); m.solid[13 * m.w + 10] = 0;
     m.warps.push({ x: 10, y: 13, to: 'store', tx: 7, ty: 8, dir: 1 });
-    sprite(m, 'smith', 31, 8, 8, 6); m.solid[13 * m.w + 35] = 0;
+    sprite(m, 'smith', 32, 9, 6, 5); m.solid[13 * m.w + 35] = 0;
+    sprite(m, 'atelie', 26, 9, 5, 5); m.solid[13 * m.w + 28] = 0;
+    m.warps.push({ x: 28, y: 13, to: 'atelie', tx: 6, ty: 7, dir: 0 });
     m.warps.push({ x: 35, y: 13, to: 'smith', tx: 6, ty: 7, dir: 1 });
     sprite(m, 'carpentry', 6, 21, 6, 5); m.solid[25 * m.w + 8] = 0;
     m.warps.push({ x: 8, y: 25, to: 'carpentry', tx: 6, ty: 7, dir: 0 });
@@ -79,6 +82,7 @@
     for (let x = 32; x <= 35; x++) spot(m, x, 22, { kind: 'shop', who: 'cida' });
     sprite(m, 'board', 20, 15, 2, 2, { solidFrom: 1 }); spot(m, 20, 16, { kind: 'board' }); spot(m, 21, 16, { kind: 'board' });
     m.warps.push({ x: 0, y: 17, h: 3, to: 'farm', tx: 46, ty: 19, dir: 2 });
+    m.warps.push({ x: 49, y: 17, h: 3, to: 'mata', tx: 2, ty: 9, dir: 3 });
     m.warps.push({ x: 23, y: 0, w: 3, to: 'minetop', tx: 8, ty: 10, dir: 0 });
     return finalize(m);
   }
@@ -183,6 +187,13 @@
     for (let x = 3; x <= 8; x++) spot(m, x, 3, { kind: 'shop', who });
     deco(m);
     return m;
+  }
+  function buildAtelie() {
+    const m = shopRoom('atelie', 'Ateliê da Bia', 12, 9, G.WOOD, 'bia', () => {});
+    // espelho, arara de roupas e manequins (desenhados em v_extra.js)
+    for (const [x, y] of [[1, 2], [9, 2], [10, 2], [1, 5], [10, 5]]) m.solid[y * m.w + x] = 1;
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 28, ty: 14, dir: 1 });
+    return finalize(m);
   }
   function buildCarpentry() {
     const m = shopRoom('carpentry', 'Carpintaria', 12, 9, G.WOOD, 'rosa', m => { sprite(m, 'lumber', 9, 2, 2, 2); sprite(m, 'crates', 1, 5, 2, 2); sprite(m, 'plant', 10, 6, 1, 1); });
@@ -290,4 +301,4 @@
     m.warps.push({ x: 9, y: 10, to: 'town', tx: 45, ty: 25, dir: 1 });
     return finalize(m);
   }
-  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum() };
+  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum(), atelie: buildAtelie() };

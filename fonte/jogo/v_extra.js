@@ -32,27 +32,25 @@
     if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
     return f;
   }
-  // barraca da Bia na praça
-  const STALL = { x: 26, y: 12 };
-  const nearStall = () => P.map === 'town' && Math.hypot(P.x - (STALL.x + 1.5) * T, P.y - (STALL.y + 3) * T) < 28;
-  function stallEnts(m, ents) {
-    if (m.id !== 'town') return;
-    const bx = STALL.x * T, by = STALL.y * T;
-    ents.push({ y: by + 30, f: () => {
-      shadowAt(bx + 24, by + 30, 24, 4);
-      R(bx + 2, by + 14, 44, 14, '#7a4a8a'); R(bx + 2, by + 14, 44, 3, '#9a6aaa');
-      for (let k = 0; k < 6; k++) R(bx + k * 8, by, 8, 8, k % 2 ? '#f8e8f0' : '#b04a8a');
-      for (let k = 0; k < 6; k++) poly([[bx + k * 8, by + 8], [bx + k * 8 + 8, by + 8], [bx + k * 8 + 4, by + 11]], k % 2 ? '#f8e8f0' : '#b04a8a');
-      R(bx + 2, by + 8, 2, 8, '#4a2a3a'); R(bx + 44, by + 8, 2, 8, '#4a2a3a');
-      // roupas penduradas
-      R(bx + 6, by + 16, 6, 7, '#4a8ad8'); R(bx + 15, by + 16, 6, 6, '#e8c040'); R(bx + 34, by + 16, 7, 5, '#5aa83a'); R(bx + 36, by + 21, 3, 4, '#5aa83a');
-      // manequim com vestido (a Bia anda pela vila, então a barraca fica no autoatendimento)
-      R(bx + 25, by + 22, 2, 7, '#5a3a2a'); R(bx + 22, by + 28, 8, 2, '#5a3a2a');
-      R(bx + 23, by + 5, 6, 3, '#e8d8c0');
-      poly([[bx + 21, by + 8], [bx + 31, by + 8], [bx + 33, by + 22], [bx + 19, by + 22]], '#d84a8a');
-      R(bx + 21, by + 12, 10, 2, '#f8e8f0');
-      nameTag('Ateliê da Bia', bx + 24, by - 4);
+  // a loja da Bia é um prédio na praça; ela fica atrás do balcão das 9h às 17h
+  SHOP_INFO.bia = { ...SHOP_INFO.roupas, npc: undefined };
+  function atelieEnts(m, ents) {
+    if (m.id !== 'atelie') return;
+    const t = performance.now() / 1000;
+    // tapete
+    ents.push({ y: -999, f: () => { R(4 * T, 5 * T + 2, 4 * T, 2 * T + 8, '#c86a9a'); R(4 * T + 3, 5 * T + 5, 4 * T - 6, 2 * T + 2, '#e89ac0'); for (let k = 0; k < 4; k++) R(4 * T + 8 + k * 14, 6 * T + 6, 6, 2, '#f8e8f0'); } });
+    // quadros da Bia na parede (ela também é artista) e prateleira de tecidos
+    ents.push({ y: -998, f: () => {
+      R(2 * T, 4, 22, 16, '#7a4a24'); R(2 * T + 2, 6, 18, 12, '#a8d8f0'); disc(2 * T + 15, 10, 3, '#f4d040'); poly([[2 * T + 2, 18], [2 * T + 9, 11], [2 * T + 15, 18]], '#5aa83a');
+      R(7 * T, 2, 34, 22, '#6a3a1e'); for (let k = 0; k < 3; k++) for (let j = 0; j < 4; j++) R(7 * T + 3 + j * 8, 4 + k * 7, 6, 5, ['#d84a8a', '#4a8ad8', '#f4c83a', '#5aa83a', '#c86ad8', '#f4f0e8'][(j + k * 2) % 6]);
     } });
+    // espelho
+    ents.push({ y: 2 * T + 15, f: () => { const x = 1 * T, y = 2 * T; R(x + 7, y + 10, 2, 6, '#7a4a24'); R(x + 4, y + 15, 8, 1, '#5a3418'); oval(x + 8, y + 2, 6, 9, '#c8a050'); oval(x + 8, y + 2, 4.5, 7.5, '#c8e0f0'); R(x + 5, y - 3, 2, 6, '#ffffffaa'); } });
+    // arara com roupas
+    ents.push({ y: 2 * T + 15, f: () => { const x = 9 * T, y = 2 * T; R(x + 1, y - 10, 2, 26, '#8a8a92'); R(x + 29, y - 10, 2, 26, '#8a8a92'); R(x + 1, y - 10, 30, 2, '#a8a8b0');
+      for (let k = 0; k < 5; k++) { const c = ['#4a8ad8', '#f4c020', '#d84a3a', '#5aa83a', '#c86ad8'][k], xx = x + 4 + k * 5 + Math.sin(t * 1.5 + k) * 0.5; R(xx + 1, y - 8, 1, 2, '#5a5a62'); R(xx - 1, y - 6, 5, 12, c); R(xx - 1, y - 6, 5, 1, shade(c, 0.3)); } } });
+    // manequins
+    for (const [mx, col] of [[1, '#d84a8a'], [10, '#4a8ad8']]) ents.push({ y: 5 * T + 15, f: () => { const x = mx * T + 8, y = 5 * T; shadowAt(x, y + 15, 5, 1.5); R(x - 1, y + 8, 2, 7, '#5a3a2a'); R(x - 4, y + 14, 8, 2, '#5a3a2a'); R(x - 2, y - 12, 4, 3, '#e8d8c0'); poly([[x - 5, y - 9], [x + 5, y - 9], [x + 7, y + 8], [x - 7, y + 8]], col); R(x - 5, y - 5, 10, 2, '#f8e8f0'); } });
   }
 
   // ---------- mais coisas nos festivais: comidinhas, minijogos e conversa ----------

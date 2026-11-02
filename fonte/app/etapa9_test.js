@@ -17,7 +17,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await ev(() => { __sv.W.meta.day = 39; __sv.P.lastDay = 39; __sv.earn(30000); __sv.goMap('town', 27.5 * 16, 15 * 16 + 12, 0); });
   await p.waitForTimeout(800); await ev(() => document.querySelectorAll('#toasts > *').forEach(e => e.remove()));
   await p.screenshot({ path: SHOTS + 'e9_praca.png' });
-  await ev(() => { const P = __sv.P; P.x = 27.5 * 16; P.y = 15 * 16 + 12; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300);
+  await ev(() => __sv.openShop('bia')); await p.waitForTimeout(300);
   const shop = await ev(() => (document.querySelector('.win') || {}).innerText || '');
   ok(/Ateliê da Bia/.test(shop) && /Galochas/.test(shop) && /Luvas de jardinagem/.test(shop) && /Capacete de minerador/.test(shop), 'Ateliê da Bia vende roupas');
   await p.screenshot({ path: SHOTS + 'e9_loja.png' });

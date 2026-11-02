@@ -155,7 +155,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'd2bd88b'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = '4c43aa5'; window.__APP_DATE = '02/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -580,7 +580,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       lines: ['Estou tentando pintar o rio com a luz da manhã.', 'Achei uns cogumelos lindos perto da mata.', 'Arte e plantação têm algo em comum: paciência.', 'Você já reparou nas cores do outono por aqui?', 'Prefiro comida simples, feita com o que a terra dá.'],
       hi: ['Pintei um quadro da sua chacrinha. Um dia te mostro!', 'Conversar com você me dá ideias novas.'],
       season: ['As flores da primavera são minhas modelos favoritas.', 'O mar no verão tem um azul impossível de pintar.', 'Outono: laranja, vermelho, dourado... que paleta!', 'A neve deixa tudo silencioso. Gosto disso.'],
-      sched: [[360, null], [480, 'town', 10, 28, 1], [660, 'beach', 14, 8, 1], [840, 'town', 26, 26, 1], [1020, 'town', 38, 28, 1], [1140, 'bar', 11, 7, 3], [1320, null]] },
+      shop: 'atelie', hours: [540, 1020],
+      sched: [[360, null], [480, 'town', 10, 28, 1], [540, 'atelie', 6, 2, 1], [1020, 'town', 38, 28, 1], [1140, 'bar', 11, 7, 3], [1320, null]] },
     davi: { name: 'Doutor Davi', role: 'médico', look: { hair: 0, shirt: 7, skin: 2, pants: '#4a4a5a', glasses: true }, bday: ['winter', 14], loves: ['oleotrufa', 'vinho:uva', '*conserva', 'cafereforcado'], likes: ['*food', '*fruit'], hates: ['gosma', 'asamorcego'],
       lines: ['Lembre-se de comer bem. Energia não vem do nada!', 'Se desmaiar na mina, alguém sempre te traz de volta. Mas tome cuidado.', 'Dormir cedo faz milagres pela saúde.', 'Estou estudando as plantas medicinais da região.', 'Uma salada por dia mantém o médico longe. Bom, eu sou o médico.'],
       hi: ['Você anda cuidando bem da saúde. Fico contente.', 'É bom ter alguém com quem conversar além dos pacientes.'],
@@ -849,12 +850,15 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.rect(0, 17, 48, 19, G.COBBLE); m.rect(23, 3, 25, 29, G.COBBLE);
     m.rect(1, 30, 48, 33, G.WATER); m.rect(1, 34, 48, 34, G.SAND); m.rect(1, 29, 48, 29, G.SAND);
     m.rect(23, 29, 25, 34, G.BRIDGE);
-    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE);
+    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE); m.rect(27, 14, 29, 16, G.COBBLE);
+    m.rect(49, 17, 49, 19, G.COBBLE);
     const r = srand(7);
     for (let k = 0; k < 70; k++) { const x = 1 + Math.floor(r() * 47), y = 3 + Math.floor(r() * 25); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
     sprite(m, 'store', 6, 8, 9, 6); m.solid[13 * m.w + 10] = 0;
     m.warps.push({ x: 10, y: 13, to: 'store', tx: 7, ty: 8, dir: 1 });
-    sprite(m, 'smith', 31, 8, 8, 6); m.solid[13 * m.w + 35] = 0;
+    sprite(m, 'smith', 32, 9, 6, 5); m.solid[13 * m.w + 35] = 0;
+    sprite(m, 'atelie', 26, 9, 5, 5); m.solid[13 * m.w + 28] = 0;
+    m.warps.push({ x: 28, y: 13, to: 'atelie', tx: 6, ty: 7, dir: 0 });
     m.warps.push({ x: 35, y: 13, to: 'smith', tx: 6, ty: 7, dir: 1 });
     sprite(m, 'carpentry', 6, 21, 6, 5); m.solid[25 * m.w + 8] = 0;
     m.warps.push({ x: 8, y: 25, to: 'carpentry', tx: 6, ty: 7, dir: 0 });
@@ -876,6 +880,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (let x = 32; x <= 35; x++) spot(m, x, 22, { kind: 'shop', who: 'cida' });
     sprite(m, 'board', 20, 15, 2, 2, { solidFrom: 1 }); spot(m, 20, 16, { kind: 'board' }); spot(m, 21, 16, { kind: 'board' });
     m.warps.push({ x: 0, y: 17, h: 3, to: 'farm', tx: 46, ty: 19, dir: 2 });
+    m.warps.push({ x: 49, y: 17, h: 3, to: 'mata', tx: 2, ty: 9, dir: 3 });
     m.warps.push({ x: 23, y: 0, w: 3, to: 'minetop', tx: 8, ty: 10, dir: 0 });
     return finalize(m);
   }
@@ -980,6 +985,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (let x = 3; x <= 8; x++) spot(m, x, 3, { kind: 'shop', who });
     deco(m);
     return m;
+  }
+  function buildAtelie() {
+    const m = shopRoom('atelie', 'Ateliê da Bia', 12, 9, G.WOOD, 'bia', () => {});
+    // espelho, arara de roupas e manequins (desenhados em v_extra.js)
+    for (const [x, y] of [[1, 2], [9, 2], [10, 2], [1, 5], [10, 5]]) m.solid[y * m.w + x] = 1;
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 28, ty: 14, dir: 1 });
+    return finalize(m);
   }
   function buildCarpentry() {
     const m = shopRoom('carpentry', 'Carpintaria', 12, 9, G.WOOD, 'rosa', m => { sprite(m, 'lumber', 9, 2, 2, 2); sprite(m, 'crates', 1, 5, 2, 2); sprite(m, 'plant', 10, 6, 1, 1); });
@@ -1087,7 +1099,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.warps.push({ x: 9, y: 10, to: 'town', tx: 45, ty: 25, dir: 1 });
     return finalize(m);
   }
-  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum() };
+  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum(), atelie: buildAtelie() };
   // ================= armazenamento: banco compartilhado (online) ou só neste aparelho =================
   const LS = 'sitio-vale-doce-v1';
   const clone = o => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -2010,9 +2022,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           R(-6, 18, w + 12, 3, '#2a1e1e');
           R(w - 26, -26, 14, 30, '#5a4a4a'); R(w - 28, -28, 18, 4, '#3a2e2e');
           R(8, 26, 46, 15, '#3a2a1a'); R(10, 28, 42, 11, '#5a3e24');
-          winPx(w - 42, 48, 26, 16, true, '#d8d0c0');
-          R(12, 50, 22, 8, '#4a4a52'); R(16, 58, 14, 4, '#3a3a42'); R(14, 62, 18, 4, '#3a3a42');
-          doorPx(4 * T + 1, h - 22, '#5a3a2a');
+          winPx(w - 30, 44, 22, 14, true, '#d8d0c0');
+          R(10, 48, 20, 7, '#4a4a52'); R(14, 55, 12, 4, '#3a3a42'); R(12, 59, 16, 4, '#3a3a42');
+          doorPx(3 * T + 1, h - 22, '#5a3a2a');
           break;
         }
         case 'cottage': {
@@ -2089,7 +2101,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -2111,6 +2123,24 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return bake(`b2|${type}|${w}|${h}|${night ? 1 : 0}|${s}|${extra}`, w + 16, h + 40, () => {
       ctx.translate(8, 36);
       switch (type) {
+        case 'atelie': {
+          R(2, 18, w - 4, h - 18, '#f4dce4');
+          for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');
+          R(2, h - 8, w - 4, 8, '#9a6a7a'); R(2, h - 8, w - 4, 1, '#b88a9a');
+          shingleRoof(-6, -12, w + 12, 32, snow ? '#e8eef4' : '#7a4a8a'); R(-6, 18, w + 12, 3, '#4a2a5a');
+          // placa com um vestidinho
+          R(w / 2 - 20, -6, 40, 17, '#5a3418'); R(w / 2 - 18, -4, 36, 13, '#f8e8f0');
+          R(w / 2 - 1, -3, 2, 2, '#8a6a4a'); poly([[w / 2 - 4, -1], [w / 2 + 4, -1], [w / 2 + 7, 8], [w / 2 - 7, 8]], '#d84a8a'); R(w / 2 - 4, 2, 8, 1, '#f8e8f0');
+          // toldo listrado
+          for (let k = 0; k < 9; k++) R(3 + k * ((w - 6) / 9), 23, (w - 6) / 9 + 1, 6, k % 2 ? '#f8f0f4' : '#b04a8a');
+          for (let k = 0; k < 9; k++) disc(3 + (k + 0.5) * ((w - 6) / 9), 29, (w - 6) / 18, k % 2 ? '#f8f0f4' : '#b04a8a');
+          // vitrine com vestido no manequim
+          winPx(7, 36, 22, 26, true, '#f4e8f0');
+          R(17, 40, 2, 3, '#e8d8c0'); poly([[14, 43], [22, 43], [24, 58], [12, 58]], '#d84a8a'); R(14, 46, 8, 1, '#f8e8f0'); R(17, 58, 2, 3, '#5a3a2a');
+          doorPx(2 * T + 1, h - 22, '#8a4a6a');
+          R(w - 26, h - 15, 20, 6, '#6a4a2a'); for (let k = 0; k < 5; k++) disc(w - 23 + k * 4, h - 16, 2.2, ['#ff8ac8', '#f4d040', '#ffffff', '#c86ad8', '#ff8ac8'][k]);
+          break;
+        }
         case 'carpentry': {
           planks(2, 18, w - 4, h - 18, '#c8884a');
           gable(2, -22, w - 4, 42, '#c8884a', '#4a7a3a', snow);
@@ -3181,7 +3211,6 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (placing) { confirmPlacing(); return; }
     if (fishing) { fishAction(); return; }
     if (nearBooth()) { openFest(); return; }
-    if (nearStall()) { openShop('roupas'); return; }
     const m = curMap();
     let [tx, ty] = target || facing();
     const k = tx + ',' + ty;
@@ -3254,6 +3283,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
     // a primeira sai com a qualidade sorteada; as extras são normais
     if (!addItem(id, 1, false, q)) return;
+    P.stats.harv = (P.stats.harv || 0) + n;
     if (q === 2) P.stats.goldCrop = 1;
     if (n > 1) addItem(id, n - 1, true);
     logAct('colheu', id, n);
@@ -3812,7 +3842,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     renderInventory();
   }
   function renderInventory() {
-    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['diario', 'Diário'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (invTab === 'items') {
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
@@ -3835,6 +3865,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         <p style="font-size:13px">Peixes pescados: ${P.stats.fish || 0} · Total enviado: ${fmt(P.stats.shipped || 0)} ₲ · Andar mais fundo da mina: ${P.mineFloor || 0}</p>` + profsHTML();
     } else if (invTab === 'ach') {
       body = achHTML();
+    } else if (invTab === 'diario') {
+      body = diaryHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;
@@ -3893,7 +3925,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'petisco', price: 30 }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
-      case 'roupas': return CLOTHES_SHOP;
+      case 'roupas': case 'bia': return CLOTHES_SHOP;
       case 'festa': return festOn() ? FEST_SHOP[festOn().id].map(([id, price]) => ({ id, price })) : [];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
@@ -4830,7 +4862,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); stallEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -5103,6 +5135,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   function panelAction3(a, b) {
+    if (diaryAction(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
@@ -6459,27 +6492,25 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
     return f;
   }
-  // barraca da Bia na praça
-  const STALL = { x: 26, y: 12 };
-  const nearStall = () => P.map === 'town' && Math.hypot(P.x - (STALL.x + 1.5) * T, P.y - (STALL.y + 3) * T) < 28;
-  function stallEnts(m, ents) {
-    if (m.id !== 'town') return;
-    const bx = STALL.x * T, by = STALL.y * T;
-    ents.push({ y: by + 30, f: () => {
-      shadowAt(bx + 24, by + 30, 24, 4);
-      R(bx + 2, by + 14, 44, 14, '#7a4a8a'); R(bx + 2, by + 14, 44, 3, '#9a6aaa');
-      for (let k = 0; k < 6; k++) R(bx + k * 8, by, 8, 8, k % 2 ? '#f8e8f0' : '#b04a8a');
-      for (let k = 0; k < 6; k++) poly([[bx + k * 8, by + 8], [bx + k * 8 + 8, by + 8], [bx + k * 8 + 4, by + 11]], k % 2 ? '#f8e8f0' : '#b04a8a');
-      R(bx + 2, by + 8, 2, 8, '#4a2a3a'); R(bx + 44, by + 8, 2, 8, '#4a2a3a');
-      // roupas penduradas
-      R(bx + 6, by + 16, 6, 7, '#4a8ad8'); R(bx + 15, by + 16, 6, 6, '#e8c040'); R(bx + 34, by + 16, 7, 5, '#5aa83a'); R(bx + 36, by + 21, 3, 4, '#5aa83a');
-      // manequim com vestido (a Bia anda pela vila, então a barraca fica no autoatendimento)
-      R(bx + 25, by + 22, 2, 7, '#5a3a2a'); R(bx + 22, by + 28, 8, 2, '#5a3a2a');
-      R(bx + 23, by + 5, 6, 3, '#e8d8c0');
-      poly([[bx + 21, by + 8], [bx + 31, by + 8], [bx + 33, by + 22], [bx + 19, by + 22]], '#d84a8a');
-      R(bx + 21, by + 12, 10, 2, '#f8e8f0');
-      nameTag('Ateliê da Bia', bx + 24, by - 4);
+  // a loja da Bia é um prédio na praça; ela fica atrás do balcão das 9h às 17h
+  SHOP_INFO.bia = { ...SHOP_INFO.roupas, npc: undefined };
+  function atelieEnts(m, ents) {
+    if (m.id !== 'atelie') return;
+    const t = performance.now() / 1000;
+    // tapete
+    ents.push({ y: -999, f: () => { R(4 * T, 5 * T + 2, 4 * T, 2 * T + 8, '#c86a9a'); R(4 * T + 3, 5 * T + 5, 4 * T - 6, 2 * T + 2, '#e89ac0'); for (let k = 0; k < 4; k++) R(4 * T + 8 + k * 14, 6 * T + 6, 6, 2, '#f8e8f0'); } });
+    // quadros da Bia na parede (ela também é artista) e prateleira de tecidos
+    ents.push({ y: -998, f: () => {
+      R(2 * T, 4, 22, 16, '#7a4a24'); R(2 * T + 2, 6, 18, 12, '#a8d8f0'); disc(2 * T + 15, 10, 3, '#f4d040'); poly([[2 * T + 2, 18], [2 * T + 9, 11], [2 * T + 15, 18]], '#5aa83a');
+      R(7 * T, 2, 34, 22, '#6a3a1e'); for (let k = 0; k < 3; k++) for (let j = 0; j < 4; j++) R(7 * T + 3 + j * 8, 4 + k * 7, 6, 5, ['#d84a8a', '#4a8ad8', '#f4c83a', '#5aa83a', '#c86ad8', '#f4f0e8'][(j + k * 2) % 6]);
     } });
+    // espelho
+    ents.push({ y: 2 * T + 15, f: () => { const x = 1 * T, y = 2 * T; R(x + 7, y + 10, 2, 6, '#7a4a24'); R(x + 4, y + 15, 8, 1, '#5a3418'); oval(x + 8, y + 2, 6, 9, '#c8a050'); oval(x + 8, y + 2, 4.5, 7.5, '#c8e0f0'); R(x + 5, y - 3, 2, 6, '#ffffffaa'); } });
+    // arara com roupas
+    ents.push({ y: 2 * T + 15, f: () => { const x = 9 * T, y = 2 * T; R(x + 1, y - 10, 2, 26, '#8a8a92'); R(x + 29, y - 10, 2, 26, '#8a8a92'); R(x + 1, y - 10, 30, 2, '#a8a8b0');
+      for (let k = 0; k < 5; k++) { const c = ['#4a8ad8', '#f4c020', '#d84a3a', '#5aa83a', '#c86ad8'][k], xx = x + 4 + k * 5 + Math.sin(t * 1.5 + k) * 0.5; R(xx + 1, y - 8, 1, 2, '#5a5a62'); R(xx - 1, y - 6, 5, 12, c); R(xx - 1, y - 6, 5, 1, shade(c, 0.3)); } } });
+    // manequins
+    for (const [mx, col] of [[1, '#d84a8a'], [10, '#4a8ad8']]) ents.push({ y: 5 * T + 15, f: () => { const x = mx * T + 8, y = 5 * T; shadowAt(x, y + 15, 5, 1.5); R(x - 1, y + 8, 2, 7, '#5a3a2a'); R(x - 4, y + 14, 8, 2, '#5a3a2a'); R(x - 2, y - 12, 4, 3, '#e8d8c0'); poly([[x - 5, y - 9], [x + 5, y - 9], [x + 7, y + 8], [x - 7, y + 8]], col); R(x - 5, y - 5, 10, 2, '#f8e8f0'); } });
   }
 
   // ---------- mais coisas nos festivais: comidinhas, minijogos e conversa ----------
@@ -6891,6 +6922,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     pinha: { name: 'Pinha', cat: 'forage', sell: 25 },
     cogumelorei: { name: 'Cogumelo-rei', cat: 'forage', sell: 320, energy: 90, desc: 'Só aparece na floresta em dia de chuva.' },
     couro: { name: 'Couro', cat: 'res', sell: 70, desc: 'Deixado pelos javalis.' },
+    carnesuina: { name: 'Carne suína', cat: 'animal', sell: 140, desc: 'De vez em quando os javalis deixam. Asse na fogueira.' },
+    lombo: { name: 'Lombo assado', cat: 'food', sell: 280, energy: 180, buff: { attack: 1 }, desc: 'Assado na fogueira. Dá Ataque +1 por um tempo.' },
     escama: { name: 'Escama de cobra', cat: 'res', sell: 60 },
     ferrao: { name: 'Ferrão de vespa', cat: 'res', sell: 45 },
     cogumeloassado: { name: 'Cogumelo assado', cat: 'food', sell: 110, energy: 95, buff: { foraging: 1 }, desc: 'Assado na fogueira. Dá Coleta +1 por um tempo.' },
@@ -6907,7 +6940,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   RECIPES.push({ id: 'fogueira', need: { mpinho: 8, pedra: 10, carvao: 1 }, skill: ['foraging', 2] });
   PLACED.push('fogueira'); SOLID_OBJ.add('fogueira');
   const MATA_FORAGE = { spring: ['morchela', 'alhoporo', 'narciso'], summer: ['framboesa', 'baga', 'cogumelo'], fall: ['castanha', 'cogumelo', 'avela', 'amora'], winter: ['pinha', 'raizinverno', 'frutacristal'] };
-  const ROAST = { cogumelo: 'cogumeloassado', morchela: 'cogumeloassado', castanha: 'castanhaassada' };
+  const ROAST = { cogumelo: 'cogumeloassado', morchela: 'cogumeloassado', castanha: 'castanhaassada', carnesuina: 'lombo' };
   // o machado melhora com barras e também com as madeiras da floresta
   const AXE_WOOD = { 1: ['mpinho', 10], 2: ['mcarvalho', 10], 3: ['madeiralei', 5] };
   const axeWoodOk = (id, lv) => id !== 'axe' || !AXE_WOOD[lv] || count(AXE_WOOD[lv][0]) >= AXE_WOOD[lv][1];
@@ -6925,22 +6958,21 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function buildMataEntrance() {
     const m = newMap('mata', 24, 18, G.GRASS, { name: 'Mata do Vale', mata: true, water: 'pond' });
     m.rect(0, 0, 23, 1, G.FOREST); m.rect(0, 16, 23, 17, G.FOREST); m.rect(0, 0, 1, 17, G.FOREST); m.rect(22, 0, 23, 17, G.FOREST);
-    m.rect(11, 0, 12, 17, G.DIRT); m.rect(5, 6, 11, 6, G.DIRT);
+    // a trilha chega da vila pela esquerda e sobe para as clareiras
+    m.rect(0, 9, 12, 10, G.DIRT); m.rect(11, 0, 12, 10, G.DIRT); m.rect(5, 6, 11, 6, G.DIRT);
     const r = srand(77);
     for (let k = 0; k < 30; k++) { const x = 2 + Math.floor(r() * 20), y = 2 + Math.floor(r() * 14); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
     // cabana do lenhador (3,2)-(7,5); porta em (5,5)
     for (let y = 2; y <= 5; y++) for (let x = 3; x <= 7; x++) m.solid[y * m.w + x] = 1;
     spot(m, 5, 5, { kind: 'cabana' }); spot(m, 4, 5, { kind: 'cabana' }); spot(m, 6, 5, { kind: 'cabana' });
     // fogueira com troncos para sentar
-    m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 9] = 1;
+    m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 4] = 1;
     m.fire = [16, 10];
     m.warps.push({ x: 11, y: 0, w: 2, to: 'mata1', tx: 0, ty: 0, dir: 0 });
-    m.warps.push({ x: 11, y: 17, w: 2, to: 'farm', tx: 24, ty: 2, dir: 1 });
+    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 47, ty: 18, dir: 2 });
     return finalize(m);
   }
   MAPS.mata = buildMataEntrance();
-  // trilha no alto da chacrinha
-  { const f = MAPS.farm; for (const x of [24, 25]) for (const y of [0, 1, 2]) { f.set(x, y, G.DIRT); f.solid[y * f.w + x] = 0; } f.warps.push({ x: 24, y: 0, w: 2, to: 'mata', tx: 11, ty: 15, dir: 0 }); }
 
   function buildMata(n, per) {
     const Wd = 30, H = 20, r = srand(n * 7907 + per * 15485863 + 11), area = mataArea(n), boss = n % 12 === 0;
@@ -7185,13 +7217,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     gainXP('combat', 6);
     if (eqHas('anelvida')) P.hp = Math.min(100, P.hp + 4);
     const mul = hasProf('ladrao') ? 2 : 1;
-    if (mo.kind === 'javali' && Math.random() < 0.5) addItem('couro', mul);
+    if (mo.kind === 'javali') { if (Math.random() < 0.22) addItem('carnesuina', 1); else if (Math.random() < 0.5) addItem('couro', mul); }
     if (mo.kind === 'cobra' && Math.random() < 0.5) addItem('escama', mul);
     if (mo.kind === 'vespa') { if (Math.random() < 0.15) addItem('melsilvestre', 1); else if (Math.random() < 0.45) addItem('ferrao', mul); }
   }
   // ---------- guardiões (chefes) da mata ----------
   const FBOSSES = {
-    12: { b: 'javalirei', name: 'Javali Rei', hp: 200, dmg: 11, r: 18, loot: [['xadrezlenhador', 1], ['madeiralei', 3], ['couro', 5]] },
+    12: { b: 'javalirei', name: 'Javali Rei', hp: 200, dmg: 11, r: 18, loot: [['xadrezlenhador', 1], ['madeiralei', 3], ['couro', 5], ['carnesuina', 3]] },
     24: { b: 'rainhavespa', name: 'Rainha das Vespas', hp: 300, dmg: 13, r: 16, fly: true, loot: [['chapeuapicultor', 1], ['melsilvestre', 8], ['madeiralei', 4]] },
     36: { b: 'sucuri', name: 'Sucuri Gigante', hp: 420, dmg: 17, r: 18, loot: [['botasmata', 1], ['escama', 8], ['madeiralei', 5]] },
     48: { b: 'anciao', name: 'Árvore Anciã', hp: 520, dmg: 20, r: 22, axeOnly: true, loot: [['m_jabuticaba', 1], ['mdourada', 5], ['madeiralei', 10]] },
@@ -7381,7 +7413,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ents.push({ y: 5 * T + 15, f: () => { drawCabana(3, 2); nameTag('Cabana do lenhador', 5 * T + 8, 2 * T - 8); } });
       const [fx, fy] = m.fire;
       ents.push({ y: fy * T + 12, f: () => { drawFire(fx * T + 8, fy * T + 8, t); for (const [dx, dy] of [[-22, 6], [22, 6], [0, 20]]) { R(fx * T + 8 + dx - 7, fy * T + 8 + dy, 14, 5, '#7a4a28'); R(fx * T + 8 + dx - 7, fy * T + 8 + dy, 14, 1, '#a8783a'); } } });
-      ents.push({ y: 12 * T + 15, f: () => { const sx = 9 * T + 8, sy = 12 * T; R(sx - 1, sy + 2, 2, 13, '#5a3820'); R(sx - 22, sy - 6, 44, 11, '#8a5a32'); R(sx - 21, sy - 5, 42, 9, '#a8703a'); drawText('Mata do Vale', sx, sy - 1, '#3a1e0a', 7); } });
+      ents.push({ y: 12 * T + 15, f: () => { const sx = 4 * T + 8, sy = 12 * T; R(sx - 1, sy + 2, 2, 13, '#5a3820'); R(sx - 22, sy - 6, 44, 11, '#8a5a32'); R(sx - 21, sy - 5, 42, 9, '#a8703a'); drawText('Mata do Vale', sx, sy - 1, '#3a1e0a', 7); } });
       return;
     }
     const set = mBroken(m), x0 = Math.floor(camX / T) - 3, x1 = Math.ceil((camX + VW) / T) + 3, y0 = Math.floor(camY / T) - 1, y1 = Math.ceil((camY + VH) / T) + 6;
@@ -7414,6 +7446,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'castanha': oval(8, 10, 5, 4, '#7a3a1a'); poly([[3, 9], [8, 3], [13, 9]], '#7a3a1a'); R(5, 11, 6, 2, '#c8a070'); R(6, 6, 2, 2, '#a85a2a'); return true;
       case 'pinha': oval(8, 9, 4, 6, '#8a5a2a'); for (let y = 4; y < 15; y += 2) R(5 + (y % 4 ? 1 : 0), y, 6, 1, '#5a3418'); R(7, 1, 2, 3, '#4a8a3a'); return true;
       case 'cogumelorei': R(6, 9, 4, 6, '#f4ecd8'); oval(8, 8, 7, 4, '#b0281a'); for (const [x, y] of [[4, 7], [8, 6], [11, 8]]) disc(x, y, 1.2, '#ffffff'); R(5, 3, 6, 2, '#f4c83a'); R(6, 1, 1, 2, '#f4c83a'); R(9, 1, 1, 2, '#f4c83a'); return true;
+      case 'carnesuina': poly([[3, 6], [10, 3], [14, 7], [12, 13], [5, 13], [2, 10]], '#e88a8a'); poly([[4, 7], [10, 4], [12, 7], [10, 11], [5, 11]], '#f4aaaa'); R(5, 8, 6, 1, '#fff0f0'); R(7, 10, 4, 1, '#fff0f0'); R(12, 10, 3, 3, '#f4ecd8'); return true;
+      case 'lombo': oval(8, 12, 7, 2.5, '#e8e8f0'); oval(8, 9, 5.5, 3.5, '#8a4a20'); oval(7, 8, 4, 2.2, '#b06a30'); for (const x of [5, 8, 11]) R(x, 7, 1, 4, '#5a2a10'); R(12, 5, 1, 3, '#5aa83a'); return true;
       case 'couro': poly([[3, 4], [13, 3], [14, 12], [8, 14], [2, 12]], '#a8683a'); R(5, 6, 6, 1, '#c88a5a'); R(4, 10, 8, 1, '#8a4a2a'); return true;
       case 'escama': for (const [x, y] of [[5, 5], [10, 5], [7, 9], [12, 9], [4, 11]]) { oval(x, y, 3, 2.5, '#4a9a3a'); R(x - 1, y - 1, 2, 1, '#8ad86a'); } return true;
       case 'ferrao': poly([[8, 1], [11, 12], [5, 12]], '#1a1a1a'); R(5, 12, 6, 3, '#f4c020'); R(7, 4, 1, 4, '#6a6a6a'); return true;
@@ -7434,6 +7468,90 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     ['coracaomata', 'Até o coração da mata', 'Chegar à última clareira da Mata do Vale.', () => allStats().some(s => (s.mata || 0) >= MATA_N)],
     ['guardioes', 'Guardiões da floresta', 'Vencer os 4 guardiões da mata.', () => Object.keys(FBOSSES).every(n => W.meta.fbosses && W.meta.fbosses[n])],
   );
+  // ================= diário: cada pessoa tem o seu, e só quem escreve lê =================
+  // Fica guardado em "diary/<uid>", separado do resto do jogador. Cada página é um dia do jogo ("d37").
+  const DIA_SEM = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const diaryDate = d => `${DIA_SEM[(d - 1) % 7]}, ${dom(d)} de ${SEASONS[SEASON_ID.indexOf(season(d))].toLowerCase()} · ano ${year(d)}`;
+  const DIARY_STICKERS = ['narciso', 'morango', 'girassol', 'abobora', 'jabuticaba', 'sardinha', 'monarca', 'vagalume', 'petisco', 'cogumelo', 'frutaestelar', 'diamante'];
+  let diary = null, diaryState = '', diaryDay = 0, diarySticker = null;
+
+  // o que aconteceu no dia: conta a partir do começo do dia
+  const diarySnap = () => { const st = P.stats || {}; return { d: W.meta.day, h: st.harv || 0, f: st.fish || 0, t: st.trees || 0, b: st.bugN || 0, mi: P.mineFloor || 0, ma: st.mata || 0 }; };
+  function diaryTick() { if (P && W.meta && P.flags && (!P.flags.ds || P.flags.ds.d !== W.meta.day)) P.flags.ds = diarySnap(); }
+  function diarySummary() {
+    const a = P.flags.ds || diarySnap(), b = diarySnap(), out = [], dif = k => Math.max(0, (b[k] || 0) - (a[k] || 0));
+    const f = festOn && festOn();
+    if (f) out.push(`Foi dia de ${f.name}`);
+    if (W.meta.rain) out.push(W.meta.snow ? 'Nevou' : W.meta.storm ? 'Teve tempestade' : 'Choveu');
+    if (dif('h')) out.push(`colhi ${dif('h')} da horta`);
+    if (dif('f')) out.push(`pesquei ${dif('f')} ${dif('f') === 1 ? 'peixe' : 'peixes'}`);
+    if (dif('t')) out.push(`derrubei ${dif('t')} ${dif('t') === 1 ? 'árvore' : 'árvores'}`);
+    if (dif('b')) out.push(`peguei ${dif('b')} ${dif('b') === 1 ? 'bichinho' : 'bichinhos'} com a rede`);
+    if (b.mi > a.mi) out.push(`desci até o andar ${b.mi} da mina`);
+    if (b.ma > a.ma) out.push(`cheguei à clareira ${b.ma} da mata`);
+    if (!out.length) return '';
+    const s = out.join(', ');
+    return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+  }
+  async function diaryLoad() {
+    if (diary || diaryState === 'loading') return;
+    diaryState = 'loading';
+    try { const s = await store.doc('diary/' + P.uid).get(); diary = (s.exists && s.data()) || {}; diary.e = diary.e || {}; diaryState = ''; }
+    catch (e) { diaryState = 'erro'; }
+    if (panelOpen && invTab === 'diario') renderInventory();
+  }
+  async function diarySave() {
+    if (!diary) return;
+    const ta = document.getElementById('diarytxt'), txt = ta ? ta.value.trim().slice(0, 1200) : '';
+    const d = diaryDay || W.meta.day, key = 'd' + d, old = diary.e[key] || {};
+    if (!txt && !diarySticker) { delete diary.e[key]; }
+    else diary.e[key] = { t: txt, s: diarySticker || '', r: d === W.meta.day ? diarySummary() : old.r || '', at: Date.now() };
+    try { await store.doc('diary/' + P.uid).set(diary); toast('Página guardada no diário.', '', null, 'diario'); sfx.pop(); }
+    catch (e) { toast('Não deu para guardar agora. Tente de novo com internet.', '', null, 'diario'); }
+    diaryDay = 0; diarySticker = null; window.__diaryDraft = null;
+    renderInventory();
+  }
+  function diaryEdit(d) {
+    const e = (diary && diary.e['d' + d]) || {};
+    diaryDay = d; diarySticker = e.s || null; window.__diaryDraft = e.t || '';
+    renderInventory();
+  }
+  function diaryHTML() {
+    if (!diary) {
+      diaryLoad();
+      return diaryState === 'erro' ? '<p style="text-align:center">O diário precisa de internet para abrir. Tente de novo daqui a pouco.</p><div class="row"><button class="btn" data-a="diaryRetry" type="button">Tentar de novo</button></div>' : '<p style="text-align:center">Abrindo o diário...</p>';
+    }
+    const d = diaryDay || W.meta.day, e = diary.e['d' + d] || {}, today = d === W.meta.day;
+    if (diarySticker === null && e.s) diarySticker = e.s;
+    const sum = today ? diarySummary() : e.r || '';
+    const draft = window.__diaryDraft != null ? window.__diaryDraft : e.t || '';
+    const stickers = DIARY_STICKERS.filter(id => ITEMS[id]);
+    const pages = Object.entries(diary.e).map(([k, v]) => [+k.slice(1), v]).filter(([n]) => n !== d).sort((a, b) => b[0] - a[0]);
+    const paper = 'background:#fffaf0;border:2px solid #c8a070;border-radius:8px;padding:10px;margin:8px 0';
+    return `<h3 style="text-align:center">Diário de ${esc(P.name)}</h3>
+      <p style="text-align:center;font-size:13px">Só você lê o que escreve aqui.</p>
+      <div style="${paper}">
+        <b>${diaryDate(d)}${today ? ' · hoje' : ''}</b>
+        ${sum ? `<p style="font-size:13px;margin:6px 0;color:#6a4a2a"><i>${esc(sum)}</i></p>` : ''}
+        <textarea id="diarytxt" maxlength="1200" rows="6" placeholder="Como foi o dia?" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;padding:8px;border:2px solid #6b3410;border-radius:6px;background:#fffef8">${esc(draft)}</textarea>
+        <p style="font-size:13px;margin:6px 0 2px">Carimbo do dia:</p>
+        <div class="row" style="flex-wrap:wrap;gap:4px">${stickers.map(id => `<button class="btn ${diarySticker === id ? 'g' : ''}" data-a="diaryStk" data-s="${id}" type="button" style="padding:4px"><img src="${iconURL(id)}" alt="${item(id).name}" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle"></button>`).join('')}</div>
+        <div class="row"><button class="btn g" data-a="diarySave" type="button">Guardar página</button>${!today ? '<button class="btn" data-a="diaryToday" type="button">Voltar para hoje</button>' : ''}</div>
+      </div>
+      ${pages.length ? `<h3>Páginas anteriores</h3>${pages.map(([n, v]) => `<div style="${paper}"><div style="display:flex;align-items:center;gap:8px">${v.s && ITEMS[v.s] ? `<img src="${iconURL(v.s)}" alt="" style="width:28px;height:28px;image-rendering:pixelated">` : ''}<b style="flex:1">${diaryDate(n)}</b><button class="btn" data-a="diaryEdit" data-d="${n}" type="button" style="padding:4px 10px">Editar</button></div>${v.r ? `<p style="font-size:13px;margin:6px 0;color:#6a4a2a"><i>${esc(v.r)}</i></p>` : ''}${v.t ? `<p style="white-space:pre-wrap;margin:6px 0">${esc(v.t)}</p>` : ''}</div>`).join('')}` : ''}`;
+  }
+  // guarda o que está escrito antes de trocar de carimbo, para não perder o texto
+  const diaryKeep = () => { const ta = document.getElementById('diarytxt'); if (ta) window.__diaryDraft = ta.value; };
+  function diaryAction(a, b) {
+    switch (a) {
+      case 'diaryStk': diaryKeep(); diarySticker = diarySticker === b.dataset.s ? '' : b.dataset.s; renderInventory(); return true;
+      case 'diarySave': diarySave(); return true;
+      case 'diaryEdit': diaryEdit(+b.dataset.d); return true;
+      case 'diaryToday': diaryDay = 0; diarySticker = null; window.__diaryDraft = null; renderInventory(); return true;
+      case 'diaryRetry': diaryState = ''; renderInventory(); return true;
+    }
+    return false;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -7631,7 +7749,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt); updateBugs(dt);
+      updateFishing(dt); updateBugs(dt); diaryTick();
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }

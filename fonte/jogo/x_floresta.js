@@ -26,6 +26,8 @@
     pinha: { name: 'Pinha', cat: 'forage', sell: 25 },
     cogumelorei: { name: 'Cogumelo-rei', cat: 'forage', sell: 320, energy: 90, desc: 'Só aparece na floresta em dia de chuva.' },
     couro: { name: 'Couro', cat: 'res', sell: 70, desc: 'Deixado pelos javalis.' },
+    carnesuina: { name: 'Carne suína', cat: 'animal', sell: 140, desc: 'De vez em quando os javalis deixam. Asse na fogueira.' },
+    lombo: { name: 'Lombo assado', cat: 'food', sell: 280, energy: 180, buff: { attack: 1 }, desc: 'Assado na fogueira. Dá Ataque +1 por um tempo.' },
     escama: { name: 'Escama de cobra', cat: 'res', sell: 60 },
     ferrao: { name: 'Ferrão de vespa', cat: 'res', sell: 45 },
     cogumeloassado: { name: 'Cogumelo assado', cat: 'food', sell: 110, energy: 95, buff: { foraging: 1 }, desc: 'Assado na fogueira. Dá Coleta +1 por um tempo.' },
@@ -42,7 +44,7 @@
   RECIPES.push({ id: 'fogueira', need: { mpinho: 8, pedra: 10, carvao: 1 }, skill: ['foraging', 2] });
   PLACED.push('fogueira'); SOLID_OBJ.add('fogueira');
   const MATA_FORAGE = { spring: ['morchela', 'alhoporo', 'narciso'], summer: ['framboesa', 'baga', 'cogumelo'], fall: ['castanha', 'cogumelo', 'avela', 'amora'], winter: ['pinha', 'raizinverno', 'frutacristal'] };
-  const ROAST = { cogumelo: 'cogumeloassado', morchela: 'cogumeloassado', castanha: 'castanhaassada' };
+  const ROAST = { cogumelo: 'cogumeloassado', morchela: 'cogumeloassado', castanha: 'castanhaassada', carnesuina: 'lombo' };
   // o machado melhora com barras e também com as madeiras da floresta
   const AXE_WOOD = { 1: ['mpinho', 10], 2: ['mcarvalho', 10], 3: ['madeiralei', 5] };
   const axeWoodOk = (id, lv) => id !== 'axe' || !AXE_WOOD[lv] || count(AXE_WOOD[lv][0]) >= AXE_WOOD[lv][1];
@@ -60,22 +62,21 @@
   function buildMataEntrance() {
     const m = newMap('mata', 24, 18, G.GRASS, { name: 'Mata do Vale', mata: true, water: 'pond' });
     m.rect(0, 0, 23, 1, G.FOREST); m.rect(0, 16, 23, 17, G.FOREST); m.rect(0, 0, 1, 17, G.FOREST); m.rect(22, 0, 23, 17, G.FOREST);
-    m.rect(11, 0, 12, 17, G.DIRT); m.rect(5, 6, 11, 6, G.DIRT);
+    // a trilha chega da vila pela esquerda e sobe para as clareiras
+    m.rect(0, 9, 12, 10, G.DIRT); m.rect(11, 0, 12, 10, G.DIRT); m.rect(5, 6, 11, 6, G.DIRT);
     const r = srand(77);
     for (let k = 0; k < 30; k++) { const x = 2 + Math.floor(r() * 20), y = 2 + Math.floor(r() * 14); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
     // cabana do lenhador (3,2)-(7,5); porta em (5,5)
     for (let y = 2; y <= 5; y++) for (let x = 3; x <= 7; x++) m.solid[y * m.w + x] = 1;
     spot(m, 5, 5, { kind: 'cabana' }); spot(m, 4, 5, { kind: 'cabana' }); spot(m, 6, 5, { kind: 'cabana' });
     // fogueira com troncos para sentar
-    m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 9] = 1;
+    m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 4] = 1;
     m.fire = [16, 10];
     m.warps.push({ x: 11, y: 0, w: 2, to: 'mata1', tx: 0, ty: 0, dir: 0 });
-    m.warps.push({ x: 11, y: 17, w: 2, to: 'farm', tx: 24, ty: 2, dir: 1 });
+    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 47, ty: 18, dir: 2 });
     return finalize(m);
   }
   MAPS.mata = buildMataEntrance();
-  // trilha no alto da chacrinha
-  { const f = MAPS.farm; for (const x of [24, 25]) for (const y of [0, 1, 2]) { f.set(x, y, G.DIRT); f.solid[y * f.w + x] = 0; } f.warps.push({ x: 24, y: 0, w: 2, to: 'mata', tx: 11, ty: 15, dir: 0 }); }
 
   function buildMata(n, per) {
     const Wd = 30, H = 20, r = srand(n * 7907 + per * 15485863 + 11), area = mataArea(n), boss = n % 12 === 0;
@@ -320,13 +321,13 @@
     gainXP('combat', 6);
     if (eqHas('anelvida')) P.hp = Math.min(100, P.hp + 4);
     const mul = hasProf('ladrao') ? 2 : 1;
-    if (mo.kind === 'javali' && Math.random() < 0.5) addItem('couro', mul);
+    if (mo.kind === 'javali') { if (Math.random() < 0.22) addItem('carnesuina', 1); else if (Math.random() < 0.5) addItem('couro', mul); }
     if (mo.kind === 'cobra' && Math.random() < 0.5) addItem('escama', mul);
     if (mo.kind === 'vespa') { if (Math.random() < 0.15) addItem('melsilvestre', 1); else if (Math.random() < 0.45) addItem('ferrao', mul); }
   }
   // ---------- guardiões (chefes) da mata ----------
   const FBOSSES = {
-    12: { b: 'javalirei', name: 'Javali Rei', hp: 200, dmg: 11, r: 18, loot: [['xadrezlenhador', 1], ['madeiralei', 3], ['couro', 5]] },
+    12: { b: 'javalirei', name: 'Javali Rei', hp: 200, dmg: 11, r: 18, loot: [['xadrezlenhador', 1], ['madeiralei', 3], ['couro', 5], ['carnesuina', 3]] },
     24: { b: 'rainhavespa', name: 'Rainha das Vespas', hp: 300, dmg: 13, r: 16, fly: true, loot: [['chapeuapicultor', 1], ['melsilvestre', 8], ['madeiralei', 4]] },
     36: { b: 'sucuri', name: 'Sucuri Gigante', hp: 420, dmg: 17, r: 18, loot: [['botasmata', 1], ['escama', 8], ['madeiralei', 5]] },
     48: { b: 'anciao', name: 'Árvore Anciã', hp: 520, dmg: 20, r: 22, axeOnly: true, loot: [['m_jabuticaba', 1], ['mdourada', 5], ['madeiralei', 10]] },
@@ -516,7 +517,7 @@
       ents.push({ y: 5 * T + 15, f: () => { drawCabana(3, 2); nameTag('Cabana do lenhador', 5 * T + 8, 2 * T - 8); } });
       const [fx, fy] = m.fire;
       ents.push({ y: fy * T + 12, f: () => { drawFire(fx * T + 8, fy * T + 8, t); for (const [dx, dy] of [[-22, 6], [22, 6], [0, 20]]) { R(fx * T + 8 + dx - 7, fy * T + 8 + dy, 14, 5, '#7a4a28'); R(fx * T + 8 + dx - 7, fy * T + 8 + dy, 14, 1, '#a8783a'); } } });
-      ents.push({ y: 12 * T + 15, f: () => { const sx = 9 * T + 8, sy = 12 * T; R(sx - 1, sy + 2, 2, 13, '#5a3820'); R(sx - 22, sy - 6, 44, 11, '#8a5a32'); R(sx - 21, sy - 5, 42, 9, '#a8703a'); drawText('Mata do Vale', sx, sy - 1, '#3a1e0a', 7); } });
+      ents.push({ y: 12 * T + 15, f: () => { const sx = 4 * T + 8, sy = 12 * T; R(sx - 1, sy + 2, 2, 13, '#5a3820'); R(sx - 22, sy - 6, 44, 11, '#8a5a32'); R(sx - 21, sy - 5, 42, 9, '#a8703a'); drawText('Mata do Vale', sx, sy - 1, '#3a1e0a', 7); } });
       return;
     }
     const set = mBroken(m), x0 = Math.floor(camX / T) - 3, x1 = Math.ceil((camX + VW) / T) + 3, y0 = Math.floor(camY / T) - 1, y1 = Math.ceil((camY + VH) / T) + 6;
@@ -549,6 +550,8 @@
       case 'castanha': oval(8, 10, 5, 4, '#7a3a1a'); poly([[3, 9], [8, 3], [13, 9]], '#7a3a1a'); R(5, 11, 6, 2, '#c8a070'); R(6, 6, 2, 2, '#a85a2a'); return true;
       case 'pinha': oval(8, 9, 4, 6, '#8a5a2a'); for (let y = 4; y < 15; y += 2) R(5 + (y % 4 ? 1 : 0), y, 6, 1, '#5a3418'); R(7, 1, 2, 3, '#4a8a3a'); return true;
       case 'cogumelorei': R(6, 9, 4, 6, '#f4ecd8'); oval(8, 8, 7, 4, '#b0281a'); for (const [x, y] of [[4, 7], [8, 6], [11, 8]]) disc(x, y, 1.2, '#ffffff'); R(5, 3, 6, 2, '#f4c83a'); R(6, 1, 1, 2, '#f4c83a'); R(9, 1, 1, 2, '#f4c83a'); return true;
+      case 'carnesuina': poly([[3, 6], [10, 3], [14, 7], [12, 13], [5, 13], [2, 10]], '#e88a8a'); poly([[4, 7], [10, 4], [12, 7], [10, 11], [5, 11]], '#f4aaaa'); R(5, 8, 6, 1, '#fff0f0'); R(7, 10, 4, 1, '#fff0f0'); R(12, 10, 3, 3, '#f4ecd8'); return true;
+      case 'lombo': oval(8, 12, 7, 2.5, '#e8e8f0'); oval(8, 9, 5.5, 3.5, '#8a4a20'); oval(7, 8, 4, 2.2, '#b06a30'); for (const x of [5, 8, 11]) R(x, 7, 1, 4, '#5a2a10'); R(12, 5, 1, 3, '#5aa83a'); return true;
       case 'couro': poly([[3, 4], [13, 3], [14, 12], [8, 14], [2, 12]], '#a8683a'); R(5, 6, 6, 1, '#c88a5a'); R(4, 10, 8, 1, '#8a4a2a'); return true;
       case 'escama': for (const [x, y] of [[5, 5], [10, 5], [7, 9], [12, 9], [4, 11]]) { oval(x, y, 3, 2.5, '#4a9a3a'); R(x - 1, y - 1, 2, 1, '#8ad86a'); } return true;
       case 'ferrao': poly([[8, 1], [11, 12], [5, 12]], '#1a1a1a'); R(5, 12, 6, 3, '#f4c020'); R(7, 4, 1, 4, '#6a6a6a'); return true;
