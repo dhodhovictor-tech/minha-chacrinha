@@ -109,8 +109,8 @@
   const eq = () => P.eq || (P.eq = {});
   const eqHas = id => { const e = P && P.eq; return !!e && Object.values(e).includes(id); };
   const eqAtk = () => (eqHas('anelguerreiro') ? 2 : 0) + (eqHas('luvascouro') ? 1 : 0);
-  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0);
-  const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0) + (eqHas('botastrilha') && !(W.meta && W.meta.rain) ? 0.05 : 0);
+  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0) + (eqHas('chapeuapicultor') && curMap().mata ? 2 : 0);
+  const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0) + (eqHas('botastrilha') && !(W.meta && W.meta.rain) ? 0.05 : 0) + (eqHas('botasmata') && curMap().mata ? 0.1 : 0);
   const defTotal = () => buffLv('defense') + profDef() + eqDef();
   function equipSlot(i) {
     const s = P.inv[i]; if (!s) return;
@@ -159,7 +159,8 @@
   }
   function updateBoss(mo, dt, dx, dy, dist) {
     const m = curMap();
-    mo.cd -= dt; mo.t2 -= dt; if (mo.stomp > 0) mo.stomp -= dt; if (mo.fade > 0) mo.fade -= dt;
+    mo.cd -= dt; mo.t2 -= dt;
+    if (mo.mata) { updateFBoss(mo, dt, dx, dy, dist); return; } if (mo.stomp > 0) mo.stomp -= dt; if (mo.fade > 0) mo.fade -= dt;
     switch (mo.b) {
       case 'reigosma':
         mo.hopT -= dt;
@@ -200,7 +201,7 @@
   // barra de vida do chefe no alto da tela
   function bossBarUpdate() {
     let el = document.getElementById('bossbar');
-    const b = curMap().rocks && monsters.find(x => x.kind === 'boss');
+    const b = (curMap().rocks || curMap().mata) && monsters.find(x => x.kind === 'boss');
     if (!b) { if (el && !el.hidden) el.hidden = true; return; }
     if (!el) { el = document.createElement('div'); el.id = 'bossbar'; el.className = 'frame'; el.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top, 0px));z-index:6;padding:4px 10px;min-width:180px;text-align:center;font-size:13px;pointer-events:none'; document.getElementById('game').appendChild(el); }
     el.hidden = false;

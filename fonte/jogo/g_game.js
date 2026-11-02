@@ -33,6 +33,7 @@
       if (!mineCache.has(key)) { if (mineCache.size > 8) mineCache.clear(); mineCache.set(key, buildMineFloor(n, W.meta.day)); }
       return mineCache.get(key);
     }
+    if (isMataN(id)) return mataMap(+id.slice(4));
     if (id.startsWith('b:')) return animalHouseMap(id.slice(2)) || MAPS.farm;
     return MAPS.farm;
   }
@@ -49,6 +50,7 @@
     const k = x + ',' + y;
     if (farmable(m)) { const t = tile(KP(m) + k); return t && t.o ? t.o : null; }
     if (m.rocks && m.rocks[k] && !brokenSet(m.floor).has(k)) return { k: 'mrock', ...m.rocks[k] };
+    if (m.wood) { const o = mataObjAt(m, k); if (o) return { ...o, k: 'fobj' }; }
     return null;
   }
   function solidAt(m, x, y) {
@@ -56,7 +58,7 @@
     if (m.solid[y * m.w + x]) return true;
     if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && !(g.door && bReady(farmB()[g.id]))) return true; }
     const o = objAt(m, x, y);
-    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock'));
+    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid)));
   }
   function blocked(m, px, py) {
     for (const [dx, dy] of [[-5, -4], [5, -4], [-5, 0], [5, 0]]) if (solidAt(m, Math.floor((px + dx) / T), Math.floor((py + dy) / T))) return true;
@@ -103,10 +105,11 @@
     setTimeout(() => {
       if (P.ride && !getMap(id).outdoor) dismount();
       P.map = id; P.x = x; P.y = y; if (dir !== undefined) P.dir = dir;
-      if (id.startsWith('mine') && id !== 'minetop') enterMine(+id.slice(4));
+      if (isMataN(id)) enterMata(+id.slice(4));
+      else if (id.startsWith('mine') && id !== 'minetop') enterMine(+id.slice(4));
       else monsters = [];
       dirty(); fade.style.opacity = 0;
-      document.getElementById('hpBar').hidden = !curMap().cave;
+      document.getElementById('hpBar').hidden = !(curMap().cave || isMataN(curMap().id));
     }, 220);
   }
   // ================= coletáveis da vila =================
@@ -163,6 +166,7 @@
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
+    if (mataAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -268,10 +272,12 @@
       if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
-      if (!useEnergy(s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0)))) return;
+      // cortar árvores gasta 15% a mais (a camisa de lenhador devolve um pouco)
+      if (!useEnergy((s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0))) * (s.id === 'axe' ? 1.15 * (eqHas('xadrezlenhador') ? 0.85 : 1) : 1))) return;
       swing(s.id, lv);
       if (s.id === 'hoe' && digArtifact(m, tx, ty)) return;
       if (m.rocks) { mineHit(m, tx, ty, s.id, power + (buffLv('mining') ? 1 : 0)); return; }
+      if (m.mata) { mataHit(m, tx, ty, s); return; }
       if (!farmable(m)) { sfx.no(); return; }
       const tl = tile(k), o = tl && tl.o;
       if (s.id === 'hoe') {
@@ -293,7 +299,7 @@
           const hp = (o.hp || 10) - power * (hasProf('mestrelenhador') ? 2 : 1); sfx.chop();
           if (o.k === 'ftree' && o.age < 7) { setTile(k, null); addItem('m_' + o.id, 1); return; }
           if (hp <= 0 && o.tap) addItem('extrator', 1);
-          if (hp <= 0) { setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(rint(8, 12) * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
+          if (hp <= 0) { P.stats.trees = (P.stats.trees || 0) + 1; setTile(k, { o: { k: 'stump', hp: 5 } }); addItem('madeira', Math.round(rint(8, 12) * (hasProf('lenhador') ? 1.25 : 1))); if (Math.random() < 0.7) addItem('seiva', rint(1, 3)); gainXP('foraging', 12); toast('Árvore derrubada!'); }
           else setTile(k, { ...tl, o: { ...o, hp, shake: performance.now() + 300 } });
           return;
         }
@@ -455,6 +461,7 @@
     let any = false;
     for (const mo of monsters) {
       if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20 + (mo.r ? mo.r - 12 : 0)) {
+        if (mo.axeOnly) { mo.hitT = 0.1; toast('A espada nem arranha a casca! Use o machado.', '', null, 'anciao'); continue; }
         const base = !s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg, crit = Math.max(Math.random() < (wp.crit || 0) ? 2 : 1, critMul());
         mo.hp -= (base + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk() + eqAtk()) * crit; mo.hitT = 0.15;
         const kb = (wp.knock || 160) * (mo.kind === 'boss' ? 0.2 : 1); mo.vx = d[0] * kb; mo.vy = d[1] * kb; any = true;
@@ -467,18 +474,20 @@
   }
   function killMonster(mo) {
     mo.dead = true;
+    if (mo.mata) { mataKill(mo); return; }
     if (mo.kind === 'boss') { bossDefeated(mo); return; }
     gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
     monsterExtraDrops(mo);
   }
   function updateMonsters(dt) {
     const m = curMap();
-    if (!m.rocks) return;
+    if (!m.rocks && !m.mata) return;
     hurtT -= dt;
     for (const mo of monsters) {
       mo.hitT -= dt;
       const dx = P.x - mo.x, dy = P.y - mo.y, dist = Math.hypot(dx, dy) || 1;
       if (mo.kind === 'boss') updateBoss(mo, dt, dx, dy, dist);
+      else if (mo.mata) mataMove(mo, dt, dx, dy, dist);
       else if (mo.kind === 'slime' || mo.kind === 'duster') {
         mo.hopT -= dt;
         const fast = mo.kind === 'duster';
@@ -492,7 +501,8 @@
       if (dist < (mo.r || 12) && hurtT <= 0) {
         hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
-        if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
+        if (P.hp <= 0 && m.mata) mataFaint();
+        else if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
         dirty();
       }
     }
@@ -507,7 +517,7 @@
   function startFishing(m) {
     const w = waterAhead(m);
     if (!w) { toast('Fique de frente para a água para pescar.'); sfx.no(); return; }
-    if (!useEnergy(4 * 1.17)) return;
+    if (!useEnergy(4 * 1.17 * 1.45)) return;
     swing('rod', 0);
     const bait = count('isca') > 0; if (bait) removeItem('isca', 1);
     fishing = { phase: 'wait', t: rnd(1.5, 5.5) * 1.17 * (eqHas('chapeupesca') ? 0.9 : 1) * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };

@@ -20,7 +20,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(/borbbranca/.test(pools.dia) && /monarca/.test(pools.dia) && !/mariposa/.test(pools.dia), 'de dia no verão: ' + pools.dia);
   ok(/mariposa/.test(pools.noite) && !/monarca/.test(pools.noite), 'de noite: ' + pools.noite);
   ok(/libesmeralda/.test(pools.chuva) && !/borbbranca/.test(pools.chuva), 'na chuva: ' + pools.chuva);
-  ok(Object.keys(await ev(() => __sv.BUGS)).length === 8, '8 espécies');
+  ok(Object.keys(await ev(() => __sv.BUGS)).length === 12, '12 espécies (8 + 4 da floresta)');
   // aparecem voando perto
   await ev(() => { const s = __sv; s.W.clock.min = 600; s.W.clock.at = Date.now(); s.W.meta.rain = false; s.goMap('town', 27 * 16 + 8, 17 * 16 + 8, 1); });
   await p.waitForTimeout(800);
@@ -39,7 +39,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const got = await ev(() => ({ inv: __sv.P.inv.some(x => x && x.id === 'monarca'), col: Object.keys(__sv.P.stats.bugs || {}), t: document.getElementById('toasts').innerText, fish: !!__sv.fishing }));
   ok(got.inv && got.col.includes('monarca') && /Você pegou: Borboleta-monarca/.test(got.t) && !got.fish, 'pegou a monarca: ' + got.t.replace(/\n/g, ' | '));
   await p.waitForTimeout(900);
-  ok(/Espécie nova na coleção! 1 de 8/.test(await ev(() => document.getElementById('toasts').innerText)), 'conta a coleção (1 de 8)');
+  ok(/Espécie nova na coleção! 1 de 12/.test(await ev(() => document.getElementById('toasts').innerText)), 'conta a coleção (1 de 12)');
   // escapar
   await ev(() => { const s = __sv, P = s.P; s.bugs = [{ id: 'libazul', x: P.x, y: P.y + 2, hx: P.x, hy: P.y + 2, tx: P.x, ty: P.y + 2, a: 0, ph: 0, wait: 9, h: 10, life: 60 }]; s.act(); });
   await p.waitForTimeout(450);

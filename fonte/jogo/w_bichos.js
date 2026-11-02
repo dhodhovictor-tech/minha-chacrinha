@@ -7,12 +7,17 @@
     borbamarela: { name: 'Borboleta-amarela', k: 'b', col: '#f4d43a', col2: '#b8860a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 420, ate: 1080, diff: 22, sell: 50 },
     monarca: { name: 'Borboleta-monarca', k: 'b', col: '#f08a1a', col2: '#1a1a1a', seasons: ['summer', 'fall'], maps: ['farm', 'town', 'beach'], de: 480, ate: 1020, diff: 36, sell: 95 },
     morpho: { name: 'Borboleta-azul', k: 'b', col: '#3a8af0', col2: '#14244a', seasons: ['summer'], maps: ['town', 'beach'], de: 360, ate: 660, diff: 60, sell: 240 },
-    mariposa: { name: 'Mariposa-lua', k: 'm', col: '#bfe8a8', col2: '#6aa04a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 1140, ate: 1560, diff: 50, sell: 170 },
+    mariposa: { name: 'Mariposa-lua', k: 'm', col: '#bfe8a8', col2: '#6aa04a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town', 'mata'], de: 1140, ate: 1560, diff: 50, sell: 170 },
     libvermelha: { name: 'Libélula-vermelha', k: 'l', col: '#e8402a', col2: '#8a1a10', seasons: ['summer', 'fall'], maps: ['farm', 'town'], de: 480, ate: 1140, agua: true, diff: 38, sell: 110 },
     libazul: { name: 'Libélula-azul', k: 'l', col: '#3ab0e8', col2: '#145a8a', seasons: ['spring', 'summer'], maps: ['farm', 'town', 'beach'], de: 420, ate: 1080, agua: true, diff: 45, sell: 130 },
-    libesmeralda: { name: 'Libélula-esmeralda', k: 'l', col: '#3ad87a', col2: '#0a6a3a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town'], de: 360, ate: 1260, agua: true, chuva: true, diff: 70, sell: 280 },
+    libesmeralda: { name: 'Libélula-esmeralda', k: 'l', col: '#3ad87a', col2: '#0a6a3a', seasons: ['spring', 'summer', 'fall'], maps: ['farm', 'town', 'mata'], de: 360, ate: 1260, agua: true, chuva: true, diff: 70, sell: 280 },
+    // só na floresta
+    borbcoruja: { name: 'Borboleta-coruja', k: 'b', col: '#a8845a', col2: '#2a1a10', seasons: ['spring', 'summer', 'fall'], maps: ['mata'], de: 1020, ate: 1260, diff: 48, sell: 150 },
+    borbfolha: { name: 'Borboleta-folha', k: 'b', col: '#c8762a', col2: '#6a3a14', seasons: ['fall'], maps: ['mata'], de: 420, ate: 1080, diff: 55, sell: 190 },
+    besouro: { name: 'Besouro-rinoceronte', k: 'be', col: '#3a2a1a', col2: '#6a4a2a', seasons: ['summer'], maps: ['mata'], de: 960, ate: 1440, diff: 58, sell: 210 },
+    vagalume: { name: 'Vaga-lume', k: 'v', col: '#e8f05a', col2: '#3a3a1a', seasons: ['spring', 'summer'], maps: ['mata'], de: 1140, ate: 1560, diff: 30, sell: 90 },
   };
-  const BUG_WHERE = { farm: 'chacrinha', town: 'vila', beach: 'praia' };
+  const BUG_WHERE = { farm: 'chacrinha', town: 'vila', beach: 'praia', mata: 'floresta' };
   for (const [k, b] of Object.entries(BUGS)) {
     const quando = b.de >= 1080 ? 'à noite' : b.ate <= 720 ? 'de manhã' : 'de dia';
     const est = b.seasons.map(s => SEASONS[SEASON_ID.indexOf(s)].toLowerCase()).join(', ');
@@ -41,7 +46,7 @@
   let bugs = [], bugMap = null, bugSpawnT = 0, bugHint = false;
   function bugPool(m) {
     const s = season(), min = nowMin(), rain = chovendo();
-    return Object.entries(BUGS).filter(([, b]) => b.maps.includes(m.id) && b.seasons.includes(s) && min >= b.de && min <= b.ate && (b.chuva ? rain : !rain || b.k === 'l' && Math.random() < 0.15));
+    return Object.entries(BUGS).filter(([, b]) => b.maps.includes(m.mata ? 'mata' : m.id) && b.seasons.includes(s) && min >= b.de && min <= b.ate && (b.chuva ? rain : !rain || b.k === 'l' && Math.random() < 0.15));
   }
   function bugSpot(m, b) {
     const px = Math.floor(P.x / T), py = Math.floor(P.y / T);
@@ -96,6 +101,8 @@
   function drawBug(b, t) {
     const d = BUGS[b.id], x = Math.round(b.x), y = Math.round(b.y - b.h);
     shadowAt(b.x, b.y, 2, 0.8);
+    if (d.k === 'v') { const on = Math.sin(t * 3 + b.ph) > -0.2; if (on) { ctx.globalAlpha = 0.35; disc(x, y + 1, 3, '#f4ff8a'); ctx.globalAlpha = 1; } R(x, y - 1, 1, 2, '#3a3a1a'); R(x, y + 1, 1, 1, on ? '#f4ff6a' : '#6a6a3a'); return; }
+    if (d.k === 'be') { const f = Math.floor(t * 24 + b.ph) % 2; ctx.globalAlpha = 0.6; R(x - 4, y - 2 - f, 3, 2, '#e8f0ff'); R(x + 2, y - 2 - f, 3, 2, '#e8f0ff'); ctx.globalAlpha = 1; oval(x + 0.5, y + 1, 2.5, 3, d.col); R(x - 1, y - 1, 1, 3, d.col2); R(x, y - 4, 1, 3, '#2a1a10'); R(x - 1, y - 5, 1, 1, '#2a1a10'); return; }
     if (d.k === 'l') {
       const f = Math.floor(t * 30 + b.ph) % 2, wc = f ? '#ffffffdd' : '#ffffff88';
       R(x - 5, y - 2, 5, 1, wc); R(x + 1, y - 2, 5, 1, wc); R(x - 4, y, 4, 1, wc); R(x + 1, y, 4, 1, wc);
@@ -113,7 +120,7 @@
     const t = performance.now() / 1000;
     for (const b of bugs) ents.push({ y: b.y + 2, f: () => drawBug(b, t) });
   }
-  function bugLights(m, light) { if (m.id === bugMap) for (const b of bugs) if (BUGS[b.id].k === 'm') light(b.x, b.y - b.h, 10, 0.25); }
+  function bugLights(m, light) { const t = performance.now() / 1000; if (m.id === bugMap) for (const b of bugs) { const k = BUGS[b.id].k; if (k === 'm') light(b.x, b.y - b.h, 10, 0.25); if (k === 'v' && Math.sin(t * 3 + b.ph) > -0.2) light(b.x, b.y - b.h, 14, 0.5, '230,255,120'); } }
 
   // ---------- usar a rede ----------
   function swingNet() {
@@ -144,7 +151,7 @@
     if (nova) { const n = Object.keys(st.bugs).length; setTimeout(() => toast(`Espécie nova na coleção! ${n} de ${Object.keys(BUGS).length}`, '', null, 'colecao'), 700); }
   }
   // conquista do casal
-  ACH.push(['insetos', 'Colecionadores de asas', 'Pegar as 8 borboletas e libélulas.', () => { const got = new Set(); for (const p of [P, ...Object.values(W.players || {})]) for (const k of Object.keys(((p || {}).stats || {}).bugs || {})) got.add(k); return Object.keys(BUGS).every(k => got.has(k)); }]);
+  ACH.push(['insetos', 'Colecionadores de asas', `Pegar os ${Object.keys(BUGS).length} insetos: borboletas, libélulas, besouro e vaga-lume.`, () => { const got = new Set(); for (const p of [P, ...Object.values(W.players || {})]) for (const k of Object.keys(((p || {}).stats || {}).bugs || {})) got.add(k); return Object.keys(BUGS).every(k => got.has(k)); }]);
 
   // ---------- desenhos: capa de chuva na pessoa e no Darth ----------
   function drawRaincoat(look, dir, step) {
@@ -172,6 +179,8 @@
   function paintIcon6(id) {
     const b = BUGS[id];
     if (b) {
+      if (b.k === 'v') { ctx.globalAlpha = 0.4; disc(8, 10, 6, '#f4ff8a'); ctx.globalAlpha = 1; oval(8, 7, 2.5, 3.5, '#3a3a1a'); oval(8, 11, 2.5, 2.5, '#f4ff5a'); R(7, 2, 2, 2, '#e8402a'); R(4, 6, 3, 2, '#c8d8e8'); R(9, 6, 3, 2, '#c8d8e8'); return true; }
+      if (b.k === 'be') { oval(8, 9, 5, 5.5, b.col); R(8, 4, 1, 10, '#1a1008'); oval(6, 8, 1.5, 3, b.col2); R(7, 1, 2, 3, b.col); R(8, 0, 1, 2, b.col); R(3, 7, 2, 1, '#1a1008'); R(11, 7, 2, 1, '#1a1008'); R(3, 11, 2, 1, '#1a1008'); R(11, 11, 2, 1, '#1a1008'); return true; }
       if (b.k === 'l') {
         for (const [x, y] of [[1, 5], [10, 5], [2, 8], [10, 8]]) { R(x, y, 5, 2, '#d8f0ff'); R(x, y, 5, 1, '#ffffff'); }
         R(7, 2, 2, 13, b.col); R(7, 2, 2, 3, b.col2); R(6, 3, 1, 1, '#1a1a1a'); R(9, 3, 1, 1, '#1a1a1a'); R(7, 11, 2, 1, b.col2);

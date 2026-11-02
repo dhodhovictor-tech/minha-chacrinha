@@ -23,7 +23,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   // aba Troféus
   await p.click('#bMenu'); await p.waitForTimeout(200); await p.click('[data-t="ach"]'); await p.waitForTimeout(200);
   const tab = await ev(() => document.querySelector('.win').innerText);
-  ok(/Conquistas de vocês dois: 5 de 21/.test(tab), 'aba Troféus mostra 5 de 21');
+  ok(/Conquistas de vocês dois: 5 de 24/.test(tab), 'aba Troféus mostra 5 de 24');
   await p.screenshot({ path: SHOTS + 'e5_trofeus.png' });
   console.log('erros', errs);
   await b.close();

@@ -163,7 +163,7 @@
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
-      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
+      case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).filter(([, f]) => !f.rare).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
       case 'rosa': return [{ id: 'madeira', price: 10 }, { id: 'pedra', price: 20 }];
       case 'cida': return marketStock();
@@ -199,9 +199,9 @@
         const s = P.inv.find(x => x && x.id === id); if (!s) return '';
         const up = UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
         if (!up) return `<div class="item"><img src="${iconURL(id, s.lv)}" alt=""><span class="nm">${toolName(id, s.lv)}<small>Já está no máximo.</small></span></div>`;
-        const ok = gold() >= up.gold && count(up.bar) >= 5;
+        const ok = gold() >= up.gold && count(up.bar) >= 5 && axeWoodOk(id, up.lv);
         const eff = { hoe: 'mais resistente', can: `leva ${canCap(up.lv)} de água e rega ${up.lv + 1} quadrados lado a lado`, axe: 'corta mais rápido', pick: 'quebra mais rápido', sword: 'mais dano', rod: 'barra de pesca maior' }[id];
-        return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
+        return `<div class="item"><img src="${iconURL(id, up.lv)}" alt=""><span class="nm">${toolName(id, up.lv)}<small>${fmt(up.gold)} ₲ + 5 ${item(up.bar).name.toLowerCase()}${axeWoodTxt(id, up.lv)} · ${eff}</small></span><button class="btn g" data-a="upgrade" data-id="${id}" type="button" ${ok ? '' : 'disabled'}>Melhorar</button></div>`;
       }).join('')}</div>`;
     } else if (shopTab === 'prices') {
       body = priceBoard();
@@ -331,7 +331,7 @@
       }
       case 'upgrade': {
         const s = P.inv.find(x => x && x.id === b.dataset.id), up = s && UPGRADES.find(u => u.lv === (s.lv || 0) + 1);
-        if (up && count(up.bar) >= 5 && spend(up.gold)) { removeItem(up.bar, 5); s.lv = up.lv; iconCache.clear(); urlCache.clear(); sfx.level(); toast(`Pronto: ${toolName(s.id, s.lv)}!`); dirty(); renderHotbar(); }
+        if (up && count(up.bar) >= 5 && axeWoodOk(s.id, up.lv) && spend(up.gold)) { removeItem(up.bar, 5); axeWoodSpend(s.id, up.lv); s.lv = up.lv; iconCache.clear(); urlCache.clear(); sfx.level(); toast(`Pronto: ${toolName(s.id, s.lv)}!`); dirty(); renderHotbar(); }
         renderShop(panelArg); break;
       }
       case 'chestIn': chestMove(panelArg, +b.dataset.i, true); break;
@@ -339,6 +339,7 @@
       case 'sleep': P.sleep = true; dirty(); savePlayer(); closePanel(); toast(online && peerPlayers().filter(p => !p.me && !p.sleep).length ? 'Esperando a outra pessoa ir dormir...' : 'Boa noite!'); if (!online || !peerPlayers().some(p => !p.me && !p.sleep)) setTimeout(() => checkDayEnd(true), 600); break;
       case 'unship': { const s = P.ship.splice(+b.dataset.i, 1)[0]; if (s) { addItem(s.id, s.n, true, s.q || 0); recordSold(s.id, -s.n); } openShipInfo(); break; }
       case 'floor': closePanel(); goMap('mine' + b.dataset.f, 0, 0, 1); break;
+      case 'mataGo': closePanel(); goMap('mata' + b.dataset.f, 0, 0, 0); break;
       case 'eat': eatHeld(); break;
       case 'look': look[b.dataset.k] = +b.dataset.v; if (b.dataset.k === 'shirt') { delete look.shirtC; delete look.plaid; delete look.jacket; } delete look.preset; { const nm = ($('nm') || {}).value; openStart(nm); } break;
       case 'lookT': { const k = b.dataset.k; look[k] = look[k] ? (k === 'hat' ? '' : false) : (k === 'hat' ? 'beanie' : k === 'pet' ? 'darth' : true); if (k !== 'pet') delete look.preset; const nm = ($('nm') || {}).value; openStart(nm); break; }

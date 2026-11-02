@@ -82,6 +82,17 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   const rk = await ev(A, () => { const m = __sv.curMap(); const k = Object.keys(m.rocks)[0]; const [x, y] = k.split(',').map(Number); const P = __sv.P; P.x = x * 16 + 8; P.y = (y + 1) * 16 + 12; P.dir = 0; P.sel = 3; __sv.curMap().rocks[k].hp = 1; __sv.act(); return k; });
   await A.waitForTimeout(1000);
   ok(await ev(B, rk => __sv.brokenSet(1).has(rk), rk), 'pedra quebrada na mina sincroniza');
+  // floresta: o que um derruba some para o outro, e a árvore gigante cortada a dois rende para os dois
+  await ev(A, () => __sv.goMap('mata3', 0, 0, 0)); await ev(B, () => __sv.goMap('mata3', 0, 0, 0)); await A.waitForTimeout(900);
+  const fk = await ev(A, () => { const m = __sv.curMap(); const k = Object.keys(m.wood).find(k => m.wood[k].kind === 'toco' || m.wood[k].kind === 'tronco' || m.wood[k].kind === 'arbusto'); __sv.breakMata(m, k, true); return k; });
+  await A.waitForTimeout(1000);
+  ok(await ev(B, fk => __sv.mBroken(__sv.curMap()).has(fk), fk), 'o que A derrubou na floresta some para B');
+  const gk = await ev(B, () => { const m = __sv.curMap(); const k = Object.keys(m.wood).find(k => m.wood[k].kind === 'gigante'); if (k) m.wood[k].hit = 1; return k; });
+  if (gk) {
+    const lei0 = await ev(B, () => __sv.count('madeiralei'));
+    await ev(A, gk => __sv.breakMata(__sv.curMap(), gk, true), gk); await A.waitForTimeout(1000);
+    ok(await ev(B, () => __sv.count('madeiralei')) > lei0, 'árvore gigante: B, que também cortava, ganhou a parte dele');
+  }
   const ta = await ev(A, () => __sv.nowMin()), tb = await ev(B, () => __sv.nowMin());
   ok(Math.abs(ta - tb) <= 10, `relógio igual nos dois (${ta} / ${tb})`);
   // dormir
