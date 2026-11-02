@@ -154,8 +154,8 @@
       if (r() > 0.42) continue;
       const q = r();
       let kind = 'stone';
-      // ferro começa a aparecer no andar 15 (pouco) e fica mais comum do 25 em diante; do 40 para baixo é bem comum
-      if (tier === 0) kind = q < 0.1 ? 'cobre' : q < 0.15 ? 'coal' : n >= 15 && q < (n >= 25 ? 0.21 : 0.18) ? 'ferro' : 'stone';
+      // ferro: bem pouco do andar 25 ao 39; do 40 para baixo é comum
+      if (tier === 0) kind = q < 0.1 ? 'cobre' : q < 0.15 ? 'coal' : n >= 25 && q < 0.165 ? 'ferro' : 'stone';
       else if (tier === 1) kind = q < 0.1 ? 'ferro' : q < 0.15 ? 'cobre' : q < 0.2 ? 'coal' : 'stone';
       else kind = q < 0.08 ? 'ouro' : q < 0.14 ? 'ferro' : q < 0.2 ? 'coal' : 'stone';
       const g = r();
