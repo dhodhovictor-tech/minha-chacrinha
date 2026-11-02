@@ -89,11 +89,11 @@
   function feedCat(own, peerUid) {
     const s = held(); if (!isTreat(s)) return false;
     useHeld(1); meow(); logAct('darth', 'petisco', 1);
-    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco! 😻', 'Darth comeu tudo e lambeu os bigodes. 😺', 'Darth ronrona de barriguinha cheia. 💚']), 'big'); }
-    else { emitP2P({ type: 'petfeed', to: peerUid }); toast('Darth adorou o petisco! 😻', 'big'); }
+    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco!', 'Darth comeu tudo e lambeu os bigodes.', 'Darth ronrona de barriguinha cheia.']), 'big', null, 'darth'); }
+    else { emitP2P({ type: 'petfeed', to: peerUid }); toast('Darth adorou o petisco!', 'big', null, 'darth'); }
     return true;
   }
-  function petFedByPartner(from) { if (!P.pet) return; P.pet.love = Math.min(100, (P.pet.love || 0) + 8); P.pet.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(`${from} deu um petisco para o Darth! 😻`); }
+  function petFedByPartner(from) { if (!P.pet) return; P.pet.love = Math.min(100, (P.pet.love || 0) + 8); P.pet.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(`${from} deu um petisco para o Darth!`, '', null, 'darth'); }
   // de manhã, depois de um dia com petisco, o Darth sempre deixa um presentinho na porta (melhor quanto mais carinho)
   let catGiftLine = '';
   function catMorningGift() {
@@ -103,10 +103,10 @@
     const love = p.love || 0, r = Math.random();
     const g = r < 0.02 + love / 2500 ? 'frutaestelar' : love >= 60 && r < 0.3 ? pick(['diamante', 'esmeralda', 'trufa', 'pena']) : pick(['sardinha', 'anchova', 'cogumelo', 'narciso', 'avela', 'quartzo', 'amora', 'pena']);
     addItem(g, 1, true); dirty();
-    catGiftLine = `<p class="big" style="text-align:center">🐾 Darth deixou um presentinho na porta: ${item(g).name}!</p>`;
+    catGiftLine = `<p class="big" style="text-align:center">Darth deixou um presentinho na porta: ${item(g).name}!</p>`;
   }
   // carinho: o Darth reage de jeitos diferentes e mostra o quanto gosta de você
-  const loveBar = l => { const n = Math.min(5, Math.ceil(l / 20)); return '💚'.repeat(n) + '🤍'.repeat(5 - n); };
+  const loveBar = l => `${Math.min(5, Math.ceil(l / 20))} de 5`;
   function catReact(st) {
     st.react = { k: pick(['pulo', 'esfrega', 'rola']), t: 1.8 }; st.heart = 2.2;
     tone(90, 70, 0.6, 'sawtooth', 0.025); tone(95, 75, 0.6, 'sawtooth', 0.02, 0.65);
@@ -115,7 +115,7 @@
   function petOwnCat() {
     const p = P.pet; if (p.petDay !== W.meta.day) { p.love = Math.min(100, (p.love || 0) + 3); p.petDay = W.meta.day; } else p.love = Math.min(100, (p.love || 0) + 1);
     dirty(); meow();
-    toast(`${catReact(petSt)} 💚 Carinho: ${loveBar(p.love)}`, 'big');
+    toast(`${catReact(petSt)} Carinho: ${loveBar(p.love)}`, 'big', null, 'darth');
   }
   // desenha o Darth com a reação do carinho
   function drawCatReact(st, x, y, dir, mv, pose) {

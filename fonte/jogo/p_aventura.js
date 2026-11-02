@@ -56,7 +56,7 @@
   }
 
   // ---------- baú de tesouro no minijogo de pesca ----------
-  function treasureChance() { return 0.15 * (hasProf('pirata') ? 2 : 1) * (tackle() === 'imatesouro' ? 2 : 1) + (eqHas('anelsorte') ? 0.05 : 0); }
+  function treasureChance() { return 0.15 * (hasProf('pirata') ? 2 : 1) * (tackle() === 'imatesouro' ? 2 : 1) + (eqHas('anelsorte') ? 0.05 : 0) + (eqHas('coroaflores') ? 0.03 : 0); }
   function treasureLoot() {
     const pool = [['isca', 5, 15, 10], ['cobre', 5, 12, 8], ['ferro', 3, 8, 6], ['ouro', 2, 5, 4], ['carvao', 3, 8, 6], ['geodo', 1, 3, 5], ['ametista', 1, 1, 3], ['topazio', 1, 1, 3], ['esmeralda', 1, 1, 1.5], ['diamante', 1, 1, 0.6], ['barraouro', 1, 2, 1.5], ['boia', 1, 1, 1], ['anelsorte', 1, 1, 0.6], ['anelbrilho', 1, 1, 0.6]];
     const tot = pool.reduce((a, x) => a + x[3], 0), out = [], n = Math.random() < 0.3 ? 3 : Math.random() < 0.6 ? 2 : 1;
@@ -107,16 +107,16 @@
   Object.assign(ITEMS, GEAR);
   const BOOT_DEF = { botascouro: 1, botasvelozes: 1, botasferro: 3, botasdragao: 4 };
   const eq = () => P.eq || (P.eq = {});
-  const eqHas = id => { const e = P && P.eq; return !!e && (e.r1 === id || e.r2 === id || e.bt === id); };
-  const eqAtk = () => (eqHas('anelguerreiro') ? 2 : 0);
-  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0);
-  const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0);
+  const eqHas = id => { const e = P && P.eq; return !!e && Object.values(e).includes(id); };
+  const eqAtk = () => (eqHas('anelguerreiro') ? 2 : 0) + (eqHas('luvascouro') ? 1 : 0);
+  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0);
+  const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0) + (eqHas('botastrilha') && !(W.meta && W.meta.rain) ? 0.05 : 0);
   const defTotal = () => buffLv('defense') + profDef() + eqDef();
   function equipSlot(i) {
     const s = P.inv[i]; if (!s) return;
     const it = item(s.id), e = eq();
-    if (it.cat !== 'ring' && it.cat !== 'boots') return;
-    const slot = it.cat === 'boots' ? 'bt' : !e.r1 ? 'r1' : !e.r2 ? 'r2' : 'r1';
+    if (it.cat !== 'ring' && it.cat !== 'boots' && it.cat !== 'roupa') return;
+    const slot = it.cat === 'roupa' ? it.slot : it.cat === 'boots' ? 'bt' : !e.r1 ? 'r1' : !e.r2 ? 'r2' : 'r1';
     const old = e[slot];
     e[slot] = s.id; s.n--; if (s.n <= 0) P.inv[i] = null;
     if (old) addItem(old, 1, true);
@@ -129,7 +129,7 @@
   }
   function gearHTML() {
     const e = P.eq || {}, cell = (k, label) => `<div class="item"><span class="nm">${e[k] ? `<img src="${iconURL(e[k])}" alt="" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle"> <b>${item(e[k]).name}</b><small>${item(e[k]).desc}</small>` : `<small>${label}: vazio</small>`}</span>${e[k] ? `<button class="btn" data-a="unequip" data-k="${k}" type="button">Tirar</button>` : ''}</div>`;
-    return `<h3>Equipado</h3><div class="list">${cell('r1', 'Anel')}${cell('r2', 'Anel')}${cell('bt', 'Botas')}</div>`;
+    return `<h3>Equipado</h3><div class="list">${cell('hd', 'Cabeça')}${cell('cp', 'Corpo')}${cell('mao', 'Mãos')}${cell('bt', 'Pés')}${cell('r1', 'Anel')}${cell('r2', 'Anel')}</div>`;
   }
   // monstros às vezes deixam cair anéis e botas
   function monsterExtraDrops(mo) {

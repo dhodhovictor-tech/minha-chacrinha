@@ -134,7 +134,7 @@
   // ================= ação principal =================
   function useEnergy(n) {
     if (P.energy < n && P.energy <= 0) { toast('Sem energia! Coma algo ou vá dormir.'); sfx.no(); return false; }
-    P.energy = Math.max(-10, P.energy - n); dirty(); return true;
+    P.energy = Math.max(-10, P.energy - n * energyMul()); dirty(); return true;
   }
   function swing(tool, lv, dur = 0.28) { toolAnim = { tool, lv, t: 0, dur }; lockT = dur * 0.8; }
   function act(target) {
@@ -142,6 +142,7 @@
     if (placing) { confirmPlacing(); return; }
     if (fishing) { fishAction(); return; }
     if (nearBooth()) { openFest(); return; }
+    if (nearStall()) { openShop('roupas'); return; }
     const m = curMap();
     let [tx, ty] = target || facing();
     const k = tx + ',' + ty;
@@ -209,6 +210,7 @@
   function harvest(k, tl) {
     const c = tl.c, d = CROPS[c.id];
     let n = d.n || 1; if (d.extra && Math.random() < d.extra) n++;
+    if (eqHas('luvasjardim') && Math.random() < 0.08) n++;
     const q = d.mix ? 0 : cropQuality(tl), id = d.mix ? pick(FORAGE.winter) : c.id;
     // a primeira sai com a qualidade sorteada; as extras são normais
     if (!addItem(id, 1, false, q)) return;
@@ -388,7 +390,7 @@
   function eatHeld() {
     const s = held(); if (!s) return;
     const it = item(s.id);
-    const en = Math.round(it.energy * Q_ENERGY[s.q || 0]);
+    const en = Math.round(it.energy * Q_ENERGY[s.q || 0] * (eqHas('avental') && it.cat === 'food' ? 1.1 : 1));
     P.energy = Math.min(P.maxEnergy, P.energy + en); P.hp = Math.min(100, P.hp + Math.round(en * 0.45));
     afterEat(s.id); useHeld(1); sfx.eat(); closePanel();
   }
@@ -436,7 +438,7 @@
       else if (['cobre', 'ferro', 'ouro'].includes(r.kind)) addItem(r.kind, rint(1, 3) + (hasProf('minerador') ? 1 : 0));
       else if (r.kind.startsWith('gem')) addItem(r.kind.split(':')[1], hasProf('geologo') ? 2 : 1);
       else if (Math.random() < 0.04 * (hasProf('prospector') ? 2 : 1)) addItem('carvao', 1);
-      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01 + (eqHas('anelsorte') ? 0.015 : 0)) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
+      if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01 + (eqHas('anelsorte') ? 0.015 : 0) + (eqHas('coroaflores') ? 0.008 : 0)) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
       if (!m.ladder && m.floor < MINE_BOTTOM) {
@@ -507,7 +509,7 @@
     if (!useEnergy(4 * 1.17)) return;
     swing('rod', 0);
     const bait = count('isca') > 0; if (bait) removeItem('isca', 1);
-    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * 1.17 * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
+    fishing = { phase: 'wait', t: rnd(1.5, 5.5) * 1.17 * (eqHas('chapeupesca') ? 0.9 : 1) * (bait ? 0.5 : 1) * (tackle() === 'anzolgiratorio' ? 0.55 : 1), bx: w[0] * T + 8, by: w[1] * T + 8, water: m.water };
     sfx.cast();
   }
   function pickFish(water) {
@@ -533,7 +535,7 @@
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1) * (eqHas('colete') ? 1.08 : 1) + (eqHas('colarhavaiano') ? 2.5 : 0); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
       document.getElementById('fish').hidden = false;
     }
   }

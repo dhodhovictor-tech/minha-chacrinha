@@ -154,7 +154,7 @@
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light);
+      festLights(m, light); luauLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -165,7 +165,7 @@
       for (const [lx, ly] of m.lanterns || []) glow(lx * T + 8, ly * T + 12, 70, 0.3 * fl, '255,160,70');
       if (m.tier === 2) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.at(x, y) === G.WATER && (x + y) % 2 === 0) glow(x * T + 8, y * T + 8, 26, 0.12, '255,90,20');
       festLights(m, (x, y, r, a) => glow(x, y, r * 1.4, a * 0.6, '255,140,40'));
-      glow(P.x, P.y - 10, eqHas('anelbrilho') ? 120 : 64, eqHas('anelbrilho') ? 0.22 : 0.1, '255,220,170');
+      glow(P.x, P.y - 10, eqHas('anelbrilho') ? 120 : eqHas('capacete') ? 92 : 64, eqHas('anelbrilho') ? 0.22 : eqHas('capacete') ? 0.16 : 0.1, '255,220,170');
       ctx.globalCompositeOperation = 'source-over';
       const g = ctx.createRadialGradient(P.x - camX, P.y - 10 - camY, 30, P.x - camX, P.y - 10 - camY, Math.max(VW, VH) * 0.7);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);

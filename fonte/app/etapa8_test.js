@@ -17,7 +17,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   // carinho: reação e medidor
   await p.waitForTimeout(1500);
   const pet = await ev(() => { const s = __sv, P = s.P, st = s.petSt; P.x = st.x - 12; P.y = st.y + 6; P.dir = 3; P.sel = 0; s.act(); return { react: st.react && st.react.k, love: P.pet.love, toast: document.getElementById('toasts').innerText }; });
-  ok(!!pet.react && pet.love === 3 && /Carinho: 💚/.test(pet.toast), 'carinho: Darth reage (' + pet.react + ') e mostra o medidor: ' + pet.toast.split('\n').pop());
+  ok(!!pet.react && pet.love === 3 && /Carinho: \d de 5/.test(pet.toast), 'carinho: Darth reage (' + pet.react + ') e mostra o medidor: ' + pet.toast.split('\n').pop());
   await p.waitForTimeout(300); await p.screenshot({ path: SHOTS + 'e8_carinho.png' });
   // petisco hoje, presentinho na manhã seguinte (sempre)
   await p.waitForTimeout(1800);

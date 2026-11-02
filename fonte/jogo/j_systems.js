@@ -441,7 +441,7 @@
   function openTalk(id, text) {
     const n = NPCS[id], r = rel(id), d = W.meta.day;
     if (!text) {
-      text = npcLine(id);
+      text = festTalk(id) || npcLine(id);
       if (r.talk !== d) { r.talk = d; r.pts = Math.min(2500, r.pts + 20); dirty(); }
     }
     const s = held(), can = giftable(s);
@@ -636,7 +636,7 @@
     switch (d.type) {
       case 'give': if (typeof d.id === 'string' && item(d.id).name !== d.id) { addItem(d.id, clamp(+d.n || 1, 1, 999), true); toast(`${d.from} te deu: ${item(d.id).name}! 🎁`, 'big'); sfx.coin(); } break;
       case 'petfeed': petFedByPartner(d.from); break;
-      case 'petlove': if (P.pet) { P.pet.love = Math.min(100, (P.pet.love || 0) + 1); dirty(); toast(`${d.from} fez carinho no Darth! 💚`); } break;
+      case 'petlove': if (P.pet) { P.pet.love = Math.min(100, (P.pet.love || 0) + 1); dirty(); toast(`${d.from} fez carinho no Darth!`, '', null, 'darth'); } break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;
@@ -746,7 +746,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t);
+    festEnts(m, ents, t); stallEnts(m, ents); luauDecor(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }

@@ -113,7 +113,7 @@
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
-      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { catReact(r); return true; } meow(); toast(catReact(r) + ' 💚', 'big'); emitP2P({ type: 'petlove', to: p.uid }); return true; }
+      if (Math.hypot(r.x - px, r.y - 6 - py) < 14) { if (feedCat(false, p.uid)) { catReact(r); return true; } meow(); toast(catReact(r), 'big', null, 'darth'); emitP2P({ type: 'petlove', to: p.uid }); return true; }
     }
     return false;
   }

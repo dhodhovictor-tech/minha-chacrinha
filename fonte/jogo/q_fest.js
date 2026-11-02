@@ -63,6 +63,7 @@
         break;
       }
     }
+    if (f.id !== 'aguasvivas' || nowMin() >= 1200 || true) body += festExtraHTML(f);
     openPanel(`<h2>${f.name}</h2>${body}`, 'fest');
   }
 
