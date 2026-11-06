@@ -23,13 +23,19 @@
     setTimeout(() => el.remove(), 2200);
     lastNote = { id, n, t: now, el };
   }
+  // redesenhar o mesmo painel (mesma loja e mesma aba) mantém a rolagem onde estava
+  let panelSig = '';
+  const panelSigOf = (kind, arg) => kind + '|' + arg + '|' + (kind === 'shop' ? shopTab : kind === 'inv' ? invTab : '');
   function openPanel(html, kind = 'msg', arg = null) {
+    const sig = panelSigOf(kind, arg), old = panelOpen && panel.querySelector('.win'), keep = old && sig === panelSig ? old.scrollTop : 0;
+    panelSig = sig;
     panelKind = kind; panelArg = arg; panelOpen = true;
     panel.innerHTML = `<div class="win frame">${kind === 'start' || kind === 'loading' ? '' : '<button class="x" data-a="close" type="button" aria-label="Fechar">×</button>'}${html}</div>`;
     panel.hidden = false;
+    if (keep) { const w = panel.querySelector('.win'); if (w) w.scrollTop = keep; }
     input.jx = input.jy = 0;
   }
-  function closePanel() { panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
+  function closePanel() { panelSig = ''; panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
   const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
@@ -162,6 +168,21 @@
     cida: { title: 'Mercado da Vila', tabs: [['prices', 'Preços'], ['buy', 'Comprar'], ['animals', 'Animais'], ['sell', 'Vender']], greet: () => '“Olha a feira! Preço bom é preço de hoje!”' },
     lia: { title: 'Bar da Lia', tabs: [['buy', 'Cardápio'], ['recipes', 'Receitas'], ['sell', 'Vender']], greet: () => '“Senta aí! Hoje tem pizza.”' },
   };
+  // quantidade escolhida em cada linha das lojas (− número + Máx)
+  const shopQty = {};
+  const qtyOf = k => Math.max(1, shopQty[k] || 1);
+  function qtyRow(img, name, small, k, pr, max, lbl, act, off) {
+    const n = Math.min(max, qtyOf(k)); shopQty[k] = n;
+    return `<div class="item shoprow" data-max="${max}" data-pr="${pr}" data-lbl="${lbl}"><img src="${img}" alt=""><span class="nm">${name}<small>${small || ''}</small></span>
+      <span class="qty"><span class="price">${fmt(pr)} ₲</span><button class="btn q" data-a="qty" data-k="${k}" data-d="-1" type="button" aria-label="Menos" ${off ? 'disabled' : ''}>−</button><input class="qn" data-qk="${k}" type="number" inputmode="numeric" min="1" max="${max}" value="${n}" aria-label="Quantidade" ${off ? 'disabled' : ''}><button class="btn q" data-a="qty" data-k="${k}" data-d="1" type="button" aria-label="Mais" ${off ? 'disabled' : ''}>+</button><button class="btn q" data-a="qty" data-k="${k}" data-d="max" type="button" ${off ? 'disabled' : ''}>Máx</button><button class="btn g" ${act} data-k="${k}" data-go="1" type="button" ${off ? 'disabled' : ''}>${lbl} · ${fmt(pr * n)} ₲</button></span></div>`;
+  }
+  function qtySet(row, k, n, typing) {
+    if (!row) return;
+    const max = +row.dataset.max, pr = +row.dataset.pr;
+    n = clamp(Math.round(n) || 1, 1, max); shopQty[k] = n;
+    const inp = row.querySelector('.qn'); if (inp && !typing && +inp.value !== n) inp.value = n;
+    const go = row.querySelector('[data-go]'); if (go) go.textContent = `${row.dataset.lbl} · ${fmt(pr * n)} ₲`;
+  }
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
@@ -195,7 +216,9 @@
     let body = '';
     if (shopTab === 'buy') {
       const list = shopList(who);
-      body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span>${have ? '<small>Já tem</small>' : `<button class="btn" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>1</button>${o.one ? '' : `<button class="btn" data-a="buy" data-id="${o.id}" data-n="5" type="button" ${gold() < pr * 5 ? 'disabled' : ''}>5</button>`}`}`); }).join('')}</div>` : '<p>Nada à venda nesta estação.</p>';
+      body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
+        if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
+        return qtyRow(iconURL(o.id), item(o.id).name, item(o.id).desc, 'b:' + o.id, pr, Math.max(1, Math.min(999, Math.floor(gold() / pr))), 'Comprar', `data-a="buy" data-id="${o.id}"`, gold() < pr); }).join('')}</div>` : '<p>Nada à venda nesta estação.</p>';
     } else if (shopTab === 'up') {
       body = `<div class="list">${['hoe', 'can', 'axe', 'pick', 'sword', 'rod'].map(id => {
         const s = P.inv.find(x => x && x.id === id); if (!s) return '';
@@ -221,7 +244,7 @@
       body = `<div class="list">${COOK.filter(r => r.learn === 'lia').map(r => row(iconURL(r.id), 'Receita: ' + r.name, Object.entries(r.need).map(([k, n]) => `${n} ${needName(k)}`).join(', '), P.recipes.includes(r.id) ? '<small>Já sabe</small>' : `<span class="price">${fmt(r.price)} ₲</span><button class="btn g" data-a="brec" data-id="${r.id}" type="button" ${gold() >= r.price ? '' : 'disabled'}>Comprar</button>`)).join('')}</div>`;
     } else {
       const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id, s.q) > 0);
-      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}<small>${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
+      body = rows.length ? `<div class="list">${rows.map(([s, i]) => qtyRow(iconURL(s.id), `${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}`, `${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}`, `s:${i}:${s.id}:${s.q || 0}`, sellPrice(s.id, s.q), s.n, 'Vender', `data-a="sell" data-i="${i}"`, false)).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
     }
     openPanel(`<h2>${info.title}</h2><p style="text-align:center;font-style:italic">${info.greet()}</p>${NPCS[info.npc || who] ? `<div class="row"><button class="btn" data-a="talkTo" data-id="${info.npc || who}" type="button">Conversar com ${NPCS[info.npc || who].name}</button></div>` : ''}${tabs}${body}<p style="text-align:center"><b>${fmt(gold())} ₲</b></p>`, 'shop', who);
   }
@@ -296,6 +319,9 @@
   }
 
   // ---------- cliques nos painéis ----------
+  // digitar a quantidade direto no número
+  panel.addEventListener('input', e => { const t = e.target; if (t.classList && t.classList.contains('qn')) { const r = t.closest('.item'), v = parseInt(t.value, 10); if (v > 0) qtySet(r, t.dataset.qk, v, true); } });
+  panel.addEventListener('change', e => { const t = e.target; if (t.classList && t.classList.contains('qn')) qtySet(t.closest('.item'), t.dataset.qk, parseInt(t.value, 10) || 1); });
   panel.addEventListener('click', e => {
     const b = e.target.closest('[data-a]');
     if (!b) { if (e.target === panel && !['start', 'loading', 'day'].includes(panelKind)) closePanel(); return; }
@@ -316,8 +342,9 @@
       case 'craft': craft(b.dataset.id); break;
       case 'wipe': if (b.dataset.sure) { store.wipe(); location.reload(); } else { b.dataset.sure = 1; b.textContent = 'Toque de novo para apagar tudo'; } break;
       case 'stab': shopTab = b.dataset.t; renderShop(panelArg); break;
+      case 'qty': { const r = b.closest('.item'), k = b.dataset.k, d = b.dataset.d; qtySet(r, k, d === 'max' ? +r.dataset.max : qtyOf(k) + +d); break; }
       case 'buy': {
-        const id = b.dataset.id, n = +b.dataset.n, list = shopList(panelArg), o = list.find(x => x.id === id);
+        const id = b.dataset.id, list = shopList(panelArg), o = list.find(x => x.id === id), n = b.dataset.n ? +b.dataset.n : qtyOf(b.dataset.k);
         if (o && spend(coopPrice(o.price) * n)) {
           let left = n;
           if (id === 'feno') { const k = Math.min(left, siloCap() - (W.farm.hay || 0)); if (k > 0) { setFarmVal('hay', (W.farm.hay || 0) + k); left -= k; toast(`${k} de feno foi direto para o silo.`); } }
@@ -327,7 +354,8 @@
         renderShop(panelArg); break;
       }
       case 'sell': {
-        const i = +b.dataset.i, n = +b.dataset.n, s = P.inv[i];
+        const i = +b.dataset.i, n = b.dataset.n ? +b.dataset.n : qtyOf(b.dataset.k), s = P.inv[i];
+        delete shopQty[b.dataset.k];
         if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id, s.q); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
         renderShop(panelArg); break;
       }

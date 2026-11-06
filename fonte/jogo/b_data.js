@@ -13,7 +13,7 @@
   const SEASON_ID = ['spring', 'summer', 'fall', 'winter'];
   const WEEK = ['Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.', 'Dom.'];
   // 10 minutos do jogo a cada 8 s: o dia (6h às 2h) dura 16 minutos reais
-  const MIN_PER_TICK = 10, MS_PER_TICK = 8000;
+  const MIN_PER_TICK = 10, MS_PER_TICK = 9500;
   const DAY_START = 360, DAY_END = 26 * 60;
 
   // ================= plantações =================

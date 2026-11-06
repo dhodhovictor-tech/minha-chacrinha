@@ -154,7 +154,7 @@
   ACH.push(['insetos', 'Colecionadores de asas', `Pegar os ${Object.keys(BUGS).length} insetos: borboletas, libélulas, besouro e vaga-lume.`, () => { const got = new Set(); for (const p of [P, ...Object.values(W.players || {})]) for (const k of Object.keys(((p || {}).stats || {}).bugs || {})) got.add(k); return Object.keys(BUGS).every(k => got.has(k)); }]);
 
   // ---------- desenhos: capa de chuva na pessoa e no Darth ----------
-  function drawRaincoat(look, dir, step) {
+  function drawRaincoat(look, dir, step, noHood) {
     const Y = '#f4c020', D = '#c8901a', L = '#ffe070', side = dir === 2 || dir === 3, hx = side ? 3 : 2;
     // corpo e mangas
     R(2, 14, 12, 10, Y); R(2, 14, 12, 1, L); R(12, 15, 2, 9, D); R(2, 23, 12, 1, D);
@@ -163,6 +163,7 @@
       if (dir === 1) { R(7, 15, 1, 8, D); for (const y of [16, 19, 22]) R(6, y, 1, 1, '#ffffff'); }
     } else { const a = step * 2; R(7 + a, 15, 4, 7, D); R(8 + a, 15, 2, 6, Y); }
     // capuz
+    if (noHood) return;
     if (dir === 0) { R(hx - 1, -1, 14, 14, Y); R(hx, -1, 12, 1, L); R(hx + 10, 1, 3, 11, D); }
     else if (side) { R(hx - 1, -1, 13, 5, Y); R(hx - 1, 3, 6, 10, Y); R(hx, -1, 10, 1, L); R(hx - 1, 8, 2, 5, D); }
     else { R(hx - 1, -1, 14, 4, Y); R(hx, -1, 12, 1, L); R(hx - 1, 3, 2, 10, Y); R(hx + 11, 3, 2, 10, D); }

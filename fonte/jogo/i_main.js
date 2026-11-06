@@ -13,7 +13,7 @@
   let lastPres = '';
   function pushPresence(force) {
     if (!room || !P) return;
-    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
+    const pr = { uid: P.uid, name: P.name, look: withEq(P.look, P.eq), map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
     const s = JSON.stringify(pr);
     if (s === lastPres && !force) return;
     lastPres = s;

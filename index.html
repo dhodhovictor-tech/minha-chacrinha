@@ -129,6 +129,12 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 .item .nm { flex: 1; min-width: 0; font-size: 14px; }
 .item .nm small { display: block; font-size: 12px; color: #7a4a24; }
 .item .btn { padding: 5px 9px; font-size: 13px; }
+.shoprow { flex-wrap: wrap; }
+.qty { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.qty .price { margin-right: 4px; }
+.btn.q { padding: 6px 9px; min-width: 32px; }
+.qn { width: 52px; font-family: var(--font); font-size: 16px; font-weight: 700; text-align: center; padding: 5px 2px; border: 2px solid var(--wood-dark); border-radius: 6px; background: #fffaf0; color: inherit; -moz-appearance: textfield; }
+.qn::-webkit-outer-spin-button, .qn::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .price { font-weight: 700; color: #8a5a00; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .skill { display: grid; grid-template-columns: 90px 1fr 34px; gap: 8px; align-items: center; font-size: 14px; }
 .skill .pip { display: flex; gap: 2px; }
@@ -155,7 +161,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '4c43aa5'; window.__APP_DATE = '02/11/2026';</script>
+<script>window.__APP_VERSION = 'c84e056'; window.__APP_DATE = '06/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -196,7 +202,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const SEASON_ID = ['spring', 'summer', 'fall', 'winter'];
   const WEEK = ['Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.', 'Dom.'];
   // 10 minutos do jogo a cada 8 s: o dia (6h às 2h) dura 16 minutos reais
-  const MIN_PER_TICK = 10, MS_PER_TICK = 8000;
+  const MIN_PER_TICK = 10, MS_PER_TICK = 9500;
   const DAY_START = 360, DAY_END = 26 * 60;
 
   // ================= plantações =================
@@ -1798,9 +1804,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const SHIRTS = ['#d84a3a', '#3a8ad8', '#5ab83a', '#e8b83a', '#a85ad8', '#f08ab0', '#3a3a4a', '#f4f0e0'];
   const SKINS = ['#f8d8b8', '#eab894', '#c88a5e', '#8e5c3c', '#5e3c26'];
   function farmerCanvas(look, dir, frame) {
-    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${look.rc ? 1 : 0}|${dir}|${frame}`;
-    return bake(key, 18, 35, () => {
-      ctx.translate(1, 2);
+    const key = `f|${look.hair || 0}|${look.style || 0}|${look.shirt || 0}|${look.skin || 0}|${look.pants || ''}|${look.npc || ''}|${look.hat || ''}|${look.plaid ? 1 : 0}|${look.shirtC || ''}|${look.jacket ? 1 : 0}|${look.scarf ? 1 : 0}|${look.beard ? 1 : 0}|${look.glasses ? 1 : 0}|${look.boot || ''}|${look.rc ? 1 : 0}|${look.eqh || ''}|${look.eqc || ''}|${look.eqm || ''}|${dir}|${frame}`;
+    // 5 pixels a mais em cima para caber chapéu
+    return bake(key, 18, 40, () => {
+      ctx.translate(1, 7);
       const hair = HAIRS[look.hair || 0], hD = shade(hair, -0.35), hL = shade(hair, 0.3);
       const skin = SKINS[look.skin || 0], sD = shade(skin, -0.16), sL = shade(skin, 0.25);
       const shirt = look.apron || look.shirtC || SHIRTS[look.shirt || 0], cD = shade(shirt, -0.3), cL = shade(shirt, 0.25);
@@ -1850,6 +1857,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         R(3, 22, 10, 1, D);
       }
       if (look.scarf) { if (!side) R(4, 14, 8, 2, '#1e1e24'); else R(5, 14, 6, 2, '#1e1e24'); }
+      if (look.eqc || look.eqm) drawEqBody(look, dir, step, side);
       // cabeça
       const hx = side ? 3 : 2;
       R(hx + 1, 2, 10, 1, skin); R(hx, 3, 12, 10, skin); R(hx + 1, 13, 10, 1, skin);
@@ -1888,6 +1896,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         for (let x = hx; x < hx + 12; x += 2) R(x, 3, 1, 3, '#16161a');
         R(hx + 2, -1, 3, 1, '#3a3a44');
       }
+      if (look.eqh && !look.rc) drawEqHat(look, dir, hx, side);
       if (look.rc) drawRaincoat(look, dir, step);
     });
   }
@@ -1896,7 +1905,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     shadowAt(cx, fy, 6, 2);
     if (opts.sleep) return;
     const frame = walk ? Math.floor(walk * 8) % 4 : 0, bob = frame % 2 ? -1 : 0;
-    blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 33 + bob);
+    blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 38 + bob);
     if (opts.item) { const ix = cx - 8; drawIconAt(opts.item, ix, fy - 50 + bob, 1); }
     if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0);
   }
@@ -2516,7 +2525,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (n.kid) {
       const c = farmerCanvas(lk, dir, walk ? Math.floor(walk * 8) % 4 : 0);
       shadowAt(x, y, 5, 2);
-      ctx.drawImage(c, Math.round(x - 7), Math.round(y - 27), 14, 27);
+      ctx.drawImage(c, Math.round(x - 7), Math.round(y - 31), 14, 31);
     } else drawFarmer(x, y, lk, dir, walk);
   }
 
@@ -3777,13 +3786,19 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     setTimeout(() => el.remove(), 2200);
     lastNote = { id, n, t: now, el };
   }
+  // redesenhar o mesmo painel (mesma loja e mesma aba) mantém a rolagem onde estava
+  let panelSig = '';
+  const panelSigOf = (kind, arg) => kind + '|' + arg + '|' + (kind === 'shop' ? shopTab : kind === 'inv' ? invTab : '');
   function openPanel(html, kind = 'msg', arg = null) {
+    const sig = panelSigOf(kind, arg), old = panelOpen && panel.querySelector('.win'), keep = old && sig === panelSig ? old.scrollTop : 0;
+    panelSig = sig;
     panelKind = kind; panelArg = arg; panelOpen = true;
     panel.innerHTML = `<div class="win frame">${kind === 'start' || kind === 'loading' ? '' : '<button class="x" data-a="close" type="button" aria-label="Fechar">×</button>'}${html}</div>`;
     panel.hidden = false;
+    if (keep) { const w = panel.querySelector('.win'); if (w) w.scrollTop = keep; }
     input.jx = input.jy = 0;
   }
-  function closePanel() { panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
+  function closePanel() { panelSig = ''; panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
   const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
@@ -3916,6 +3931,21 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     cida: { title: 'Mercado da Vila', tabs: [['prices', 'Preços'], ['buy', 'Comprar'], ['animals', 'Animais'], ['sell', 'Vender']], greet: () => '“Olha a feira! Preço bom é preço de hoje!”' },
     lia: { title: 'Bar da Lia', tabs: [['buy', 'Cardápio'], ['recipes', 'Receitas'], ['sell', 'Vender']], greet: () => '“Senta aí! Hoje tem pizza.”' },
   };
+  // quantidade escolhida em cada linha das lojas (− número + Máx)
+  const shopQty = {};
+  const qtyOf = k => Math.max(1, shopQty[k] || 1);
+  function qtyRow(img, name, small, k, pr, max, lbl, act, off) {
+    const n = Math.min(max, qtyOf(k)); shopQty[k] = n;
+    return `<div class="item shoprow" data-max="${max}" data-pr="${pr}" data-lbl="${lbl}"><img src="${img}" alt=""><span class="nm">${name}<small>${small || ''}</small></span>
+      <span class="qty"><span class="price">${fmt(pr)} ₲</span><button class="btn q" data-a="qty" data-k="${k}" data-d="-1" type="button" aria-label="Menos" ${off ? 'disabled' : ''}>−</button><input class="qn" data-qk="${k}" type="number" inputmode="numeric" min="1" max="${max}" value="${n}" aria-label="Quantidade" ${off ? 'disabled' : ''}><button class="btn q" data-a="qty" data-k="${k}" data-d="1" type="button" aria-label="Mais" ${off ? 'disabled' : ''}>+</button><button class="btn q" data-a="qty" data-k="${k}" data-d="max" type="button" ${off ? 'disabled' : ''}>Máx</button><button class="btn g" ${act} data-k="${k}" data-go="1" type="button" ${off ? 'disabled' : ''}>${lbl} · ${fmt(pr * n)} ₲</button></span></div>`;
+  }
+  function qtySet(row, k, n, typing) {
+    if (!row) return;
+    const max = +row.dataset.max, pr = +row.dataset.pr;
+    n = clamp(Math.round(n) || 1, 1, max); shopQty[k] = n;
+    const inp = row.querySelector('.qn'); if (inp && !typing && +inp.value !== n) inp.value = n;
+    const go = row.querySelector('[data-go]'); if (go) go.textContent = `${row.dataset.lbl} · ${fmt(pr * n)} ₲`;
+  }
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
     switch (who) {
@@ -3949,7 +3979,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     let body = '';
     if (shopTab === 'buy') {
       const list = shopList(who);
-      body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span>${have ? '<small>Já tem</small>' : `<button class="btn" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>1</button>${o.one ? '' : `<button class="btn" data-a="buy" data-id="${o.id}" data-n="5" type="button" ${gold() < pr * 5 ? 'disabled' : ''}>5</button>`}`}`); }).join('')}</div>` : '<p>Nada à venda nesta estação.</p>';
+      body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
+        if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
+        return qtyRow(iconURL(o.id), item(o.id).name, item(o.id).desc, 'b:' + o.id, pr, Math.max(1, Math.min(999, Math.floor(gold() / pr))), 'Comprar', `data-a="buy" data-id="${o.id}"`, gold() < pr); }).join('')}</div>` : '<p>Nada à venda nesta estação.</p>';
     } else if (shopTab === 'up') {
       body = `<div class="list">${['hoe', 'can', 'axe', 'pick', 'sword', 'rod'].map(id => {
         const s = P.inv.find(x => x && x.id === id); if (!s) return '';
@@ -3975,7 +4007,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       body = `<div class="list">${COOK.filter(r => r.learn === 'lia').map(r => row(iconURL(r.id), 'Receita: ' + r.name, Object.entries(r.need).map(([k, n]) => `${n} ${needName(k)}`).join(', '), P.recipes.includes(r.id) ? '<small>Já sabe</small>' : `<span class="price">${fmt(r.price)} ₲</span><button class="btn g" data-a="brec" data-id="${r.id}" type="button" ${gold() >= r.price ? '' : 'disabled'}>Comprar</button>`)).join('')}</div>`;
     } else {
       const rows = P.inv.map((s, i) => [s, i]).filter(([s]) => s && stackable(s.id) && sellPrice(s.id, s.q) > 0);
-      body = rows.length ? `<div class="list">${rows.map(([s, i]) => `<div class="item"><img src="${iconURL(s.id)}" alt=""><span class="nm">${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}<small>${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}</small></span><button class="btn" data-a="sell" data-i="${i}" data-n="1" type="button">1</button><button class="btn" data-a="sell" data-i="${i}" data-n="${s.n}" type="button">Tudo</button></div>`).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
+      body = rows.length ? `<div class="list">${rows.map(([s, i]) => qtyRow(iconURL(s.id), `${item(s.id).name}${s.q ? ` <span class="qtag q${s.q}">★</span>` : ''} ×${s.n}`, `${fmt(sellPrice(s.id, s.q))} ₲ cada ${trendHTML(s.id)}`, `s:${i}:${s.id}:${s.q || 0}`, sellPrice(s.id, s.q), s.n, 'Vender', `data-a="sell" data-i="${i}"`, false)).join('')}</div>` : '<p>Nada para vender na mochila.</p>';
     }
     openPanel(`<h2>${info.title}</h2><p style="text-align:center;font-style:italic">${info.greet()}</p>${NPCS[info.npc || who] ? `<div class="row"><button class="btn" data-a="talkTo" data-id="${info.npc || who}" type="button">Conversar com ${NPCS[info.npc || who].name}</button></div>` : ''}${tabs}${body}<p style="text-align:center"><b>${fmt(gold())} ₲</b></p>`, 'shop', who);
   }
@@ -4050,6 +4082,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ---------- cliques nos painéis ----------
+  // digitar a quantidade direto no número
+  panel.addEventListener('input', e => { const t = e.target; if (t.classList && t.classList.contains('qn')) { const r = t.closest('.item'), v = parseInt(t.value, 10); if (v > 0) qtySet(r, t.dataset.qk, v, true); } });
+  panel.addEventListener('change', e => { const t = e.target; if (t.classList && t.classList.contains('qn')) qtySet(t.closest('.item'), t.dataset.qk, parseInt(t.value, 10) || 1); });
   panel.addEventListener('click', e => {
     const b = e.target.closest('[data-a]');
     if (!b) { if (e.target === panel && !['start', 'loading', 'day'].includes(panelKind)) closePanel(); return; }
@@ -4070,8 +4105,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'craft': craft(b.dataset.id); break;
       case 'wipe': if (b.dataset.sure) { store.wipe(); location.reload(); } else { b.dataset.sure = 1; b.textContent = 'Toque de novo para apagar tudo'; } break;
       case 'stab': shopTab = b.dataset.t; renderShop(panelArg); break;
+      case 'qty': { const r = b.closest('.item'), k = b.dataset.k, d = b.dataset.d; qtySet(r, k, d === 'max' ? +r.dataset.max : qtyOf(k) + +d); break; }
       case 'buy': {
-        const id = b.dataset.id, n = +b.dataset.n, list = shopList(panelArg), o = list.find(x => x.id === id);
+        const id = b.dataset.id, list = shopList(panelArg), o = list.find(x => x.id === id), n = b.dataset.n ? +b.dataset.n : qtyOf(b.dataset.k);
         if (o && spend(coopPrice(o.price) * n)) {
           let left = n;
           if (id === 'feno') { const k = Math.min(left, siloCap() - (W.farm.hay || 0)); if (k > 0) { setFarmVal('hay', (W.farm.hay || 0) + k); left -= k; toast(`${k} de feno foi direto para o silo.`); } }
@@ -4081,7 +4117,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         renderShop(panelArg); break;
       }
       case 'sell': {
-        const i = +b.dataset.i, n = +b.dataset.n, s = P.inv[i];
+        const i = +b.dataset.i, n = b.dataset.n ? +b.dataset.n : qtyOf(b.dataset.k), s = P.inv[i];
+        delete shopQty[b.dataset.k];
         if (s) { const k = Math.min(n, s.n), pr = sellPrice(s.id, s.q); s.n -= k; if (!s.n) P.inv[i] = null; earn(pr * k); recordSold(s.id, k); sfx.coin(); renderHotbar(); }
         renderShop(panelArg); break;
       }
@@ -4889,8 +4926,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function drawPlayerEnt(t) {
     const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
-    if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, P.look, P.dir, 0, opts); }
-    else drawFarmer(P.x, P.y, P.look, P.dir, walkT, opts);
+    const lk = withEq(P.look, P.eq);
+    if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, lk, P.dir, 0, opts); }
+    else drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);
     if (loveFx > 0) for (let k = 0; k < 3; k++) drawHeart(P.x - 8 + k * 8, P.y - 40 - ((t * 20 + k * 7) % 14));
   }
 
@@ -6832,7 +6870,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   ACH.push(['insetos', 'Colecionadores de asas', `Pegar os ${Object.keys(BUGS).length} insetos: borboletas, libélulas, besouro e vaga-lume.`, () => { const got = new Set(); for (const p of [P, ...Object.values(W.players || {})]) for (const k of Object.keys(((p || {}).stats || {}).bugs || {})) got.add(k); return Object.keys(BUGS).every(k => got.has(k)); }]);
 
   // ---------- desenhos: capa de chuva na pessoa e no Darth ----------
-  function drawRaincoat(look, dir, step) {
+  function drawRaincoat(look, dir, step, noHood) {
     const Y = '#f4c020', D = '#c8901a', L = '#ffe070', side = dir === 2 || dir === 3, hx = side ? 3 : 2;
     // corpo e mangas
     R(2, 14, 12, 10, Y); R(2, 14, 12, 1, L); R(12, 15, 2, 9, D); R(2, 23, 12, 1, D);
@@ -6841,6 +6879,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (dir === 1) { R(7, 15, 1, 8, D); for (const y of [16, 19, 22]) R(6, y, 1, 1, '#ffffff'); }
     } else { const a = step * 2; R(7 + a, 15, 4, 7, D); R(8 + a, 15, 2, 6, Y); }
     // capuz
+    if (noHood) return;
     if (dir === 0) { R(hx - 1, -1, 14, 14, Y); R(hx, -1, 12, 1, L); R(hx + 10, 1, 3, 11, D); }
     else if (side) { R(hx - 1, -1, 13, 5, Y); R(hx - 1, 3, 6, 10, Y); R(hx, -1, 10, 1, L); R(hx - 1, 8, 2, 5, D); }
     else { R(hx - 1, -1, 14, 4, Y); R(hx, -1, 12, 1, L); R(hx - 1, 3, 2, 10, Y); R(hx + 11, 3, 2, 10, D); }
@@ -7552,6 +7591,132 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     return false;
   }
+  // ================= roupas equipadas aparecem no personagem =================
+  // O desenho da pessoa (farmerCanvas) recebe no "look" o que está vestido: eqh (cabeça), eqc (corpo), eqm (mãos) e a cor da bota.
+  const BOOT_COL = { galochas: '#f4c020', botastrilha: '#7a5a3a', botasmata: '#4a6a2a', botascouro: '#8a5a32', botasvelozes: '#3a7ad0', botasferro: '#8a8e9a', botasdragao: '#b82a22' };
+  const GLOVE_COL = { luvasjardim: '#5aa83a', luvascouro: '#8a5a2a' };
+  function withEq(look, eq) {
+    if (!eq || !look) return look;
+    const o = { ...look }, h = eq.hd, c = eq.cp, m = eq.mao, b = eq.bt;
+    if (h) { o.eqh = h; o.hat = ''; }
+    if (c) o.eqc = c;
+    if (m && GLOVE_COL[m]) o.eqm = m;
+    if (b && BOOT_COL[b]) o.boot = BOOT_COL[b];
+    if (c === 'macacao') o.pants = '#3a5aa8';
+    return o;
+  }
+  // corpo e mãos (desenhado depois da roupa normal e antes da cabeça)
+  function drawEqBody(look, dir, step, side) {
+    const c = look.eqc, back = dir === 0;
+    switch (c) {
+      case 'macacao': {
+        const B = '#3a5aa8', D = '#2a4a8a';
+        if (back) { R(4, 15, 1, 7, B); R(11, 15, 1, 7, B); R(4, 19, 8, 4, B); }
+        else if (side) { R(5, 18, 7, 5, B); R(8, 14, 1, 4, B); R(6, 19, 3, 2, D); }
+        else { R(4, 18, 8, 5, B); R(5, 17, 6, 1, B); R(4, 14, 1, 4, B); R(11, 14, 1, 4, B); R(6, 19, 4, 2, D); R(4, 17, 1, 1, '#f4c020'); R(11, 17, 1, 1, '#f4c020'); }
+        break;
+      }
+      case 'avental': {
+        const W = '#f4f0e8', D = '#d8d0c0';
+        if (back) { R(4, 19, 8, 1, W); R(7, 19, 2, 2, W); }
+        else if (side) { R(9, 17, 4, 6, W); R(9, 17, 1, 6, D); R(8, 14, 1, 3, W); }
+        else { R(4, 17, 8, 6, W); R(5, 16, 6, 1, W); R(6, 14, 1, 2, W); R(9, 14, 1, 2, W); R(6, 19, 4, 2, D); R(7, 20, 2, 1, '#d84a6a'); }
+        break;
+      }
+      case 'colete': {
+        const G = '#6a8a4a', D = '#4a6a2a';
+        if (back) { R(3, 15, 10, 8, G); R(3, 15, 10, 1, D); }
+        else if (side) { R(4, 15, 8, 8, G); R(9, 18, 2, 2, D); }
+        else { R(3, 15, 3, 8, G); R(10, 15, 3, 8, G); R(4, 18, 2, 2, D); R(10, 18, 2, 2, D); R(4, 21, 2, 1, D); R(10, 21, 2, 1, D); }
+        break;
+      }
+      case 'cachecol': {
+        const Rd = '#d84a3a';
+        if (side) { R(5, 14, 7, 2, Rd); R(4, 16, 2, 4, Rd); R(4, 18, 2, 1, '#ffffff'); }
+        else { R(4, 14, 8, 2, Rd); if (!back) { R(9, 16, 2, 5, Rd); R(9, 18, 2, 1, '#ffffff'); R(9, 20, 2, 1, '#ffffff'); } }
+        break;
+      }
+      case 'colarhavaiano': {
+        const cs = ['#ff6aa8', '#ffd040', '#ffffff', '#ff6aa8', '#ffd040'];
+        if (side) for (let k = 0; k < 4; k++) R(5 + k * 2, 15 + (k % 2), 2, 2, cs[k]);
+        else for (let k = 0; k < 5; k++) R(3 + k * 2, 15 + (k === 0 || k === 4 ? 0 : 1) + (back ? 0 : k === 2 ? 1 : 0), 2, 2, cs[k]);
+        break;
+      }
+      case 'xadrezlenhador': {
+        const Rd = '#b83228', K = '#2a1a1a', L = '#e86a5a';
+        R(3, 15, 10, 8, Rd); R(3, 15, 10, 1, L);
+        if (!side) { R(1, 16 + step, 2, 6, Rd); R(13, 16 - step, 2, 6, shade(Rd, -0.2)); for (const x of [5, 9]) R(x, 15, 1, 7, K); for (const y of [17, 20]) R(3, y, 10, 1, K); R(1, 18 + step, 2, 1, K); R(13, 18 - step, 2, 1, K); if (dir === 1) { R(7, 15, 2, 2, shade(SKINS[look.skin || 0], -0.16)); R(7, 17, 1, 5, K); } }
+        else { const a = step * 2; for (const x of [5, 9]) R(x, 15, 1, 7, K); R(3, 18, 10, 1, K); R(7 + a, 16, 3, 6, shade(Rd, -0.2)); R(7 + a, 18, 3, 1, K); }
+        R(3, 22, 10, 1, shade(look.pants || '#3a4a7a', -0.2));
+        break;
+      }
+      case 'capachuva': if (!look.rc) drawRaincoat(look, dir, step, true); break;
+    }
+    // luvas
+    if (look.eqm) {
+      const g = GLOVE_COL[look.eqm], gd = shade(g, -0.25);
+      if (!side) { R(1, 22 + step, 2, 2, g); R(13, 22 - step, 2, 2, gd); }
+      else { const a = step * 2; R(7 + a, 22, 3, 2, g); }
+    }
+  }
+  // cabeça (desenhado por cima do cabelo); hx = canto esquerdo da cabeça
+  function drawEqHat(look, dir, hx, side) {
+    const back = dir === 0;
+    switch (look.eqh) {
+      case 'chapeupalha': {
+        const S = '#e8c860', D = '#c8a040', L = '#f8e098', band = '#c84a3a';
+        if (side) { R(hx - 2, 2, 16, 2, S); R(hx - 2, 3, 16, 1, D); R(hx + 1, -3, 9, 5, S); R(hx + 2, -4, 7, 1, S); R(hx + 2, -3, 3, 1, L); R(hx + 1, 1, 9, 1, band);
+          disc(hx + 2, 0, 1.6, '#ff7ab8'); R(hx + 2, 0, 1, 1, '#ffd040'); }
+        else { R(hx - 2, 2, 16, 2, S); R(hx - 2, 3, 16, 1, D); R(hx + 1, -3, 10, 5, S); R(hx + 2, -4, 8, 1, S); R(hx + 2, -3, 3, 1, L); R(hx + 1, 1, 10, 1, band);
+          // florzinha na fita
+          const fx = back ? hx + 2 : hx + 9; for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) R(fx + dx, 0 + dy, 1, 1, '#ff7ab8'); R(fx, 0, 1, 1, '#ffd040'); R(fx + 1, 2, 2, 1, '#4aa83a'); }
+        break;
+      }
+      case 'capacete': {
+        const Y = '#e8b020', D = '#b88a10', L = '#ffd860';
+        R(hx, -2, 12, 5, Y); R(hx + 1, -3, 10, 1, Y); R(hx + 2, -2, 4, 1, L); R(hx - 1, 3, 14, 1, D);
+        if (side) { R(hx + 10, -1, 3, 3, '#8a8a92'); R(hx + 11, 0, 2, 1, '#fff6a0'); }
+        else if (!back) { R(hx + 4, -1, 4, 3, '#8a8a92'); R(hx + 5, 0, 2, 1, '#fff6a0'); }
+        break;
+      }
+      case 'chapeupesca': {
+        const G = '#5a7a4a', D = '#3a5a2a';
+        R(hx + 1, -2, 10, 4, G); R(hx + 2, -3, 8, 1, G); R(hx - 1, 2, 14, 2, D); R(hx, 2, 12, 1, G);
+        if (!back) { R(hx + (side ? 4 : 8), 0, 1, 2, '#c8c8d0'); R(hx + (side ? 3 : 9), 1, 1, 1, '#e8402a'); }
+        break;
+      }
+      case 'coroaflores': {
+        const cs = ['#ff8ac8', '#f4c83a', '#ffffff', '#ff6a6a', '#c86ad8', '#ff8ac8'];
+        R(hx, 1, 12, 1, '#4aa83a');
+        for (let k = 0; k < 6; k++) { const x = hx + k * 2, y = side && k > 3 ? 1 : 0; R(x, y, 2, 2, cs[k]); R(x, y, 1, 1, shade(cs[k], 0.3)); }
+        break;
+      }
+      case 'mascara': {
+        const O = '#f08a2a', D = '#c8661a';
+        R(hx - 1, 1, 14, 12, O); R(hx, 0, 12, 1, O); R(hx, 13, 12, 1, D);
+        for (const x of [hx + 3, hx + 7]) R(x, 1, 1, 12, D);
+        R(hx + 5, -2, 2, 2, '#3a7a2a');
+        if (!back) {
+          const ex = side ? [hx + 8] : [hx + 2, hx + 8];
+          for (const x of ex) poly([[x, 7], [x + 2, 4], [x + 4, 7]], '#2a1a0a');
+          R(side ? hx + 7 : hx + 3, 9, side ? 5 : 7, 2, '#2a1a0a'); R(side ? hx + 8 : hx + 5, 9, 1, 1, O);
+        }
+        break;
+      }
+      case 'gorro': {
+        R(hx, -1, 12, 4, '#c83a3a'); R(hx + 1, -2, 10, 1, '#c83a3a'); R(hx + 2, -1, 3, 1, '#e86a5a');
+        R(hx - 1, 2, 14, 2, '#ffffff'); disc(hx + 6, -3, 2, '#ffffff');
+        break;
+      }
+      case 'chapeuapicultor': {
+        const W = '#f4f0e0';
+        R(hx + 1, -3, 10, 5, W); R(hx + 2, -4, 8, 1, W); R(hx - 2, 2, 16, 1, '#d8d0b8');
+        ctx.globalAlpha = 0.45; R(hx - 1, 3, 14, 9, '#2a2a2a'); ctx.globalAlpha = 1;
+        for (let x = hx - 1; x < hx + 13; x += 2) R(x, 3, 1, 9, '#1a1a1a55');
+        break;
+      }
+    }
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -7567,7 +7732,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   let lastPres = '';
   function pushPresence(force) {
     if (!room || !P) return;
-    const pr = { uid: P.uid, name: P.name, look: P.look, map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
+    const pr = { uid: P.uid, name: P.name, look: withEq(P.look, P.eq), map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
     const s = JSON.stringify(pr);
     if (s === lastPres && !force) return;
     lastPres = s;

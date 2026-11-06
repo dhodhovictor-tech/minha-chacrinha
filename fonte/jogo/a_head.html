@@ -108,6 +108,12 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 .item .nm { flex: 1; min-width: 0; font-size: 14px; }
 .item .nm small { display: block; font-size: 12px; color: #7a4a24; }
 .item .btn { padding: 5px 9px; font-size: 13px; }
+.shoprow { flex-wrap: wrap; }
+.qty { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.qty .price { margin-right: 4px; }
+.btn.q { padding: 6px 9px; min-width: 32px; }
+.qn { width: 52px; font-family: var(--font); font-size: 16px; font-weight: 700; text-align: center; padding: 5px 2px; border: 2px solid var(--wood-dark); border-radius: 6px; background: #fffaf0; color: inherit; -moz-appearance: textfield; }
+.qn::-webkit-outer-spin-button, .qn::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .price { font-weight: 700; color: #8a5a00; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .skill { display: grid; grid-template-columns: 90px 1fr 34px; gap: 8px; align-items: center; font-size: 14px; }
 .skill .pip { display: flex; gap: 2px; }

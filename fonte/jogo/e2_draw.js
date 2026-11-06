@@ -415,7 +415,7 @@
     if (n.kid) {
       const c = farmerCanvas(lk, dir, walk ? Math.floor(walk * 8) % 4 : 0);
       shadowAt(x, y, 5, 2);
-      ctx.drawImage(c, Math.round(x - 7), Math.round(y - 27), 14, 27);
+      ctx.drawImage(c, Math.round(x - 7), Math.round(y - 31), 14, 31);
     } else drawFarmer(x, y, lk, dir, walk);
   }
 

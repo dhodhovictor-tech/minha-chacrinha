@@ -93,6 +93,9 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
     await ev(A, gk => __sv.breakMata(__sv.curMap(), gk, true), gk); await A.waitForTimeout(1000);
     ok(await ev(B, () => __sv.count('madeiralei')) > lei0, 'árvore gigante: B, que também cortava, ganhou a parte dele');
   }
+  // roupa vestida aparece para a outra pessoa
+  await ev(A, () => { const s = __sv; s.addItem('chapeupalha', 1, true); s.equipSlot(s.P.inv.findIndex(x => x && x.id === 'chapeupalha')); }); await A.waitForTimeout(1200);
+  ok(await ev(B, uidA => { const p = __sv.peerPlayers().find(x => x.uid === uidA); return !!(p && p.look && p.look.eqh === 'chapeupalha'); }, await ev(A, () => __sv.P.uid)), 'B vê o chapéu de palha que A vestiu');
   // diário: fica guardado no banco, mas só quem escreveu lê
   await ev(A, async () => { const s = __sv; s.diary = { e: { d1: { t: 'segredo da A', s: '', r: '' } } }; s.openInventory('diario'); await new Promise(r => setTimeout(r, 200)); });
   await ev(A, () => document.querySelector('[data-a="diarySave"]').click()); await A.waitForTimeout(1200);

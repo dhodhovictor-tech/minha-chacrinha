@@ -773,8 +773,9 @@
   }
   function drawPlayerEnt(t) {
     const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
-    if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, P.look, P.dir, 0, opts); }
-    else drawFarmer(P.x, P.y, P.look, P.dir, walkT, opts);
+    const lk = withEq(P.look, P.eq);
+    if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, lk, P.dir, 0, opts); }
+    else drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);
     if (loveFx > 0) for (let k = 0; k < 3; k++) drawHeart(P.x - 8 + k * 8, P.y - 40 - ((t * 20 + k * 7) % 14));
   }
 
