@@ -51,6 +51,7 @@
     if (farmable(m)) { const t = tile(KP(m) + k); return t && t.o ? t.o : null; }
     if (m.rocks && m.rocks[k] && !brokenSet(m.floor).has(k)) return { k: 'mrock', ...m.rocks[k] };
     if (m.wood) { const o = mataObjAt(m, k); if (o) return { ...o, k: 'fobj' }; }
+    if (m.id === 'house') { const f = movelAt(x, y); if (f) return { k: 'movel', id: f.id }; }
     return null;
   }
   function solidAt(m, x, y) {
@@ -58,7 +59,7 @@
     if (m.solid[y * m.w + x]) return true;
     if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && !(g.door && bReady(farmB()[g.id]))) return true; }
     const o = objAt(m, x, y);
-    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid)));
+    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid) || (o.k === 'movel' && !MOVEIS[o.id].walk)));
   }
   function blocked(m, px, py) {
     for (const [dx, dy] of [[-5, -4], [5, -4], [-5, 0], [5, 0]]) if (solidAt(m, Math.floor((px + dx) / T), Math.floor((py + dy) / T))) return true;
@@ -165,7 +166,7 @@
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
-    if (mataAct(m, tx, ty)) return;
+    if (casaAct(m, tx, ty) || mataAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -176,7 +177,7 @@
         else openShipInfo();
         return true;
       }
-      case 'bed': openSleep(); return true;
+      case 'bed': if (applyBedding()) return true; openSleep(); return true;
       case 'shop': { const pos = npcPos(sp.who), [o, c] = SHOP_HOURS(NPCS[sp.who].shop); if (!pos || pos.map !== curMap().id) { toast(`${NPCS[sp.who].name} não está agora. Horário: ${o / 60}h às ${c / 60 % 24}h.`); return true; } openShop(sp.who); return true; }
       case 'mail': openMail(); return true;
       case 'cc': openCC(sp.room); return true;
@@ -269,7 +270,7 @@
       if (s.id === 'rod') { startFishing(m); return; }
       if (s.id === 'rede') { swingNet(); return; }
       if (s.id === 'balde' || s.id === 'tesoura') { toast(s.id === 'balde' ? 'Fique de frente para uma vaca ou cabra.' : 'Fique de frente para uma ovelha.'); return; }
-      if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
+      if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur * encSpeed(s)); toolAnim.enc = s.enc; swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
       // cortar árvores gasta 15% a mais (a camisa de lenhador devolve um pouco)
@@ -351,6 +352,8 @@
       return;
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
+    if (it.cat === 'movel') { placeMovel(m, tx, ty, s); return; }
+    if (it.cat === 'cama') { toast('Toque na cama de casa segurando a roupa de cama.', '', null, 'cama'); return; }
     if (it.cat === 'place') {
       if (!farmable(m)) { toast('Coloque isso na chacrinha.'); return; }
       const tl = tile(k);
@@ -462,9 +465,10 @@
     for (const mo of monsters) {
       if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20 + (mo.r ? mo.r - 12 : 0)) {
         if (mo.axeOnly) { mo.hitT = 0.1; toast('A espada nem arranha a casca! Use o machado.', '', null, 'anciao'); continue; }
-        const base = !s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg, crit = Math.max(Math.random() < (wp.crit || 0) ? 2 : 1, critMul());
+        const base = (!s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg) + encDmg(s), crit = Math.max(Math.random() < (wp.crit || 0) + encCrit(s) ? 2 : 1, critMul());
         mo.hp -= (base + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk() + eqAtk()) * crit; mo.hitT = 0.15;
         const kb = (wp.knock || 160) * (mo.kind === 'boss' ? 0.2 : 1); mo.vx = d[0] * kb; mo.vy = d[1] * kb; any = true;
+        if (s && s.enc === 'esmeralda') P.hp = Math.min(100, P.hp + 2);
         if (mo.hp <= 0) killMonster(mo);
       }
     }
@@ -499,7 +503,7 @@
       if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
       mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
       if (dist < (mo.r || 12) && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+        hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0 && m.mata) mataFaint();
         else if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
@@ -640,7 +644,7 @@
       const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
-      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null });
+      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null });
       deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};

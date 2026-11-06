@@ -61,6 +61,7 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 .slot img { width: 32px; height: 32px; image-rendering: pixelated; pointer-events: none; }
 .slot .n { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
 .slot .q { position: absolute; left: 2px; bottom: 0; font-size: 13px; font-style: normal; line-height: 1; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; pointer-events: none; }
+.slot .enc { position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; transform: rotate(45deg); border: 1px solid #3a1a0a; pointer-events: none; }
 .slot .q1, .qtag.q1 { color: #e4eaf2; }
 .slot .q2, .qtag.q2 { color: #ffd23a; }
 .qtag { font-style: normal; text-shadow: 0 1px 0 #3b1d0a; white-space: nowrap; }
@@ -161,7 +162,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'c84e056'; window.__APP_DATE = '06/11/2026';</script>
+<script>window.__APP_VERSION = 'fc4b1fb'; window.__APP_DATE = '06/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -856,7 +857,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.rect(0, 17, 48, 19, G.COBBLE); m.rect(23, 3, 25, 29, G.COBBLE);
     m.rect(1, 30, 48, 33, G.WATER); m.rect(1, 34, 48, 34, G.SAND); m.rect(1, 29, 48, 29, G.SAND);
     m.rect(23, 29, 25, 34, G.BRIDGE);
-    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE); m.rect(27, 14, 29, 16, G.COBBLE);
+    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE); m.rect(27, 14, 29, 16, G.COBBLE); m.rect(16, 14, 18, 16, G.COBBLE);
     m.rect(49, 17, 49, 19, G.COBBLE);
     const r = srand(7);
     for (let k = 0; k < 70; k++) { const x = 1 + Math.floor(r() * 47), y = 3 + Math.floor(r() * 25); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
@@ -864,6 +865,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.warps.push({ x: 10, y: 13, to: 'store', tx: 7, ty: 8, dir: 1 });
     sprite(m, 'smith', 32, 9, 6, 5); m.solid[13 * m.w + 35] = 0;
     sprite(m, 'atelie', 26, 9, 5, 5); m.solid[13 * m.w + 28] = 0;
+    sprite(m, 'moveis', 15, 9, 5, 5); m.solid[13 * m.w + 17] = 0;
+    m.warps.push({ x: 17, y: 13, to: 'moveis', tx: 6, ty: 7, dir: 0 });
     m.warps.push({ x: 28, y: 13, to: 'atelie', tx: 6, ty: 7, dir: 0 });
     m.warps.push({ x: 35, y: 13, to: 'smith', tx: 6, ty: 7, dir: 1 });
     sprite(m, 'carpentry', 6, 21, 6, 5); m.solid[25 * m.w + 8] = 0;
@@ -875,7 +878,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.rect(23, 35, 25, 35, G.SAND);
     m.warps.push({ x: 23, y: 35, w: 3, to: 'beach', tx: 20, ty: 1, dir: 1 });
     sprite(m, 'fountain', 28, 21, 3, 3);
-    for (const [x, y] of [[3, 5], [17, 5], [20, 9], [34, 4], [45, 13], [3, 24], [12, 26], [44, 26], [21, 26], [33, 26]]) sprite(m, 'tree', x, y, 1, 1, { big: true });
+    for (const [x, y] of [[3, 5], [17, 5], [3, 15], [34, 4], [45, 13], [3, 24], [12, 26], [44, 26], [21, 26], [33, 26]]) sprite(m, 'tree', x, y, 1, 1, { big: true });
     sprite(m, 'bench', 27, 25, 2, 1);
     sprite(m, 'marketstall', 32, 21, 4, 2);
     sprite(m, 'ccbuilding', 40, 4, 8, 5); m.solid[8 * m.w + 43] = 0;
@@ -999,6 +1002,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.warps.push({ x: 6, y: 8, to: 'town', tx: 28, ty: 14, dir: 1 });
     return finalize(m);
   }
+  function buildMoveis() {
+    const m = shopRoom('moveis', 'Marcenaria do Tonico', 12, 9, G.WOOD, 'tonico', m => { sprite(m, 'lumber', 1, 6, 2, 2); });
+    // peças do mostruário (desenhadas em zz_casa.js)
+    for (const [x, y] of [[1, 5], [9, 2], [10, 2], [1, 2], [10, 5]]) m.solid[y * m.w + x] = 1;
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 17, ty: 14, dir: 1 });
+    return finalize(m);
+  }
   function buildCarpentry() {
     const m = shopRoom('carpentry', 'Carpintaria', 12, 9, G.WOOD, 'rosa', m => { sprite(m, 'lumber', 9, 2, 2, 2); sprite(m, 'crates', 1, 5, 2, 2); sprite(m, 'plant', 10, 6, 1, 1); });
     m.warps.push({ x: 6, y: 8, to: 'town', tx: 8, ty: 26, dir: 1 });
@@ -1105,7 +1115,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.warps.push({ x: 9, y: 10, to: 'town', tx: 45, ty: 25, dir: 1 });
     return finalize(m);
   }
-  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum(), atelie: buildAtelie() };
+  const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum(), atelie: buildAtelie(), moveis: buildMoveis() };
   // ================= armazenamento: banco compartilhado (online) ou só neste aparelho =================
   const LS = 'sitio-vale-doce-v1';
   const clone = o => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -1907,9 +1917,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const frame = walk ? Math.floor(walk * 8) % 4 : 0, bob = frame % 2 ? -1 : 0;
     blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 38 + bob);
     if (opts.item) { const ix = cx - 8; drawIconAt(opts.item, ix, fy - 50 + bob, 1); }
-    if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0);
+    if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0, opts.toolEnc);
   }
-  function drawToolSwing(cx, y, dir, tool, t, lv) {
+  function drawToolSwing(cx, y, dir, tool, t, lv, enc) {
     const ic = iconCanvas(tool, lv);
     ctx.save();
     const a = dir === 3 ? -1.7 + t * 2.4 : dir === 2 ? 1.7 - t * 2.4 : dir === 1 ? -0.7 + t * 1.4 : 0.7 - t * 1.4;
@@ -1918,8 +1928,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (tool === 'scythe' || WEAPONS[tool]) {
       const a0 = dir === 3 ? -1.7 : dir === 2 ? 1.7 : dir === 1 ? -0.7 : 0.7;
       const off = dir === 2 ? -2.2 : -0.94;
-      ctx.strokeStyle = `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(cx + ox, y + oy, 15, Math.min(a0, a) + off, Math.max(a0, a) + off); ctx.stroke();
+      const ec = enc && ENCANTOS[enc] && ENCANTOS[enc].col;
+      ctx.strokeStyle = ec || `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = ec ? 3.5 : 2.5; if (ec) ctx.globalAlpha = 0.85 * (1 - t);
+      ctx.beginPath(); ctx.arc(cx + ox, y + oy, 15, Math.min(a0, a) + off, Math.max(a0, a) + off); ctx.stroke(); ctx.globalAlpha = 1;
     }
     ctx.translate(cx + ox, y + oy); ctx.rotate(a); if (dir === 2) ctx.scale(-1, 1);
     ctx.drawImage(ic, -3, -16, 16, 16);
@@ -2050,7 +2061,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         case 'bench': R(0, 4, w, 5, '#a86a3a'); R(0, 4, w, 1, '#c8884a'); R(0, 0, w, 3, '#8a5428'); R(2, 9, 2, 6, '#3a3a3a'); R(w - 4, 9, 2, 6, '#3a3a3a'); break;
         case 'board': R(2, 18, 3, 14, '#6a3a1a'); R(w - 5, 18, 3, 14, '#6a3a1a'); R(0, 2, w, 18, '#8a5428'); R(2, 4, w - 4, 14, '#c8a06a'); R(5, 6, 8, 7, '#fff4e0'); R(17, 7, 9, 8, '#ffe0e0'); R(8, 5, 2, 2, '#e8402a'); R(21, 6, 2, 2, '#3a8ad8'); break;
         case 'bed': R(1, 0, w - 2, 6, '#7a4220'); R(2, 1, w - 4, 4, '#a0602e'); R(2, 6, w - 4, h - 8, '#a0602e'); R(4, 6, w - 8, 9, '#f4f0e8'); R(5, 7, w - 10, 6, '#ffffff');
-          for (let yy = 15; yy < h - 4; yy += 6) for (let xx = 4; xx < w - 4; xx += 6) R(xx, yy, 6, 6, ((xx + yy) / 6) % 2 ? '#4a7ac8' : '#6a9ae0'); R(4, 15, w - 8, 1, '#3a5a9a'); R(1, h - 3, w - 2, 3, '#6a3a1a'); break;
+          if (!bedQuilt(col, w, h)) { for (let yy = 15; yy < h - 4; yy += 6) for (let xx = 4; xx < w - 4; xx += 6) R(xx, yy, 6, 6, ((xx + yy) / 6) % 2 ? '#4a7ac8' : '#6a9ae0'); R(4, 15, w - 8, 1, '#3a5a9a'); } R(1, h - 3, w - 2, 3, '#6a3a1a'); break;
         case 'table': R(2, 6, w - 4, 12, '#a86a3a'); R(2, 6, w - 4, 2, '#c8884a'); R(4, 18, 2, 10, '#6a3a1a'); R(w - 6, 18, 2, 10, '#6a3a1a'); R(9, 0, 8, 7, '#e8e0d0'); disc(13, 0, 3, '#5ab83a'); R(12, -2, 2, 2, '#e8402a'); break;
         case 'tv': R(3, 2, w - 6, 12, '#2a2a2e'); R(5, 4, w - 10, 8, night ? '#5a9ae8' : '#2a4a6a'); R(6, 5, 3, 2, '#ffffff44'); R(7, 14, w - 14, 2, '#5a3a2a'); break;
         case 'plant': R(4, 9, 8, 7, '#c86a3a'); R(4, 9, 8, 1, '#e08a5a'); for (const [dx, dy] of [[0, 0], [-3, 2], [3, 2], [0, 4], [-2, -2], [2, -3]]) { oval(8 + dx, 4 + dy, 2.5, 3.5, '#3a8a2a'); R(7 + dx, 2 + dy, 1, 2, '#6ac04a'); } break;
@@ -2088,6 +2099,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       return;
     }
     if (['house', 'store', 'smith', 'cottage', 'fountain'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
+    if (s.type === 'bed') s.col = (W.farm && W.farm.cama) || '';
     blit(buildingCanvas(s.type, w, h, night && ['house', 'cottage', 'tv'].includes(s.type), s.col), x - 8, y - 36);
     const t = performance.now() / 1000;
     if (s.type === 'smith' || s.type === 'house') { const cxp = x + w - (s.type === 'smith' ? 19 : 24), cyp = y - (s.type === 'smith' ? 30 : 22); for (let k = 0; k < 3; k++) { const p = (t * 0.4 + k / 3) % 1; ctx.fillStyle = `rgba(220,220,230,${0.55 * (1 - p)})`; ctx.beginPath(); ctx.arc(cxp + Math.sin(p * 6 + k) * 3, cyp - p * 24, 2 + p * 4, 0, TAU); ctx.fill(); } }
@@ -2110,7 +2122,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -2132,6 +2144,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return bake(`b2|${type}|${w}|${h}|${night ? 1 : 0}|${s}|${extra}`, w + 16, h + 40, () => {
       ctx.translate(8, 36);
       switch (type) {
+        case 'moveis': drawMoveisB(w, h, night, snow); break;
         case 'atelie': {
           R(2, 18, w - 4, h - 18, '#f4dce4');
           for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');
@@ -2663,7 +2676,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon5(id)) return;
+    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon8(id) || paintIcon5(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
@@ -3126,6 +3139,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (farmable(m)) { const t = tile(KP(m) + k); return t && t.o ? t.o : null; }
     if (m.rocks && m.rocks[k] && !brokenSet(m.floor).has(k)) return { k: 'mrock', ...m.rocks[k] };
     if (m.wood) { const o = mataObjAt(m, k); if (o) return { ...o, k: 'fobj' }; }
+    if (m.id === 'house') { const f = movelAt(x, y); if (f) return { k: 'movel', id: f.id }; }
     return null;
   }
   function solidAt(m, x, y) {
@@ -3133,7 +3147,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m.solid[y * m.w + x]) return true;
     if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && !(g.door && bReady(farmB()[g.id]))) return true; }
     const o = objAt(m, x, y);
-    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid)));
+    return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid) || (o.k === 'movel' && !MOVEIS[o.id].walk)));
   }
   function blocked(m, px, py) {
     for (const [dx, dy] of [[-5, -4], [5, -4], [-5, 0], [5, 0]]) if (solidAt(m, Math.floor((px + dx) / T), Math.floor((py + dy) / T))) return true;
@@ -3240,7 +3254,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
-    if (mataAct(m, tx, ty)) return;
+    if (casaAct(m, tx, ty) || mataAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -3251,7 +3265,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         else openShipInfo();
         return true;
       }
-      case 'bed': openSleep(); return true;
+      case 'bed': if (applyBedding()) return true; openSleep(); return true;
       case 'shop': { const pos = npcPos(sp.who), [o, c] = SHOP_HOURS(NPCS[sp.who].shop); if (!pos || pos.map !== curMap().id) { toast(`${NPCS[sp.who].name} não está agora. Horário: ${o / 60}h às ${c / 60 % 24}h.`); return true; } openShop(sp.who); return true; }
       case 'mail': openMail(); return true;
       case 'cc': openCC(sp.room); return true;
@@ -3344,7 +3358,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.id === 'rod') { startFishing(m); return; }
       if (s.id === 'rede') { swingNet(); return; }
       if (s.id === 'balde' || s.id === 'tesoura') { toast(s.id === 'balde' ? 'Fique de frente para uma vaca ou cabra.' : 'Fique de frente para uma ovelha.'); return; }
-      if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur); swordHit(); return; }
+      if (WEAPONS[s.id]) { swing(s.id, lv, WEAPONS[s.id].dur * encSpeed(s)); toolAnim.enc = s.enc; swordHit(); return; }
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
       // cortar árvores gasta 15% a mais (a camisa de lenhador devolve um pouco)
@@ -3426,6 +3440,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       return;
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
+    if (it.cat === 'movel') { placeMovel(m, tx, ty, s); return; }
+    if (it.cat === 'cama') { toast('Toque na cama de casa segurando a roupa de cama.', '', null, 'cama'); return; }
     if (it.cat === 'place') {
       if (!farmable(m)) { toast('Coloque isso na chacrinha.'); return; }
       const tl = tile(k);
@@ -3537,9 +3553,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (const mo of monsters) {
       if (Math.hypot(mo.x - cx, mo.y - 6 - cy) < 20 + (mo.r ? mo.r - 12 : 0)) {
         if (mo.axeOnly) { mo.hitT = 0.1; toast('A espada nem arranha a casca! Use o machado.', '', null, 'anciao'); continue; }
-        const base = !s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg, crit = Math.max(Math.random() < (wp.crit || 0) ? 2 : 1, critMul());
+        const base = (!s || s.id === 'sword' ? 4 + lv * 3 : wp.dmg) + encDmg(s), crit = Math.max(Math.random() < (wp.crit || 0) + encCrit(s) ? 2 : 1, critMul());
         mo.hp -= (base + skillLv(P.skills.combat) + buffLv('attack') * 2 + profAtk() + eqAtk()) * crit; mo.hitT = 0.15;
         const kb = (wp.knock || 160) * (mo.kind === 'boss' ? 0.2 : 1); mo.vx = d[0] * kb; mo.vy = d[1] * kb; any = true;
+        if (s && s.enc === 'esmeralda') P.hp = Math.min(100, P.hp + 2);
         if (mo.hp <= 0) killMonster(mo);
       }
     }
@@ -3574,7 +3591,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
       mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
       if (dist < (mo.r || 12) && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+        hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0 && m.mata) mataFaint();
         else if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
@@ -3715,7 +3732,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
-      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null });
+      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null });
       deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};
@@ -3799,7 +3816,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     input.jx = input.jy = 0;
   }
   function closePanel() { panelSig = ''; panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
-  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
+  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>${s.enc && ENCANTOS[s.enc] ? `<i class="enc" style="background:${ENCANTOS[s.enc].col}"></i>` : ''}` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
     $('hotbar').innerHTML = P.inv.slice(0, 10).map((s, i) => slotHTML(s, i, i === P.sel, 'hot')).join('');
@@ -3863,7 +3880,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
       body = `<p style="text-align:center;font-size:13px">A primeira fileira é a barra de ferramentas. Toque num item e depois em outro lugar para trocar.</p>
         <div class="grid">${P.inv.map((s, i) => slotHTML(s, i, i === invSel)).join('')}</div>
-        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
+        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) + (s.enc ? ' · ' + encName(s) : '') : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
         ${s && it.cat !== 'tool' ? `<div class="row">${it.cat === 'ring' || it.cat === 'boots' || it.cat === 'roupa' ? '<button class="btn g" data-a="equipSel" type="button">Vestir</button>' : ''}${it.cat === 'tackle' ? '<button class="btn g" data-a="tackleSel" type="button">Prender na vara</button>' : ''}${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
         ${gearHTML()}
         <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button><button class="btn" data-a="music" type="button">${musicOn ? 'Desligar a música' : 'Ligar a música'}</button></div>`;
@@ -3977,7 +3994,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const tabs = `<div class="tabs">${info.tabs.map(([k, l]) => `<button type="button" data-a="stab" data-t="${k}" class="${shopTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     const row = (img, name, small, right) => `<div class="item"><img src="${img}" alt=""><span class="nm">${name}<small>${small || ''}</small></span>${right}</div>`;
     let body = '';
-    if (shopTab === 'buy') {
+    const ext = extraShopTab(who, shopTab);
+    if (ext != null) body = ext;
+    else if (shopTab === 'buy') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
@@ -4899,7 +4918,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -4925,7 +4944,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m.id === 'beach') for (const f of beachForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
   }
   function drawPlayerEnt(t) {
-    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
+    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, toolEnc: toolAnim && toolAnim.enc, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
     const lk = withEq(P.look, P.eq);
     if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, lk, P.dir, 0, opts); }
     else drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);
@@ -5173,7 +5192,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   function panelAction3(a, b) {
-    if (diaryAction(a, b)) return true;
+    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
@@ -5802,7 +5821,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         mo.vx += (dx / dist * 30 - mo.vx) * dt * 2; mo.vy += (dy / dist * 30 - mo.vy) * dt * 2;
         if (mo.cd <= 0 && dist < 80) {
           mo.cd = 3.2; mo.stomp = 0.5; sfx.hit();
-          if (dist < 50 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * 0.8) - defTotal()); sfx.hurt(); dirty(); }
+          if (dist < 50 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * 0.8 * MON_DMG) - defTotal()); sfx.hurt(); dirty(); }
         }
         break;
       case 'rainhafantasma':
@@ -7302,7 +7321,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         mo.vx = 0; mo.vy = 0;
         // derruba galhos onde a pessoa está: dá para desviar
         if (mo.cd <= 0) { mo.cd = Math.max(1.4, 2.4 * mo.hp / mo.max + 0.6); mo.drops.push({ x: P.x, y: P.y, t: 0.9 }); }
-        for (const d of mo.drops) { d.t -= dt; if (d.t <= 0 && !d.done) { d.done = true; sfx.chop(); if (Math.hypot(P.x - d.x, P.y - d.y) < 14 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); dirty(); if (P.hp <= 0) mataFaint(); } } }
+        for (const d of mo.drops) { d.t -= dt; if (d.t <= 0 && !d.done) { d.done = true; sfx.chop(); if (Math.hypot(P.x - d.x, P.y - d.y) < 14 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); dirty(); if (P.hp <= 0) mataFaint(); } } }
         mo.drops = mo.drops.filter(d => d.t > -0.3);
         break;
     }
@@ -7717,6 +7736,271 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       }
     }
   }
+  // ================= encantamentos: pedras preciosas nas armas (com o Seu Cláudio) =================
+  // Cada arma guarda um encanto (s.enc). Encantar de novo troca o anterior.
+  const ENCANTOS = {
+    quartzo: { name: 'Brilho', gem: 'quartzo', n: 5, gold: 500, col: '#e8f0ff', desc: '+2 de dano.' },
+    topazio: { name: 'Ligeireza', gem: 'topazio', n: 3, gold: 1500, col: '#f4c83a', desc: 'Golpes 15% mais rápidos.' },
+    ametista: { name: 'Precisão', gem: 'ametista', n: 3, gold: 2000, col: '#b05ae0', desc: '+10% de chance de golpe crítico.' },
+    esmeralda: { name: 'Vida', gem: 'esmeralda', n: 2, gold: 3000, col: '#3ad87a', desc: 'Cada bicho atingido devolve 2 de vida.' },
+    diamante: { name: 'Fúria', gem: 'diamante', n: 1, gold: 5000, col: '#9ae8ff', desc: '+6 de dano.' },
+  };
+  // os bichos batem 30% mais forte
+  const MON_DMG = 1.3;
+  SHOP_INFO.claudio.tabs.splice(SHOP_INFO.claudio.tabs.length - 1, 0, ['enc', 'Encantar']);
+  const encDmg = s => (s && s.enc === 'quartzo' ? 2 : s && s.enc === 'diamante' ? 6 : 0);
+  const encCrit = s => (s && s.enc === 'ametista' ? 0.1 : 0);
+  const encSpeed = s => (s && s.enc === 'topazio' ? 0.85 : 1);
+  const encName = s => (s && s.enc && ENCANTOS[s.enc] ? ENCANTOS[s.enc].name : '');
+  function encHTML() {
+    const ws = P.inv.map((s, i) => [s, i]).filter(([s]) => s && WEAPONS[s.id]);
+    if (!ws.length) return '<p style="text-align:center">Traga uma arma na mochila para encantar.</p>';
+    return `<p style="text-align:center;font-size:13px">“Uma pedra preciosa bem colocada desperta a lâmina.” Cada arma guarda um encanto; encantar de novo troca o anterior.</p>
+      ${ws.map(([s, i]) => `<div class="item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;align-items:center;gap:8px"><img src="${iconURL(s.id, s.lv)}" alt=""><span class="nm"><b>${toolName(s.id, s.lv)}</b><small>${s.enc ? `Encanto atual: <b style="color:#6a2a8a">${encName(s)}</b> · ${ENCANTOS[s.enc].desc}` : 'Sem encanto'}</small></span></div>
+        <div class="list">${Object.entries(ENCANTOS).map(([k, e]) => { const can = count(e.gem) >= e.n && gold() >= e.gold, cur = s.enc === k; return `<div class="item"><img src="${iconURL(e.gem)}" alt=""><span class="nm"><b>${e.name}</b> <span style="display:inline-block;width:9px;height:9px;transform:rotate(45deg);background:${e.col};border:1px solid #3a1a0a"></span><small>${e.desc} · ${e.n} ${item(e.gem).name.toLowerCase()} (${count(e.gem)}) + ${fmt(e.gold)} ₲</small></span>${cur ? '<small>Já tem</small>' : `<button class="btn g" data-a="encApply" data-i="${i}" data-e="${k}" type="button" ${can ? '' : 'disabled'}>Encantar</button>`}</div>`; }).join('')}</div>
+      </div>`).join('')}`;
+  }
+  function encApply(i, k) {
+    const s = P.inv[i], e = ENCANTOS[k];
+    if (!s || !WEAPONS[s.id] || !e || count(e.gem) < e.n || !spend(e.gold)) return;
+    removeItem(e.gem, e.n); s.enc = k; dirty(); renderHotbar(); sfx.level();
+    toast(`${toolName(s.id, s.lv)} encantada com ${e.name}! ${e.desc}`, 'big', null, 'encanto');
+    renderShop(panelArg);
+  }
+  function encAction(a, b) { if (a === 'encApply') { encApply(+b.dataset.i, b.dataset.e); return true; } return false; }
+  // ================= Marcenaria do Tonico: móveis para a casa e roupas de cama =================
+  // Os móveis ficam em W.farm.casa ("x,y" do canto de cima à esquerda → id) e a roupa de cama em W.farm.cama:
+  // a casa é a mesma para os dois.
+  NPCS.tonico = {
+    name: 'Seu Tonico', role: 'marceneiro', look: { hair: 4, shirt: 3, skin: 1, pants: '#5a4a3a', beard: true, apron: '#8a5a32' }, bday: ['fall', 9],
+    loves: ['mipe', 'madeiralei', 'cafereforcado', 'tortamirtilo'], likes: ['*res', '*food', 'resina'], hates: ['gosma', 'asamorcego'],
+    shop: 'moveis', hours: [540, 1020],
+    lines: ['Madeira boa tem cheiro de floresta. Sente só!', 'Cada móvel que sai daqui leva um pedacinho da Mata do Vale.', 'Ipê é duro de trabalhar, mas dura a vida inteira.', 'Uma casa com móveis feitos à mão é outra coisa.', 'Se achar madeira dourada, me mostra? Nunca trabalhei com ela.'],
+    hi: ['Vocês dois deixaram a casa uma beleza, ouvi dizer.', 'Guardei as tábuas mais bonitas pra vocês.'],
+    season: ['Primavera: hora de lixar e envernizar tudo.', 'No verão a madeira seca rapidinho.', 'Outono é a melhor época pra buscar carvalho.', 'No inverno a oficina fica quentinha com a serragem.'],
+    sched: [[360, null], [480, 'town', 17, 15, 1], [540, 'moveis', 6, 2, 1], [1020, 'town', 16, 27, 1], [1200, null]],
+  };
+  SHOP_INFO.tonico = { title: 'Marcenaria do Tonico', tabs: [['moveis', 'Móveis'], ['cama', 'Roupa de cama'], ['sell', 'Vender']], greet: () => '“Me traga madeira da mata que eu faço o móvel do jeitinho de vocês.”' };
+
+  // ---------- móveis ----------
+  // w,h em quadrados; walk: dá para pisar em cima (tapete); luz: acende à noite
+  const MOVEIS = {
+    cadeirapinho: { name: 'Cadeira de pinho', w: 1, h: 1, gold: 250, need: { mpinho: 8 }, desc: 'Simples e cheirosa.' },
+    mesapinho: { name: 'Mesinha de pinho', w: 1, h: 1, gold: 400, need: { mpinho: 12 }, desc: 'Boa para o café da manhã.' },
+    vaso: { name: 'Vaso de samambaia', w: 1, h: 1, gold: 300, need: { mpinho: 4, fibra: 10 }, desc: 'Um verdinho dentro de casa.' },
+    luminaria: { name: 'Luminária de pé', w: 1, h: 1, gold: 800, need: { mpinho: 6, barracobre: 1 }, luz: true, desc: 'Acende sozinha à noite.' },
+    mesacarvalho: { name: 'Mesa de carvalho', w: 2, h: 1, gold: 900, need: { mcarvalho: 15 }, desc: 'Mesa grande para dois.' },
+    poltrona: { name: 'Poltrona de carvalho', w: 1, h: 1, gold: 1200, need: { mcarvalho: 10, fibra: 20 }, desc: 'Fofinha, com braços de carvalho.' },
+    tapete: { name: 'Tapete de crochê', w: 2, h: 2, gold: 600, need: { fibra: 40 }, walk: true, desc: 'Dá para pisar. Feito à mão.' },
+    estanteipe: { name: 'Estante de ipê', w: 2, h: 1, gold: 1800, need: { mipe: 15 }, desc: 'Cheia de livros e lembranças.' },
+    relogio: { name: 'Relógio de pêndulo', w: 1, h: 1, gold: 2200, need: { mipe: 10, barraouro: 1 }, desc: 'Tique-taque de ipê e ouro.' },
+    comoda: { name: 'Cômoda de madeira de lei', w: 2, h: 1, gold: 2500, need: { madeiralei: 8 }, desc: 'Pesada, bonita e para sempre.' },
+    espelhodourado: { name: 'Espelho dourado', w: 1, h: 1, gold: 4000, need: { mdourada: 2 }, desc: 'Moldura de madeira dourada que brilha.' },
+  };
+  for (const [k, f] of Object.entries(MOVEIS)) ITEMS[k] = { name: f.name, cat: 'movel', sell: Math.round(f.gold / 3), desc: `${f.desc} Segure dentro de casa e toque no chão para colocar${f.w > 1 || f.h > 1 ? ` (ocupa ${f.w}×${f.h})` : ''}.` };
+
+  // ---------- roupas de cama ----------
+  const CAMAS = {
+    camaxadrez: { name: 'Roupa de cama xadrez', gold: 300, desc: 'A azul de sempre.' },
+    camaflorida: { name: 'Roupa de cama florida', gold: 1500, desc: 'Rosa com florzinhas.' },
+    camalistrada: { name: 'Roupa de cama listrada', gold: 1500, desc: 'Listras amarelas de verão.' },
+    camacoracoes: { name: 'Roupa de cama de coraçõezinhos', gold: 2000, desc: 'Para o casal mais fofo da vila.' },
+    camala: { name: 'Colcha de lã', gold: 2500, desc: 'Quentinha para o inverno.' },
+    camaestrelas: { name: 'Roupa de cama de céu estrelado', gold: 3000, desc: 'Azul-escuro com estrelinhas.' },
+  };
+  for (const [k, c] of Object.entries(CAMAS)) ITEMS[k] = { name: c.name, cat: 'cama', sell: Math.round(c.gold / 4), desc: `${c.desc} Segure e toque na cama para trocar.` };
+  // dá para fazer em Criar
+  RECIPES.push(
+    { id: 'camaxadrez', need: { fibra: 20 }, skill: null },
+    { id: 'camaflorida', need: { fibra: 30, narciso: 2 }, skill: ['farming', 2] },
+    { id: 'camalistrada', need: { fibra: 30, tecido: 1 }, skill: ['farming', 3] },
+    { id: 'camacoracoes', need: { fibra: 40, tecido: 2 }, skill: ['farming', 4] },
+    { id: 'camala', need: { la: 10, fibra: 20 }, skill: ['farming', 4] },
+    { id: 'camaestrelas', need: { tecido: 3, quartzo: 5 }, skill: ['farming', 6] },
+  );
+
+  // ---------- as reformas da chacrinha pedem madeira da floresta ----------
+  Object.assign(BUILDS.coop.lvs[1].need, { mpinho: 60, mcarvalho: 30 });
+  Object.assign(BUILDS.coop.lvs[2].need, { mcarvalho: 60, mipe: 40, madeiralei: 15 });
+  Object.assign(BUILDS.barn.lvs[1].need, { mpinho: 80, mcarvalho: 40 });
+  Object.assign(BUILDS.barn.lvs[2].need, { mcarvalho: 80, mipe: 50, madeiralei: 20 });
+  Object.assign(BUILDS.stable.lvs[0].need, { mpinho: 40, mcarvalho: 20 });
+
+  // ---------- painéis da marcenaria ----------
+  const needTxtC = need => Object.entries(need).map(([k, n]) => `<span style="color:${count(k) >= n ? '#2a7a2a' : '#a83a2a'}">${n} ${item(k).name.toLowerCase()} (${count(k)})</span>`).join(', ');
+  const canMake = f => gold() >= f.gold && Object.entries(f.need).every(([k, n]) => count(k) >= n);
+  function moveisHTML() {
+    return `<p style="text-align:center;font-size:13px">Cada móvel é feito na hora, com a madeira que vocês trazem da mata.</p><div class="list">${Object.entries(MOVEIS).map(([k, f]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${f.name}</b><small>${f.desc} · ${fmt(f.gold)} ₲ + ${needTxtC(f.need)}</small></span><button class="btn g" data-a="movelMake" data-id="${k}" type="button" ${canMake(f) ? '' : 'disabled'}>Encomendar</button></div>`).join('')}</div>`;
+  }
+  function camasHTML() {
+    return `<p style="text-align:center;font-size:13px">Também dá para fazer em casa, na aba Criar, com fibra, lã e tecido.</p><div class="list">${Object.entries(CAMAS).map(([k, c]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${c.name}</b><small>${c.desc}</small></span><span class="price">${fmt(c.gold)} ₲</span><button class="btn g" data-a="camaBuy" data-id="${k}" type="button" ${gold() >= c.gold ? '' : 'disabled'}>Comprar</button></div>`).join('')}</div>`;
+  }
+  // abas extras das lojas (Encantar no ferreiro, Móveis e Roupa de cama na marcenaria)
+  function extraShopTab(who, tab) {
+    if (who === 'claudio' && tab === 'enc') return encHTML();
+    if (who === 'tonico' && tab === 'moveis') return moveisHTML();
+    if (who === 'tonico' && tab === 'cama') return camasHTML();
+    return null;
+  }
+
+  // ---------- colocar, guardar e desenhar os móveis ----------
+  const casa = () => (W.farm && W.farm.casa) || {};
+  // quadrados ocupados pelos móveis: "x,y" → chave do móvel
+  let casaVer = '', casaGrid = new Map();
+  function casaCells() {
+    const ver = JSON.stringify(casa());
+    if (ver === casaVer) return casaGrid;
+    casaVer = ver; casaGrid = new Map();
+    for (const [k, id] of Object.entries(casa())) { const f = MOVEIS[id]; if (!f) continue; const [x, y] = k.split(',').map(Number); for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) casaGrid.set((x + dx) + ',' + (y + dy), k); }
+    return casaGrid;
+  }
+  const movelAt = (x, y) => { const k = casaCells().get(x + ',' + y); return k ? { k, id: casa()[k] } : null; };
+  function canPlaceMovel(m, x, y, f) {
+    for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) {
+      const xx = x + dx, yy = y + dy, k = xx + ',' + yy;
+      if (xx < 1 || yy < 2 || xx > m.w - 2 || yy > m.h - 2) return false;
+      if (m.solid[yy * m.w + xx] || m.spots[k] || movelAt(xx, yy)) return false;
+      if (xx === 7 && yy >= 8) return false; // caminho da porta
+      if (Math.floor(P.x / T) === xx && Math.floor((P.y - 3) / T) === yy) return false;
+    }
+    return true;
+  }
+  function placeMovel(m, tx, ty, s) {
+    const f = MOVEIS[s.id];
+    if (m.id !== 'house') { toast('Os móveis vão dentro de casa.', '', null, 'movel'); return; }
+    // em cima ou à esquerda do quadrado tocado, o que couber
+    for (const [ox, oy] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) {
+      const x = tx + ox, y = ty + oy;
+      if ((ox && f.w < 2) || (oy && f.h < 2)) continue;
+      if (canPlaceMovel(m, x, y, f)) { setFarm('casa', x + ',' + y, s.id); useHeld(1); sfx.hoe(); toast(`${f.name} no lugar!`, '', null, 'movel'); return; }
+    }
+    toast('Não cabe aqui. Tente outro cantinho.', '', null, 'movel'); sfx.no();
+  }
+  function openMovel(k) {
+    const id = casa()[k], f = MOVEIS[id]; if (!f) return;
+    openPanel(`<h2>${f.name}</h2><p style="text-align:center">${f.desc}</p><div class="row"><button class="btn" data-a="movelPick" data-k="${k}" type="button">Guardar na mochila</button></div>`, 'movel', k);
+  }
+  // tocar em Usar dentro de casa: roupa de cama na cama e móveis
+  function casaAct(m, tx, ty) {
+    if (m.id !== 'house') return false;
+    const s = held();
+    const mv = movelAt(tx, ty);
+    if (mv && !(s && item(s.id).cat === 'movel')) { openMovel(mv.k); return true; }
+    if (s && item(s.id).cat === 'movel') { placeMovel(m, tx, ty, s); return true; }
+    return false;
+  }
+  function applyBedding() {
+    const s = held(); if (!s || !CAMAS[s.id]) return false;
+    const old = W.farm.cama;
+    if (old === s.id) { toast('Essa roupa de cama já está na cama.', '', null, 'cama'); return true; }
+    useHeld(1); setFarmVal('cama', s.id);
+    if (old && CAMAS[old]) addItem(old, 1, true);
+    sfx.pop(); toast(`Cama arrumada com a ${CAMAS[s.id].name.toLowerCase()}!${old && CAMAS[old] ? ' A antiga voltou para a mochila.' : ''}`, 'big', null, 'cama');
+    return true;
+  }
+  function casaAction(a, b) {
+    switch (a) {
+      case 'movelMake': {
+        const id = b.dataset.id, f = MOVEIS[id];
+        if (!f || !canMake(f) || !spend(f.gold)) return true;
+        for (const [k, n] of Object.entries(f.need)) removeItem(k, n);
+        addItem(id, 1, true); sfx.coin(); toast(`O Seu Tonico fez: ${f.name}! Está na mochila.`, '', id, 'movel');
+        renderShop(panelArg); return true;
+      }
+      case 'camaBuy': { const c = CAMAS[b.dataset.id]; if (c && spend(c.gold)) { addItem(b.dataset.id, 1, true); sfx.coin(); toast(`Comprou: ${c.name}.`, '', b.dataset.id, 'cama'); } renderShop(panelArg); return true; }
+      case 'movelPick': {
+        const k = b.dataset.k, id = casa()[k];
+        if (id && addItem(id, 1, true)) { setFarm('casa', k, null); sfx.pop(); toast(`${MOVEIS[id].name} guardado na mochila.`, '', null, 'movel'); }
+        closePanel(); return true;
+      }
+    }
+    return false;
+  }
+
+  // ---------- desenho dos móveis ----------
+  function drawMovel(id, px, py, t, night) {
+    switch (id) {
+      case 'cadeirapinho': shadowAt(px + 8, py + 14, 6, 2); R(px + 4, py - 6, 8, 12, '#b88a4a'); R(px + 5, py - 5, 6, 2, '#d8b070'); R(px + 5, py - 1, 6, 1, '#d8b070'); R(px + 3, py + 5, 10, 4, '#d8b070'); R(px + 3, py + 5, 10, 1, '#f0d098'); R(px + 4, py + 9, 2, 5, '#9a6a3a'); R(px + 10, py + 9, 2, 5, '#9a6a3a'); break;
+      case 'mesapinho': shadowAt(px + 8, py + 14, 6, 2); oval(px + 8, py + 5, 7, 3.5, '#b88a4a'); oval(px + 8, py + 4, 7, 3, '#d8b070'); R(px + 7, py + 7, 2, 7, '#9a6a3a'); R(px + 4, py + 13, 8, 1, '#9a6a3a'); R(px + 7, py, 3, 3, '#f4f0e8'); R(px + 8, py - 1, 1, 1, '#ffffff99'); break;
+      case 'vaso': shadowAt(px + 8, py + 14, 5, 2); R(px + 4, py + 7, 8, 7, '#c86a3a'); R(px + 4, py + 7, 8, 1, '#e08a5a'); for (const [dx, dy, l] of [[-5, -2, 7], [5, -2, 7], [-3, -6, 8], [3, -6, 8], [0, -8, 9]]) { ctx.strokeStyle = '#3a8a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 8, py + 7); ctx.quadraticCurveTo(px + 8 + dx * 0.4, py + 7 + dy, px + 8 + dx, py + 7 + dy - l * 0.3); ctx.stroke(); } break;
+      case 'luminaria': shadowAt(px + 8, py + 14, 5, 2); R(px + 7, py - 4, 2, 17, '#4a3a2a'); R(px + 4, py + 12, 8, 2, '#4a3a2a'); poly([[px + 3, py - 4], [px + 13, py - 4], [px + 11, py - 12], [px + 5, py - 12]], night ? '#ffe8a0' : '#e8d8b0'); R(px + 3, py - 4, 10, 1, '#c8a870'); break;
+      case 'mesacarvalho': shadowAt(px + 16, py + 14, 14, 2); R(px + 1, py + 2, 30, 7, '#5a3418'); R(px + 1, py + 1, 30, 7, '#7a4a28'); R(px + 2, py + 2, 28, 1, '#9a6a3a'); R(px + 2, py + 8, 2, 6, '#4a2a14'); R(px + 28, py + 8, 2, 6, '#4a2a14'); R(px + 10, py - 1, 12, 3, '#f4f0e8'); disc(px + 16, py - 2, 2.5, '#e8402a'); R(px + 15, py - 6, 2, 4, '#3a8a2a'); break;
+      case 'poltrona': shadowAt(px + 8, py + 14, 7, 2); R(px + 2, py - 5, 12, 10, '#8a2a3a'); R(px + 3, py - 4, 10, 2, '#a83a4a'); R(px + 1, py + 2, 14, 7, '#8a2a3a'); R(px + 3, py + 3, 10, 4, '#b84a5a'); R(px, py + 1, 3, 8, '#7a4a28'); R(px + 13, py + 1, 3, 8, '#7a4a28'); R(px + 2, py + 9, 2, 4, '#5a3418'); R(px + 12, py + 9, 2, 4, '#5a3418'); break;
+      case 'tapete': { const c = ['#e86a8a', '#f4c83a', '#5ab8e8', '#8ad86a']; for (let r = 0; r < 4; r++) oval(px + 16, py + 16, 15 - r * 3.4, 13 - r * 3, c[r]); oval(px + 16, py + 16, 2, 2, '#ffffff'); break; }
+      case 'estanteipe': shadowAt(px + 16, py + 14, 14, 2); R(px + 1, py - 16, 30, 30, '#7a3a1a'); R(px + 3, py - 14, 26, 26, '#5a2a10');
+        for (let r = 0; r < 3; r++) { R(px + 3, py - 6 + r * 9, 26, 2, '#9a5a2a'); for (let i = 0; i < 6; i++) { const c = ['#c83a3a', '#3a7ad0', '#f4c83a', '#5aa83a', '#f4f0e8', '#b05ae0'][(i + r * 2) % 6]; R(px + 4 + i * 4, py - 13 + r * 9, 3, 7 - (i + r) % 2, c); } }
+        R(px + 22, py - 14, 5, 5, '#e8d8b0'); R(px + 23, py - 13, 3, 3, '#a8d8f0'); break;
+      case 'relogio': shadowAt(px + 8, py + 14, 6, 2); R(px + 3, py - 18, 10, 32, '#7a3a1a'); disc(px + 8, py - 12, 4.5, '#f4f0e0'); R(px + 8, py - 15, 1, 3, '#2a1a0a'); R(px + 8, py - 12, 3, 1, '#2a1a0a'); R(px + 5, py - 5, 6, 14, '#3a1a0a');
+        { const a = Math.sin(t * 3) * 0.35; ctx.strokeStyle = '#f4c83a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px + 8, py - 5); ctx.lineTo(px + 8 + Math.sin(a) * 9, py - 5 + Math.cos(a) * 9); ctx.stroke(); disc(px + 8 + Math.sin(a) * 9, py - 5 + Math.cos(a) * 9, 1.8, '#f4c83a'); } break;
+      case 'comoda': shadowAt(px + 16, py + 14, 14, 2); R(px + 1, py - 4, 30, 18, '#3a180e'); R(px + 2, py - 3, 28, 16, '#5a2a1a'); for (let r = 0; r < 3; r++) { R(px + 3, py - 2 + r * 5, 26, 4, '#6a3420'); R(px + 15, py + r * 5, 2, 1, '#f4c83a'); }
+        R(px + 4, py - 9, 6, 6, '#c8a050'); R(px + 5, py - 8, 4, 4, '#f8e8f0'); disc(px + 24, py - 7, 3, '#e8d8b0'); R(px + 23, py - 12, 2, 4, '#f4f0e8'); break;
+      case 'espelhodourado': shadowAt(px + 8, py + 14, 6, 2); R(px + 7, py + 6, 2, 8, '#b8861a'); R(px + 4, py + 13, 8, 1, '#b8861a'); oval(px + 8, py - 3, 7, 10, '#e8b830'); oval(px + 8, py - 3, 5, 8, '#c8e8f8'); R(px + 5, py - 9, 2, 7, '#ffffffaa');
+        if (Math.sin(t * 2.5) > 0.6) { R(px + 13, py - 12, 1, 3, '#ffffff'); R(px + 12, py - 11, 3, 1, '#ffffff'); } break;
+    }
+  }
+  function casaEnts(m, ents, t) {
+    const night = nightF() > 0.2;
+    if (m.id === 'house') {
+      for (const [k, id] of Object.entries(casa())) {
+        const f = MOVEIS[id]; if (!f) continue;
+        const [x, y] = k.split(',').map(Number);
+        ents.push({ y: f.walk ? -500 : (y + f.h - 1) * T + 14, f: () => drawMovel(id, x * T, y * T, t, night) });
+      }
+    }
+    if (m.id === 'moveis') {
+      // mostruário da marcenaria
+      for (const [id, x, y] of [['cadeirapinho', 1, 5], ['estanteipe', 9, 2], ['relogio', 1, 2], ['poltrona', 10, 5]]) ents.push({ y: y * T + 14, f: () => drawMovel(id, x * T, y * T, t, false) });
+      ents.push({ y: -500, f: () => drawMovel('tapete', 4 * T, 5 * T, t, false) });
+    }
+  }
+  function casaLights(m, light) {
+    if (m.id !== 'house') return;
+    for (const [k, id] of Object.entries(casa())) if (MOVEIS[id] && MOVEIS[id].luz) { const [x, y] = k.split(',').map(Number); light(x * T + 8, y * T - 6, 46, 0.55); }
+  }
+  // capa da cama conforme a roupa de cama
+  function bedQuilt(col, w, h) {
+    const st = { camaflorida: ['#f4a8c8', '#e888b0'], camalistrada: ['#f4d040', '#fff6d0'], camacoracoes: ['#f8f0f0', '#e8e0e0'], camala: ['#e8dcc8', '#c83a3a'], camaestrelas: ['#2a2a6a', '#1e1e4a'] }[col];
+    if (!st) return false;
+    R(4, 15, w - 8, h - 19, st[0]); R(4, 15, w - 8, 1, shade(st[0], -0.3));
+    if (col === 'camalistrada') for (let yy = 17; yy < h - 4; yy += 4) R(4, yy, w - 8, 2, st[1]);
+    if (col === 'camaflorida') for (let yy = 18; yy < h - 5; yy += 6) for (let xx = 5 + (yy % 12 ? 3 : 0); xx < w - 5; xx += 7) { R(xx - 1, yy, 3, 1, '#ffffff'); R(xx, yy - 1, 1, 3, '#ffffff'); R(xx, yy, 1, 1, '#f4c83a'); }
+    if (col === 'camacoracoes') for (let yy = 18; yy < h - 5; yy += 6) for (let xx = 5 + (yy % 12 ? 3 : 0); xx < w - 6; xx += 8) { R(xx, yy, 2, 2, '#e83a6a'); R(xx + 3, yy, 2, 2, '#e83a6a'); R(xx, yy + 1, 5, 2, '#e83a6a'); R(xx + 1, yy + 3, 3, 1, '#e83a6a'); }
+    if (col === 'camala') { R(4, h - 9, w - 8, 3, st[1]); for (let xx = 3; xx < w - 3; xx += 3) R(xx, h - 8, 1, 1, '#ffffff'); for (let yy = 18; yy < h - 10; yy += 3) for (let xx = 4; xx < w - 4; xx += 4) R(xx + (yy % 2), yy, 2, 1, '#d4c4a8'); }
+    if (col === 'camaestrelas') { const r = srand(9); for (let k = 0; k < 18; k++) R(3 + r() * (w - 6), 17 + r() * (h - 23), 1, 1, k % 3 ? '#f4e8a0' : '#ffffff'); disc(w - 9, 20, 2.5, '#f4e8a0'); disc(w - 8, 19, 2.2, st[0]); }
+    return true;
+  }
+  // a construção da marcenaria na vila
+  function drawMoveisB(w, h, night, snow) {
+    planks(2, 18, w - 4, h - 18, '#a8743a', 6);
+    gable(2, -22, w - 4, 42, '#a8743a', '#3a6a4a', snow);
+    R(w / 2 - 18, -6, 36, 16, '#5a3418'); R(w / 2 - 16, -4, 32, 12, '#f0dcb0');
+    // plaquinha com uma cadeira
+    R(w / 2 - 4, -3, 8, 5, '#9a5a2a'); R(w / 2 - 4, 2, 8, 2, '#c88a4a'); R(w / 2 - 4, 4, 1, 3, '#9a5a2a'); R(w / 2 + 3, 4, 1, 3, '#9a5a2a');
+    winPx(8, 34, 20, 16, night);
+    doorPx(2 * T + 1, h - 22, '#6a3a1e');
+    // tábuas encostadas e um serrote
+    for (let k = 0; k < 4; k++) R(w - 26 + k * 5, h - 22 + (k % 2) * 2, 4, 22 - (k % 2) * 2, ['#d8b070', '#7a4a28', '#c8763a', '#5a2a1a'][k]);
+    poly([[w - 8, h - 30], [w - 2, h - 26], [w - 3, h - 24], [w - 9, h - 28]], '#a8a8b0');
+  }
+  // ícones
+  function paintIcon8(id) {
+    if (MOVEIS[id]) {
+      const c = document.createElement('canvas'); c.width = 48; c.height = 56;
+      const save = ctx; ctx = c.getContext('2d'); drawMovel(id, 8, 30, 0, false); const d = ctx.getImageData(0, 0, 48, 56).data; ctx = save;
+      let x0 = 48, y0 = 56, x1 = 0, y1 = 0;
+      for (let y = 0; y < 56; y++) for (let x = 0; x < 48; x++) if (d[(y * 48 + x) * 4 + 3] > 120) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+      if (x1 >= x0) { const bw = x1 - x0 + 1, bh = y1 - y0 + 1, sc = Math.min(15 / bw, 15 / bh, 1); ctx.drawImage(c, x0, y0, bw, bh, Math.round(8 - bw * sc / 2), Math.round(8 - bh * sc / 2), Math.round(bw * sc), Math.round(bh * sc)); }
+      return true;
+    }
+    if (CAMAS[id]) {
+      const c = { camaxadrez: ['#4a7ac8', '#6a9ae0'], camaflorida: ['#f4a8c8', '#ffffff'], camalistrada: ['#f4d040', '#fff6d0'], camacoracoes: ['#f8f0f0', '#e83a6a'], camala: ['#e8dcc8', '#c83a3a'], camaestrelas: ['#2a2a6a', '#f4e8a0'] }[id];
+      for (let k = 0; k < 3; k++) { R(2, 10 - k * 3, 12, 3, k % 2 ? c[0] : shade(c[0], -0.1)); R(2, 10 - k * 3, 12, 1, shade(c[0], 0.2)); }
+      R(4, 11, 3, 1, c[1]); R(9, 8, 3, 1, c[1]); R(6, 5, 3, 1, c[1]); R(2, 13, 12, 1, shade(c[0], -0.35));
+      return true;
+    }
+    return false;
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -7873,7 +8157,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -8055,7 +8339,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const t = stripNull(clone(d.t || {}));
       for (const k of Object.keys(t)) if (!t[k] || !Object.keys(t[k]).length) delete t[k];
       W.farm.t = t;
-      for (const sec of ['b', 'a', 'pots']) W.farm[sec] = stripNull(clone(d[sec] || {}));
+      for (const sec of ['b', 'a', 'pots', 'casa']) W.farm[sec] = stripNull(clone(d[sec] || {}));
+      W.farm.cama = d.cama || null;
       W.farm.hay = d.hay || 0; W.farm.fridge = d.fridge ? clone(d.fridge) : null;
       const q = pend['world/farm'];
       if (q && q.patch) {

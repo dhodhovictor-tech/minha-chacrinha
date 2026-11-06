@@ -746,7 +746,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -772,7 +772,7 @@
     if (m.id === 'beach') for (const f of beachForage()) ents.push({ y: f.y * T + 13, f: () => drawIconAt(f.id, f.x * T, f.y * T - 2 + Math.sin(t * 2 + f.x) * 1) });
   }
   function drawPlayerEnt(t) {
-    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
+    const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, toolEnc: toolAnim && toolAnim.enc, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
     const lk = withEq(P.look, P.eq);
     if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, lk, P.dir, 0, opts); }
     else drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);

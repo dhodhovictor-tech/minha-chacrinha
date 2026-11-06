@@ -1,6 +1,6 @@
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -22,6 +22,7 @@
     return bake(`b2|${type}|${w}|${h}|${night ? 1 : 0}|${s}|${extra}`, w + 16, h + 40, () => {
       ctx.translate(8, 36);
       switch (type) {
+        case 'moveis': drawMoveisB(w, h, night, snow); break;
         case 'atelie': {
           R(2, 18, w - 4, h - 18, '#f4dce4');
           for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');

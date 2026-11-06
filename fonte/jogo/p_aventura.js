@@ -175,7 +175,7 @@
         mo.vx += (dx / dist * 30 - mo.vx) * dt * 2; mo.vy += (dy / dist * 30 - mo.vy) * dt * 2;
         if (mo.cd <= 0 && dist < 80) {
           mo.cd = 3.2; mo.stomp = 0.5; sfx.hit();
-          if (dist < 50 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * 0.8) - defTotal()); sfx.hurt(); dirty(); }
+          if (dist < 50 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * 0.8 * MON_DMG) - defTotal()); sfx.hurt(); dirty(); }
         }
         break;
       case 'rainhafantasma':

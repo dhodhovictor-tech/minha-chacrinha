@@ -96,6 +96,13 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   // roupa vestida aparece para a outra pessoa
   await ev(A, () => { const s = __sv; s.addItem('chapeupalha', 1, true); s.equipSlot(s.P.inv.findIndex(x => x && x.id === 'chapeupalha')); }); await A.waitForTimeout(1200);
   ok(await ev(B, uidA => { const p = __sv.peerPlayers().find(x => x.uid === uidA); return !!(p && p.look && p.look.eqh === 'chapeupalha'); }, await ev(A, () => __sv.P.uid)), 'B vê o chapéu de palha que A vestiu');
+  // a casa é dos dois: móvel e roupa de cama que A coloca aparecem para B
+  await ev(A, () => { const s = __sv; s.setFarm('casa', '4,5', 'tapete'); s.addItem('camaflorida', 1, true); const P = s.P; s.goMap('house', 2 * 16 + 8, 5 * 16 + 10, 0); });
+  await A.waitForTimeout(700);
+  await ev(A, () => { const s = __sv, P = s.P; P.x = 2 * 16 + 8; P.y = 5 * 16 + 10; P.dir = 0; P.sel = P.inv.findIndex(x => x && x.id === 'camaflorida'); s.act(); });
+  await A.waitForTimeout(1500);
+  ok(await ev(B, () => (__sv.W.farm.casa || {})['4,5'] === 'tapete' && __sv.W.farm.cama === 'camaflorida'), 'B vê o tapete e a roupa de cama que A colocou');
+  await ev(A, () => { document.querySelectorAll('[data-a="close"]').forEach(c => c.click()); __sv.goMap('farm', 10 * 16, 12 * 16, 1); }); await A.waitForTimeout(700);
   // diário: fica guardado no banco, mas só quem escreveu lê
   await ev(A, async () => { const s = __sv; s.diary = { e: { d1: { t: 'segredo da A', s: '', r: '' } } }; s.openInventory('diario'); await new Promise(r => setTimeout(r, 200)); });
   await ev(A, () => document.querySelector('[data-a="diarySave"]').click()); await A.waitForTimeout(1200);

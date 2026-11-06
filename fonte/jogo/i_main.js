@@ -154,7 +154,7 @@
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -336,7 +336,8 @@
       const t = stripNull(clone(d.t || {}));
       for (const k of Object.keys(t)) if (!t[k] || !Object.keys(t[k]).length) delete t[k];
       W.farm.t = t;
-      for (const sec of ['b', 'a', 'pots']) W.farm[sec] = stripNull(clone(d[sec] || {}));
+      for (const sec of ['b', 'a', 'pots', 'casa']) W.farm[sec] = stripNull(clone(d[sec] || {}));
+      W.farm.cama = d.cama || null;
       W.farm.hay = d.hay || 0; W.farm.fridge = d.fridge ? clone(d.fridge) : null;
       const q = pend['world/farm'];
       if (q && q.patch) {

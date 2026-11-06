@@ -367,7 +367,7 @@
         mo.vx = 0; mo.vy = 0;
         // derruba galhos onde a pessoa está: dá para desviar
         if (mo.cd <= 0) { mo.cd = Math.max(1.4, 2.4 * mo.hp / mo.max + 0.6); mo.drops.push({ x: P.x, y: P.y, t: 0.9 }); }
-        for (const d of mo.drops) { d.t -= dt; if (d.t <= 0 && !d.done) { d.done = true; sfx.chop(); if (Math.hypot(P.x - d.x, P.y - d.y) < 14 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, mo.dmg - defTotal()); sfx.hurt(); dirty(); if (P.hp <= 0) mataFaint(); } } }
+        for (const d of mo.drops) { d.t -= dt; if (d.t <= 0 && !d.done) { d.done = true; sfx.chop(); if (Math.hypot(P.x - d.x, P.y - d.y) < 14 && hurtT <= 0) { hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); dirty(); if (P.hp <= 0) mataFaint(); } } }
         mo.drops = mo.drops.filter(d => d.t > -0.3);
         break;
     }

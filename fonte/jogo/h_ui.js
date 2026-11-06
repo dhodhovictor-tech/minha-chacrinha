@@ -36,7 +36,7 @@
     input.jx = input.jy = 0;
   }
   function closePanel() { panelSig = ''; panelOpen = false; panel.hidden = true; panel.innerHTML = ''; panelKind = null; invSel = -1; dirty(); }
-  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>` : ''}</button>`;
+  const slotHTML = (s, i, on, act = 'slot') => `<button class="slot${on ? ' on' : ''}" data-a="${act}" data-i="${i}" type="button" title="${s ? item(s.id).name + (s.q ? ' (' + Q_NAME[s.q] + ')' : '') : 'vazio'}">${s ? `<img src="${iconURL(s.id, s.lv || 0)}" alt="">${s.q ? `<i class="q q${s.q}">★</i>` : ''}<span class="n">${stackable(s.id) && s.n > 1 ? s.n : ''}</span>${s.enc && ENCANTOS[s.enc] ? `<i class="enc" style="background:${ENCANTOS[s.enc].col}"></i>` : ''}` : ''}</button>`;
   function renderHotbar() {
     if (!P) return;
     $('hotbar').innerHTML = P.inv.slice(0, 10).map((s, i) => slotHTML(s, i, i === P.sel, 'hot')).join('');
@@ -100,7 +100,7 @@
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
       body = `<p style="text-align:center;font-size:13px">A primeira fileira é a barra de ferramentas. Toque num item e depois em outro lugar para trocar.</p>
         <div class="grid">${P.inv.map((s, i) => slotHTML(s, i, i === invSel)).join('')}</div>
-        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
+        <div class="desc">${s ? `<b>${it.cat === 'tool' ? toolName(s.id, s.lv) + (s.enc ? ' · ' + encName(s) : '') : it.name}${s.q ? ` <span class="qtag q${s.q}">★ ${Q_NAME[s.q]}</span>` : ''}</b>${it.desc ? ' · ' + it.desc : ''}${it.sell ? ` · hoje vale ${fmt(sellPrice(s.id, s.q))} ₲ ${trendHTML(s.id)}` : ''}${it.energy ? ` · +${Math.round(it.energy * Q_ENERGY[s.q || 0])} de energia` : ''}${s.id === 'can' ? ` · água: ${P.water}/${canCap(s.lv || 0)}` : ''}${s.id === 'rod' && s.tk ? ` · ${item(s.tk).name}: ${s.tkn} usos` : ''}` : 'Toque num item para ver o que é.'}</div>
         ${s && it.cat !== 'tool' ? `<div class="row">${it.cat === 'ring' || it.cat === 'boots' || it.cat === 'roupa' ? '<button class="btn g" data-a="equipSel" type="button">Vestir</button>' : ''}${it.cat === 'tackle' ? '<button class="btn g" data-a="tackleSel" type="button">Prender na vara</button>' : ''}${it.energy ? '<button class="btn g" data-a="eatSel" type="button">Comer</button>' : ''}<button class="btn r" data-a="trash" type="button">Jogar fora</button></div>` : ''}
         ${gearHTML()}
         <div class="row"><button class="btn" data-a="mute" type="button">${muted ? 'Ligar o som' : 'Desligar o som'}</button><button class="btn" data-a="music" type="button">${musicOn ? 'Desligar a música' : 'Ligar a música'}</button></div>`;
@@ -214,7 +214,9 @@
     const tabs = `<div class="tabs">${info.tabs.map(([k, l]) => `<button type="button" data-a="stab" data-t="${k}" class="${shopTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     const row = (img, name, small, right) => `<div class="item"><img src="${img}" alt=""><span class="nm">${name}<small>${small || ''}</small></span>${right}</div>`;
     let body = '';
-    if (shopTab === 'buy') {
+    const ext = extraShopTab(who, shopTab);
+    if (ext != null) body = ext;
+    else if (shopTab === 'buy') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);

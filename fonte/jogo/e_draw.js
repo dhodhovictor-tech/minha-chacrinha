@@ -605,9 +605,9 @@
     const frame = walk ? Math.floor(walk * 8) % 4 : 0, bob = frame % 2 ? -1 : 0;
     blit(farmerCanvas(opts.rc ? { ...(look || {}), rc: 1 } : look || {}, dir, frame), cx - 9, fy - 38 + bob);
     if (opts.item) { const ix = cx - 8; drawIconAt(opts.item, ix, fy - 50 + bob, 1); }
-    if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0);
+    if (opts.tool) drawToolSwing(cx, fy + bob, dir, opts.tool, opts.toolT || 0, opts.toolLv || 0, opts.toolEnc);
   }
-  function drawToolSwing(cx, y, dir, tool, t, lv) {
+  function drawToolSwing(cx, y, dir, tool, t, lv, enc) {
     const ic = iconCanvas(tool, lv);
     ctx.save();
     const a = dir === 3 ? -1.7 + t * 2.4 : dir === 2 ? 1.7 - t * 2.4 : dir === 1 ? -0.7 + t * 1.4 : 0.7 - t * 1.4;
@@ -616,8 +616,9 @@
     if (tool === 'scythe' || WEAPONS[tool]) {
       const a0 = dir === 3 ? -1.7 : dir === 2 ? 1.7 : dir === 1 ? -0.7 : 0.7;
       const off = dir === 2 ? -2.2 : -0.94;
-      ctx.strokeStyle = `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(cx + ox, y + oy, 15, Math.min(a0, a) + off, Math.max(a0, a) + off); ctx.stroke();
+      const ec = enc && ENCANTOS[enc] && ENCANTOS[enc].col;
+      ctx.strokeStyle = ec || `rgba(255,255,255,${(0.75 * (1 - t)).toFixed(2)})`; ctx.lineWidth = ec ? 3.5 : 2.5; if (ec) ctx.globalAlpha = 0.85 * (1 - t);
+      ctx.beginPath(); ctx.arc(cx + ox, y + oy, 15, Math.min(a0, a) + off, Math.max(a0, a) + off); ctx.stroke(); ctx.globalAlpha = 1;
     }
     ctx.translate(cx + ox, y + oy); ctx.rotate(a); if (dir === 2) ctx.scale(-1, 1);
     ctx.drawImage(ic, -3, -16, 16, 16);
@@ -748,7 +749,7 @@
         case 'bench': R(0, 4, w, 5, '#a86a3a'); R(0, 4, w, 1, '#c8884a'); R(0, 0, w, 3, '#8a5428'); R(2, 9, 2, 6, '#3a3a3a'); R(w - 4, 9, 2, 6, '#3a3a3a'); break;
         case 'board': R(2, 18, 3, 14, '#6a3a1a'); R(w - 5, 18, 3, 14, '#6a3a1a'); R(0, 2, w, 18, '#8a5428'); R(2, 4, w - 4, 14, '#c8a06a'); R(5, 6, 8, 7, '#fff4e0'); R(17, 7, 9, 8, '#ffe0e0'); R(8, 5, 2, 2, '#e8402a'); R(21, 6, 2, 2, '#3a8ad8'); break;
         case 'bed': R(1, 0, w - 2, 6, '#7a4220'); R(2, 1, w - 4, 4, '#a0602e'); R(2, 6, w - 4, h - 8, '#a0602e'); R(4, 6, w - 8, 9, '#f4f0e8'); R(5, 7, w - 10, 6, '#ffffff');
-          for (let yy = 15; yy < h - 4; yy += 6) for (let xx = 4; xx < w - 4; xx += 6) R(xx, yy, 6, 6, ((xx + yy) / 6) % 2 ? '#4a7ac8' : '#6a9ae0'); R(4, 15, w - 8, 1, '#3a5a9a'); R(1, h - 3, w - 2, 3, '#6a3a1a'); break;
+          if (!bedQuilt(col, w, h)) { for (let yy = 15; yy < h - 4; yy += 6) for (let xx = 4; xx < w - 4; xx += 6) R(xx, yy, 6, 6, ((xx + yy) / 6) % 2 ? '#4a7ac8' : '#6a9ae0'); R(4, 15, w - 8, 1, '#3a5a9a'); } R(1, h - 3, w - 2, 3, '#6a3a1a'); break;
         case 'table': R(2, 6, w - 4, 12, '#a86a3a'); R(2, 6, w - 4, 2, '#c8884a'); R(4, 18, 2, 10, '#6a3a1a'); R(w - 6, 18, 2, 10, '#6a3a1a'); R(9, 0, 8, 7, '#e8e0d0'); disc(13, 0, 3, '#5ab83a'); R(12, -2, 2, 2, '#e8402a'); break;
         case 'tv': R(3, 2, w - 6, 12, '#2a2a2e'); R(5, 4, w - 10, 8, night ? '#5a9ae8' : '#2a4a6a'); R(6, 5, 3, 2, '#ffffff44'); R(7, 14, w - 14, 2, '#5a3a2a'); break;
         case 'plant': R(4, 9, 8, 7, '#c86a3a'); R(4, 9, 8, 1, '#e08a5a'); for (const [dx, dy] of [[0, 0], [-3, 2], [3, 2], [0, 4], [-2, -2], [2, -3]]) { oval(8 + dx, 4 + dy, 2.5, 3.5, '#3a8a2a'); R(7 + dx, 2 + dy, 1, 2, '#6ac04a'); } break;
@@ -786,6 +787,7 @@
       return;
     }
     if (['house', 'store', 'smith', 'cottage', 'fountain'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
+    if (s.type === 'bed') s.col = (W.farm && W.farm.cama) || '';
     blit(buildingCanvas(s.type, w, h, night && ['house', 'cottage', 'tv'].includes(s.type), s.col), x - 8, y - 36);
     const t = performance.now() / 1000;
     if (s.type === 'smith' || s.type === 'house') { const cxp = x + w - (s.type === 'smith' ? 19 : 24), cyp = y - (s.type === 'smith' ? 30 : 22); for (let k = 0; k < 3; k++) { const p = (t * 0.4 + k / 3) % 1; ctx.fillStyle = `rgba(220,220,230,${0.55 * (1 - p)})`; ctx.beginPath(); ctx.arc(cxp + Math.sin(p * 6 + k) * 3, cyp - p * 24, 2 + p * 4, 0, TAU); ctx.fill(); } }
