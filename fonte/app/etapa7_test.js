@@ -21,7 +21,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(wet[0] && wet[1] && wet[2] && !wet[3], 'regador de ferro (nível 2) molhou 3 quadrados lado a lado: ' + wet);
   // mover a fornalha trabalhando
   await ev(() => { const s = __sv; s.setTile('20,22', { o: { k: 'fornalha', in: 'cobre', out: 'barracobre', ready: 99999 } }); for (let y = 20; y <= 26; y++) for (let x = 22; x <= 28; x++) if (s.tile(x + ',' + y)) s.setTile(x + ',' + y, null); });
-  await p.click('#bMenu'); await p.waitForTimeout(150); await p.click('[data-t="coop"]'); await p.waitForTimeout(150); await p.click('[data-a="moveStart"]'); await p.waitForTimeout(200);
+  await ev(() => document.getElementById('bMenu').click()); await p.waitForTimeout(150); await p.click('[data-t="coop"]'); await p.waitForTimeout(150); await p.click('[data-a="moveStart"]'); await p.waitForTimeout(200);
   await ev(() => { const pl = __sv.placing; pl.x = 20; pl.y = 22; __sv.act(); }); await p.waitForTimeout(200);
   ok(await ev(() => __sv.placing && __sv.placing.obj === '20,22'), 'escolheu a fornalha para mudar');
   await ev(() => { const pl = __sv.placing; pl.x = 25; pl.y = 24; __sv.act(); }); await p.waitForTimeout(200);
@@ -35,7 +35,9 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(gift, 'Darth bem tratado deixa presentinho de manhã');
   // cartinha para a outra pessoa
   await ev(() => { __sv.W.players.uB = { uid: 'uB', name: 'Victor', look: {}, feed: [] }; });
-  await p.click('#bMenu'); await p.waitForTimeout(150); await p.click('[data-t="coop"]'); await p.waitForTimeout(150);
+  await p.waitForTimeout(1200); for (let k = 0; k < 3; k++) { await ev(() => document.querySelectorAll('#panel [data-a]').forEach(b => { if (/close|ok|dayOk/.test(b.dataset.a)) b.click(); })); await p.waitForTimeout(250); }
+  await ev(() => { if (!document.getElementById('panel').hidden) document.querySelectorAll('.win button').forEach(b => { if (/Bom dia|Vamos|OK|Fechar|×/.test(b.textContent)) b.click(); }); }); await p.waitForTimeout(300);
+  await ev(() => document.getElementById('bMenu').click()); await p.waitForTimeout(150); await p.click('[data-t="coop"]'); await p.waitForTimeout(150);
   await p.click('[data-a="letterOpen"]'); await p.waitForTimeout(200);
   await p.fill('#lettertxt', 'Te amo! Deixei umas abóboras no baú 🎃');
   await p.screenshot({ path: SHOTS + 'e7_letter.png' });

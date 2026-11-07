@@ -14,7 +14,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await closeAll(); await p.waitForTimeout(1200);
   await ev(() => { const s = __sv; s.W.meta.day = 37; s.P.lastDay = 37; s.W.clock.min = 600; s.W.clock.at = Date.now(); s.W.meta.rain = false; s.earn(50000); });
   // a mata fica à direita da vila
-  await ev(() => __sv.goMap('town', 47.5 * 16, 18 * 16 + 10, 3)); await p.waitForTimeout(600);
+  await ev(() => __sv.goMap('town', 77.5 * 16, 28 * 16 + 10, 3)); await p.waitForTimeout(600);
   await p.keyboard.down('ArrowRight'); await p.waitForTimeout(900); await p.keyboard.up('ArrowRight'); await p.waitForTimeout(700);
   ok(await ev(() => __sv.P.map) === 'mata', 'seguindo a rua da vila para a direita chega à Mata do Vale: ' + await ev(() => __sv.P.map));
   await ev(() => __sv.goMap('mata', 11.5 * 16, 11 * 16 + 8, 0)); await p.waitForTimeout(700); await clearToasts();

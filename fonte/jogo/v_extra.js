@@ -170,12 +170,13 @@
     openShop('festa');
   }
   // decoração extra do luau: tochas tiki e fogueira perto da barraca
+  const luauTorches = () => { const b = VILA.booth; return [[b.x - 2, b.y + 1], [b.x + 4, b.y + 1], [b.x - 2, b.y - 2], [b.x + 4, b.y - 2]]; };
   function luauDecor(m, ents, t) {
     const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return;
-    for (const [x, y] of [[16, 14], [22, 14], [16, 11], [22, 11]]) ents.push({ y: y * T + 15, f: () => { R(x * T + 7, y * T - 6, 2, 20, '#7a4a22'); R(x * T + 5, y * T - 9, 6, 4, '#a86a32'); disc(x * T + 8, y * T - 12 + Math.sin(t * 9 + x) * 0.6, 3, '#ff8a1a'); R(x * T + 7, y * T - 13, 2, 2, '#ffe04a'); } });
-    ents.push({ y: 15 * T + 12, f: () => { const fx = 14 * T + 8, fy = 15 * T + 8; for (const [dx, dy] of [[-6, 2], [5, 2], [-3, 4], [2, 4]]) R(fx + dx, fy + dy, 5, 2, '#6a3a1a'); for (let k = 0; k < 3; k++) disc(fx + (k - 1) * 3, fy - 2 - Math.abs(Math.sin(t * 7 + k)) * 3, 3 - k * 0.5, k === 1 ? '#ffd040' : '#ff7a1a'); } });
+    for (const [x, y] of luauTorches()) ents.push({ y: y * T + 15, f: () => { R(x * T + 7, y * T - 6, 2, 20, '#7a4a22'); R(x * T + 5, y * T - 9, 6, 4, '#a86a32'); disc(x * T + 8, y * T - 12 + Math.sin(t * 9 + x) * 0.6, 3, '#ff8a1a'); R(x * T + 7, y * T - 13, 2, 2, '#ffe04a'); } });
+    ents.push({ y: (VILA.booth.y + 2) * T + 12, f: () => { const fx = (VILA.booth.x - 4) * T + 8, fy = (VILA.booth.y + 2) * T + 8; for (const [dx, dy] of [[-6, 2], [5, 2], [-3, 4], [2, 4]]) R(fx + dx, fy + dy, 5, 2, '#6a3a1a'); for (let k = 0; k < 3; k++) disc(fx + (k - 1) * 3, fy - 2 - Math.abs(Math.sin(t * 7 + k)) * 3, 3 - k * 0.5, k === 1 ? '#ffd040' : '#ff7a1a'); } });
   }
-  function luauLights(m, light) { const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return; for (const [x, y] of [[16, 14], [22, 14], [16, 11], [22, 11]]) light(x * T + 8, y * T - 10, 34, 0.5); light(14 * T + 8, 15 * T + 6, 50, 0.6); }
+  function luauLights(m, light) { const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return; for (const [x, y] of luauTorches()) light(x * T + 8, y * T - 10, 34, 0.5); light((VILA.booth.x - 4) * T + 8, (VILA.booth.y + 2) * T + 6, 50, 0.6); }
 
   // ---------- ícones novos ----------
   function paintIcon5(id) {

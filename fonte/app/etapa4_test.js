@@ -12,7 +12,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const clearToasts = () => ev(() => document.querySelectorAll('#toasts > *').forEach(e => e.remove()));
   await closeAll();
   const setDay = d => ev(d => { const s = __sv; s.W.meta.day = d; s.P.lastDay = d; s.W.clock.day = d; s.W.clock.min = 600; s.W.clock.at = Date.now(); }, d);
-  const toBooth = async () => { await ev(() => __sv.goMap('town', 19.5 * 16, 15 * 16 + 12, 0)); await p.waitForTimeout(700); await ev(() => { const P = __sv.P; P.x = 19.5 * 16; P.y = 15 * 16 + 12; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300); };
+  const toBooth = async () => { await ev(() => __sv.goMap('town', 34.5 * 16, 33 * 16 + 12, 0)); await p.waitForTimeout(700); await ev(() => { const P = __sv.P; P.x = 34.5 * 16; P.y = 33 * 16 + 12; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300); };
   // calendário
   ok(await ev(() => !__sv.festOn(1) && __sv.festOn(13).id === 'ovo' && __sv.festOn(24).id === 'flores' && __sv.festOn(39).id === 'luau' && __sv.festOn(72).id === 'feira' && __sv.festOn(83).id === 'espiritos' && __sv.festOn(92).id === 'gelo' && __sv.festOn(109).id === 'estrela'), 'datas dos festivais certas');
   // 1) Festa do Ovo

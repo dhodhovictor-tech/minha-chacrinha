@@ -94,7 +94,7 @@
     renderInventory();
   }
   function renderInventory() {
-    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['diario', 'Diário'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['diario', 'Diário'], ['mapa', 'Mapa'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (invTab === 'items') {
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
@@ -119,6 +119,8 @@
       body = achHTML();
     } else if (invTab === 'diario') {
       body = diaryHTML();
+    } else if (invTab === 'mapa') {
+      body = mapaHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;
@@ -137,6 +139,7 @@
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
     openPanel(`<h2>${P.name}</h2>${tabs}${body}`, 'inv');
+    if (invTab === 'mapa') drawMapa();
   }
   const farmName = () => (W.meta && W.meta.name) || 'Minha Chacrinha';
   function invClick(i) {

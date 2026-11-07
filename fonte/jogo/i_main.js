@@ -154,7 +154,7 @@
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light); vilaLights(m, light, nf);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -195,7 +195,7 @@
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt); updateBugs(dt); diaryTick();
+      updateFishing(dt); updateBugs(dt); diaryTick(); updateConvos(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }

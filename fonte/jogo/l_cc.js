@@ -136,7 +136,7 @@
   }
 
   // ================= carrinhos de mina =================
-  const CARTS = [['farm', 'Chacrinha', 16, 7], ['town', 'Vila', 21, 5], ['beach', 'Praia', 17, 3], ['minetop', 'Mina', 13, 8]];
+  const CARTS = [['farm', 'Chacrinha', 16, 7], ['town', 'Vila', 41, 5], ['beach', 'Praia', 17, 3], ['minetop', 'Mina', 13, 8]];
   function openCarts() {
     if (!ccDone('artesanato')) { toast('O carrinho está quebrado. Talvez o Centro Comunitário consiga consertar.'); return; }
     openPanel(`<h2>Carrinho de mina</h2><p style="text-align:center">Para onde vamos?</p><div class="row">${CARTS.filter(c => c[0] !== P.map).map(([id, nm]) => `<button class="btn g" data-a="cart" data-id="${id}" type="button">${nm}</button>`).join('')}</div>`, 'carts');

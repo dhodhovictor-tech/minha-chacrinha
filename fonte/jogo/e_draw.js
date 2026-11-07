@@ -787,7 +787,7 @@
       return;
     }
     if (['house', 'store', 'smith', 'cottage', 'fountain'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
-    if (s.type === 'bed') s.col = (W.farm && W.farm.cama) || '';
+    if (s.type === 'bed' && curMap().id === 'house') s.col = (W.farm && W.farm.cama) || '';
     blit(buildingCanvas(s.type, w, h, night && ['house', 'cottage', 'tv'].includes(s.type), s.col), x - 8, y - 36);
     const t = performance.now() / 1000;
     if (s.type === 'smith' || s.type === 'house') { const cxp = x + w - (s.type === 'smith' ? 19 : 24), cyp = y - (s.type === 'smith' ? 30 : 22); for (let k = 0; k < 3; k++) { const p = (t * 0.4 + k / 3) % 1; ctx.fillStyle = `rgba(220,220,230,${0.55 * (1 - p)})`; ctx.beginPath(); ctx.arc(cxp + Math.sin(p * 6 + k) * 3, cyp - p * 24, 2 + p * 4, 0, TAU); ctx.fill(); } }

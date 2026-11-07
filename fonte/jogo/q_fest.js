@@ -12,7 +12,7 @@
     'winter:25': { id: 'estrela', name: 'Estrela de Inverno', desc: 'Amigo secreto: escolha um presente para a outra pessoa.' },
   };
   const festOn = (d = W.meta.day) => FESTS[season(d) + ':' + dom(d)] || null;
-  const BOOTH = { x: 18, y: 13 };
+  const BOOTH = VILA.booth;
   const HOST_LOOK = { hair: 3, style: 1, shirt: 4, skin: 1, pants: '#6a3a5a', apron: '#d84a6a' };
   const festMine = () => ((W.meta.fest || {})[W.meta.day] || {})[P.uid] || null;
   function festSave(data) {
@@ -71,7 +71,7 @@
   function startEggHunt() {
     const m = MAPS.town, eggs = [];
     for (let i = 0; i < 400 && eggs.length < 26; i++) {
-      const x = 4 + Math.floor(Math.random() * 40), y = 4 + Math.floor(Math.random() * 24);
+      const x = BOOTH.x - 14 + Math.floor(Math.random() * 32), y = BOOTH.y - 14 + Math.floor(Math.random() * 22);
       if (m.solid[y * m.w + x] || [G.WATER, G.FOREST].includes(m.at(x, y)) || eggs.some(e => e.x === x && e.y === y)) continue;
       eggs.push({ x, y, c: pick(['#e8402a', '#4a8ae8', '#f4c83a', '#5ad84a', '#c86ae8', '#ff8ac8']) });
     }

@@ -162,7 +162,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'fc4b1fb'; window.__APP_DATE = '06/11/2026';</script>
+<script>window.__APP_VERSION = '09caa01'; window.__APP_DATE = '07/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -846,53 +846,81 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     spot(m, 12, 6, { kind: 'bin' }); spot(m, 13, 6, { kind: 'bin' });
     sprite(m, 'mailbox', 14, 6, 1, 1); spot(m, 14, 6, { kind: 'mail' });
     sprite(m, 'minecart', 16, 6, 1, 1); spot(m, 16, 6, { kind: 'minecart' });
-    m.warps.push({ x: 47, y: 18, h: 3, to: 'town', tx: 1, ty: 18, dir: 3 });
+    m.warps.push({ x: 47, y: 18, h: 3, to: 'town', tx: 1, ty: 28, dir: 3 });
     return finalize(m);
+  }
+  // ================= a vila: 80×56, em bairros =================
+  // [x, y, largura, altura, coluna da porta]; a porta fica na linha de baixo do prédio
+  const VILA = {
+    w: 80, h: 56, rua: 27, av: 39, ruaN: 15, ruaS: 45,
+    store: [4, 20, 9, 6, 8], atelie: [15, 21, 5, 5, 17], moveis: [22, 21, 5, 5, 24],
+    smith: [32, 8, 6, 5, 35], carpentry: [43, 8, 6, 5, 45], cc: [52, 8, 8, 5, 55], museum: [62, 8, 6, 5, 64],
+    bar: [61, 20, 8, 5, 64], ranch: [5, 31, 6, 5, 7],
+    padaria: [4, 9, 5, 5, 6], flores: [11, 9, 5, 5, 13], petshop: [18, 9, 5, 5, 20], clinica: [52, 20, 6, 5, 54], biblioteca: [70, 8, 6, 5, 72],
+    booth: { x: 33, y: 31 }, board: [33, 21], stall: [44, 21], fonte: [39, 32], coreto: [44, 31], cart: [42, 4], pier: [20, 49],
+    // casas dos moradores (casinhas 5×4, porta na 4ª coluna)
+    casas: { nena: [51, 31, '#c85a3a'], davi: [58, 31, '#3a6a9a'], helena: [65, 31, '#7a4a8a'], juca: [72, 31, '#c8a03a'], rosa: [51, 40, '#4a8a4a'], bia: [58, 40, '#d84a8a'], tonico: [65, 40, '#8a5a32'], cida: [72, 40, '#d8763a'] },
+  };
+  // prédio com porta, entrada e calçadinha até a rua
+  function predio(m, type, [x, y, w, h, dx], to, ate, extra = {}) {
+    sprite(m, type, x, y, w, h, extra);
+    const dy = y + h - 1; m.solid[dy * m.w + dx] = 0;
+    if (to) m.warps.push({ x: dx, y: dy, to, tx: extra.tx != null ? extra.tx : 6, ty: extra.ty != null ? extra.ty : 7, dir: extra.dir != null ? extra.dir : 0, lar: extra.lar });
+    if (ate) m.rect(dx, dy + 1, dx, ate, G.COBBLE);
   }
   function buildTown() {
-    const m = newMap('town', 50, 36, G.GRASS, { name: 'Vila', water: 'river' });
-    m.rect(0, 0, 49, 2, G.FOREST); m.rect(49, 0, 49, 35, G.FOREST); m.rect(0, 0, 0, 35, G.FOREST); m.rect(0, 35, 49, 35, G.FOREST);
-    m.rect(22, 0, 26, 2, G.CLIFF);
-    m.rect(23, 1, 25, 2, G.DIRT);
-    m.rect(0, 17, 48, 19, G.COBBLE); m.rect(23, 3, 25, 29, G.COBBLE);
-    m.rect(1, 30, 48, 33, G.WATER); m.rect(1, 34, 48, 34, G.SAND); m.rect(1, 29, 48, 29, G.SAND);
-    m.rect(23, 29, 25, 34, G.BRIDGE);
-    m.rect(9, 14, 11, 16, G.COBBLE); m.rect(34, 14, 36, 16, G.COBBLE); m.rect(27, 14, 29, 16, G.COBBLE); m.rect(16, 14, 18, 16, G.COBBLE);
-    m.rect(49, 17, 49, 19, G.COBBLE);
+    const V = VILA, m = newMap('town', V.w, V.h, G.GRASS, { name: 'Vila', water: 'river' });
+    const W2 = V.w - 1, H2 = V.h - 1;
+    m.rect(0, 0, W2, 2, G.FOREST); m.rect(W2, 0, W2, H2, G.FOREST); m.rect(0, 0, 0, H2, G.FOREST); m.rect(0, H2, W2, H2, G.FOREST);
+    // estrada da mina ao norte
+    m.rect(V.av - 2, 0, V.av + 4, 2, G.CLIFF); m.rect(V.av, 1, V.av + 2, 2, G.DIRT);
+    // rio, beira-rio e ponte ao sul
+    m.rect(1, 50, W2 - 1, 53, G.WATER); m.rect(1, 49, W2 - 1, 49, G.SAND); m.rect(1, 54, W2 - 1, 54, G.SAND);
+    m.rect(V.av, 49, V.av + 2, 54, G.BRIDGE); m.rect(V.av, H2, V.av + 2, H2, G.SAND);
+    m.rect(V.pier[0], V.pier[1], V.pier[0] + 1, V.pier[1] + 2, G.BRIDGE);
+    // ruas: principal (leste-oeste), avenida (norte-sul), rua de cima e rua de baixo
+    m.rect(0, V.rua, W2, V.rua + 2, G.COBBLE); m.rect(V.av, 3, V.av + 2, 48, G.COBBLE);
+    m.rect(3, V.ruaN, W2 - 2, V.ruaN + 1, G.COBBLE); m.rect(3, V.ruaS, W2 - 2, V.ruaS + 1, G.COBBLE);
+    m.rect(50, 36, W2 - 2, 37, G.COBBLE); m.rect(49, 31, 49, 46, G.COBBLE);
+    // praça central
+    m.rect(31, 19, 49, 37, G.COBBLE);
     const r = srand(7);
-    for (let k = 0; k < 70; k++) { const x = 1 + Math.floor(r() * 47), y = 3 + Math.floor(r() * 25); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
-    sprite(m, 'store', 6, 8, 9, 6); m.solid[13 * m.w + 10] = 0;
-    m.warps.push({ x: 10, y: 13, to: 'store', tx: 7, ty: 8, dir: 1 });
-    sprite(m, 'smith', 32, 9, 6, 5); m.solid[13 * m.w + 35] = 0;
-    sprite(m, 'atelie', 26, 9, 5, 5); m.solid[13 * m.w + 28] = 0;
-    sprite(m, 'moveis', 15, 9, 5, 5); m.solid[13 * m.w + 17] = 0;
-    m.warps.push({ x: 17, y: 13, to: 'moveis', tx: 6, ty: 7, dir: 0 });
-    m.warps.push({ x: 28, y: 13, to: 'atelie', tx: 6, ty: 7, dir: 0 });
-    m.warps.push({ x: 35, y: 13, to: 'smith', tx: 6, ty: 7, dir: 1 });
-    sprite(m, 'carpentry', 6, 21, 6, 5); m.solid[25 * m.w + 8] = 0;
-    m.warps.push({ x: 8, y: 25, to: 'carpentry', tx: 6, ty: 7, dir: 0 });
-    sprite(m, 'ranch', 37, 21, 6, 5); m.solid[25 * m.w + 39] = 0;
-    m.warps.push({ x: 39, y: 25, to: 'ranch', tx: 6, ty: 7, dir: 0 });
-    sprite(m, 'bar', 13, 21, 8, 5); m.solid[25 * m.w + 16] = 0;
-    m.warps.push({ x: 16, y: 25, to: 'bar', tx: 8, ty: 8, dir: 0 });
-    m.rect(23, 35, 25, 35, G.SAND);
-    m.warps.push({ x: 23, y: 35, w: 3, to: 'beach', tx: 20, ty: 1, dir: 1 });
-    sprite(m, 'fountain', 28, 21, 3, 3);
-    for (const [x, y] of [[3, 5], [17, 5], [3, 15], [34, 4], [45, 13], [3, 24], [12, 26], [44, 26], [21, 26], [33, 26]]) sprite(m, 'tree', x, y, 1, 1, { big: true });
-    sprite(m, 'bench', 27, 25, 2, 1);
-    sprite(m, 'marketstall', 32, 21, 4, 2);
-    sprite(m, 'ccbuilding', 40, 4, 8, 5); m.solid[8 * m.w + 43] = 0;
-    m.warps.push({ x: 43, y: 8, to: 'cc', tx: 11, ty: 10, dir: 0 });
-    sprite(m, 'museumb', 43, 20, 6, 5); m.solid[24 * m.w + 45] = 0;
-    m.warps.push({ x: 45, y: 24, to: 'museum', tx: 9, ty: 9, dir: 0 });
-    sprite(m, 'minecart', 21, 4, 1, 1); spot(m, 21, 4, { kind: 'minecart' });
-    for (let x = 32; x <= 35; x++) spot(m, x, 22, { kind: 'shop', who: 'cida' });
-    sprite(m, 'board', 20, 15, 2, 2, { solidFrom: 1 }); spot(m, 20, 16, { kind: 'board' }); spot(m, 21, 16, { kind: 'board' });
-    m.warps.push({ x: 0, y: 17, h: 3, to: 'farm', tx: 46, ty: 19, dir: 2 });
-    m.warps.push({ x: 49, y: 17, h: 3, to: 'mata', tx: 2, ty: 9, dir: 3 });
-    m.warps.push({ x: 23, y: 0, w: 3, to: 'minetop', tx: 8, ty: 10, dir: 0 });
+    for (let k = 0; k < 160; k++) { const x = 1 + Math.floor(r() * (W2 - 1)), y = 3 + Math.floor(r() * 44); if (m.at(x, y) === G.GRASS) m.set(x, y, G.FLOWERS); }
+    for (const [x0, y0, x1, y1] of [[32, 34, 34, 36], [46, 34, 48, 36], [32, 20, 33, 20], [47, 20, 48, 20]]) m.rect(x0, y0, x1, y1, G.FLOWERS);
+    // comércio (norte da rua principal)
+    predio(m, 'store', V.store, 'store', V.rua - 1, { tx: 7, ty: 8, dir: 1 });
+    predio(m, 'atelie', V.atelie, 'atelie', V.rua - 1);
+    predio(m, 'moveis', V.moveis, 'moveis', V.rua - 1);
+    // ofícios, centro comunitário e museu (rua de cima)
+    predio(m, 'smith', V.smith, 'smith', V.ruaN - 1, { dir: 1 });
+    predio(m, 'carpentry', V.carpentry, 'carpentry', V.ruaN - 1);
+    predio(m, 'ccbuilding', V.cc, 'cc', V.ruaN - 1, { tx: 11, ty: 10 });
+    predio(m, 'museumb', V.museum, 'museum', V.ruaN - 1, { tx: 9, ty: 9 });
+    // bar e rancho
+    predio(m, 'bar', V.bar, 'bar', V.rua - 1, { tx: 8, ty: 8 });
+    predio(m, 'ranch', V.ranch, 'ranch', V.ruaS - 1);
+    // casas dos moradores
+    for (const [id, [x, y, col]] of Object.entries(V.casas)) predio(m, 'cottage', [x, y, 5, 4, x + 3], 'lar_' + id, y < 36 ? 35 : V.ruaS - 1, { col, tx: 5, ty: 6, lar: id });
+    // praça: fonte, coreto, quadro, barraca da Cida, bancos
+    sprite(m, 'fountain', V.fonte[0], V.fonte[1], 3, 3);
+    sprite(m, 'coreto', V.coreto[0], V.coreto[1], 5, 4);
+    sprite(m, 'board', V.board[0], V.board[1], 2, 2, { solidFrom: 1 }); spot(m, V.board[0], V.board[1] + 1, { kind: 'board' }); spot(m, V.board[0] + 1, V.board[1] + 1, { kind: 'board' });
+    sprite(m, 'marketstall', V.stall[0], V.stall[1], 4, 2);
+    for (let x = V.stall[0]; x < V.stall[0] + 4; x++) spot(m, x, V.stall[1] + 1, { kind: 'shop', who: 'cida' });
+    for (const [x, y] of [[31, 24], [47, 24], [36, 36], [43, 36], [24, 47], [56, 47], [70, 22]]) sprite(m, 'bench', x, y, 2, 1);
+    sprite(m, 'minecart', V.cart[0], V.cart[1], 1, 1); spot(m, V.cart[0], V.cart[1], { kind: 'minecart' });
+    // árvores
+    for (const [x, y] of [[2, 6], [29, 7], [50, 6], [77, 6], [29, 22], [2, 23], [77, 22], [73, 21], [75, 25], [14, 34], [20, 37], [27, 33], [27, 40], [2, 38], [12, 40], [33, 44], [47, 41], [77, 34], [77, 43], [6, 47], [16, 47], [32, 48], [46, 48], [62, 48], [72, 48], [23, 12], [27, 13]]) sprite(m, 'tree', x, y, 1, 1, { big: true });
+    // postes de luz
+    m.lanterns = [[3, 26], [13, 26], [27, 26], [30, 14], [48, 14], [61, 14], [76, 14], [50, 26], [70, 26], [31, 30], [48, 30], [37, 36], [44, 26], [50, 35], [76, 35], [12, 44], [28, 44], [50, 44], [66, 44], [22, 48]];
+    // saídas: chacrinha (oeste), mata (leste), mina (norte), praia (sul)
+    m.warps.push({ x: 0, y: V.rua, h: 3, to: 'farm', tx: 46, ty: 19, dir: 2 });
+    m.warps.push({ x: W2, y: V.rua, h: 3, to: 'mata', tx: 2, ty: 9, dir: 3 });
+    m.warps.push({ x: V.av, y: 0, w: 3, to: 'minetop', tx: 8, ty: 10, dir: 0 });
+    m.warps.push({ x: V.av, y: H2, w: 3, to: 'beach', tx: 20, ty: 1, dir: 1 });
     return finalize(m);
   }
+
   function buildHouse() {
     const m = newMap('house', 16, 11, G.WOOD, { name: 'Casa', outdoor: false });
     m.rect(0, 0, 15, 1, G.WALL); m.rect(0, 0, 0, 10, G.WALL); m.rect(15, 0, 15, 10, G.WALL); m.rect(0, 10, 15, 10, G.WALL);
@@ -919,7 +947,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'counter', 4, 3, 6, 1);
     for (let x = 4; x <= 9; x++) spot(m, x, 3, { kind: 'shop', who: 'pedro' });
     sprite(m, 'crates', 1, 6, 2, 2); sprite(m, 'crates', 11, 6, 2, 2);
-    m.warps.push({ x: 7, y: 9, to: 'town', tx: 10, ty: 14, dir: 0 });
+    m.warps.push({ x: 7, y: 9, to: 'town', tx: 8, ty: 26, dir: 1 });
     return finalize(m);
   }
   function buildSmith() {
@@ -929,7 +957,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'forge', 1, 1, 2, 2); sprite(m, 'anvil', 9, 2, 1, 1);
     sprite(m, 'counter', 3, 3, 6, 1);
     for (let x = 3; x <= 8; x++) spot(m, x, 3, { kind: 'shop', who: 'claudio' });
-    m.warps.push({ x: 6, y: 8, to: 'town', tx: 35, ty: 14, dir: 0 });
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 35, ty: 13, dir: 1 });
     return finalize(m);
   }
   function buildMineTop() {
@@ -941,7 +969,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'elevator', 11, 2, 2, 2); spot(m, 11, 3, { kind: 'elevator' }); spot(m, 12, 3, { kind: 'elevator' });
     sprite(m, 'cart', 5, 2, 2, 1);
     sprite(m, 'minecart', 13, 7, 1, 1); spot(m, 13, 7, { kind: 'minecart' });
-    m.warps.push({ x: 8, y: 11, to: 'town', tx: 24, ty: 3, dir: 0 });
+    m.warps.push({ x: 8, y: 11, to: 'town', tx: 40, ty: 3, dir: 1 });
     m.lanterns = [[3, 1], [7, 1], [14, 1]];
     return finalize(m);
   }
@@ -999,24 +1027,24 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const m = shopRoom('atelie', 'Ateliê da Bia', 12, 9, G.WOOD, 'bia', () => {});
     // espelho, arara de roupas e manequins (desenhados em v_extra.js)
     for (const [x, y] of [[1, 2], [9, 2], [10, 2], [1, 5], [10, 5]]) m.solid[y * m.w + x] = 1;
-    m.warps.push({ x: 6, y: 8, to: 'town', tx: 28, ty: 14, dir: 1 });
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 17, ty: 26, dir: 1 });
     return finalize(m);
   }
   function buildMoveis() {
     const m = shopRoom('moveis', 'Marcenaria do Tonico', 12, 9, G.WOOD, 'tonico', m => { sprite(m, 'lumber', 1, 6, 2, 2); });
     // peças do mostruário (desenhadas em zz_casa.js)
     for (const [x, y] of [[1, 5], [9, 2], [10, 2], [1, 2], [10, 5]]) m.solid[y * m.w + x] = 1;
-    m.warps.push({ x: 6, y: 8, to: 'town', tx: 17, ty: 14, dir: 1 });
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 24, ty: 26, dir: 1 });
     return finalize(m);
   }
   function buildCarpentry() {
     const m = shopRoom('carpentry', 'Carpintaria', 12, 9, G.WOOD, 'rosa', m => { sprite(m, 'lumber', 9, 2, 2, 2); sprite(m, 'crates', 1, 5, 2, 2); sprite(m, 'plant', 10, 6, 1, 1); });
-    m.warps.push({ x: 6, y: 8, to: 'town', tx: 8, ty: 26, dir: 1 });
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 45, ty: 13, dir: 1 });
     return finalize(m);
   }
   function buildRanch() {
     const m = shopRoom('ranch', 'Rancho da Marta', 12, 9, G.STRAW, 'marta', m => { sprite(m, 'haybale', 9, 2, 2, 1); sprite(m, 'haybale', 1, 5, 2, 1); sprite(m, 'haybale', 9, 6, 2, 1); });
-    m.warps.push({ x: 6, y: 8, to: 'town', tx: 39, ty: 26, dir: 1 }); m.woodWall = true;
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: 7, ty: 36, dir: 1 }); m.woodWall = true;
     return finalize(m);
   }
   function buildBar() {
@@ -1030,7 +1058,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'bartable', 12, 4, 2, 2); sprite(m, 'bartable', 12, 7, 2, 1);
     sprite(m, 'barrels', 1, 6, 2, 2);
     sprite(m, 'plant', 14, 2, 1, 1);
-    m.warps.push({ x: 8, y: 9, to: 'town', tx: 16, ty: 26, dir: 1 });
+    m.warps.push({ x: 8, y: 9, to: 'town', tx: 64, ty: 25, dir: 1 });
     return finalize(m);
   }
   function buildFishShop() {
@@ -1051,7 +1079,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'palm', 4, 4, 1, 1); sprite(m, 'palm', 35, 6, 1, 1); sprite(m, 'palm', 15, 5, 1, 1);
     sprite(m, 'driftwood', 33, 12, 2, 1);
     sprite(m, 'minecart', 17, 2, 1, 1); spot(m, 17, 2, { kind: 'minecart' });
-    m.warps.push({ x: 19, y: 0, w: 3, to: 'town', tx: 24, ty: 34, dir: 0 });
+    m.warps.push({ x: 19, y: 0, w: 3, to: 'town', tx: 40, ty: 54, dir: 0 });
     return finalize(m);
   }
   // galinheiro e celeiro por dentro (o tamanho cresce com o nível)
@@ -1094,7 +1122,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     sprite(m, 'ccaltar', 10, 5, 2, 2); for (const [x, y] of [[10, 5], [11, 5], [10, 6], [11, 6]]) spot(m, x, y, { kind: 'cc' });
     const pl = [[2, 2], [6, 2], [15, 2], [19, 2], [2, 8], [19, 8]];
     pl.forEach(([x, y], i) => { sprite(m, 'ccplaque', x, y, 1, 1, { room: i }); spot(m, x, y, { kind: 'cc', room: i }); });
-    m.warps.push({ x: 11, y: 11, to: 'town', tx: 43, ty: 9, dir: 1 });
+    m.warps.push({ x: 11, y: 11, to: 'town', tx: 55, ty: 13, dir: 1 });
     return finalize(m);
   }
   // museu: vitrines com 3 lugares cada, preenchidas pelas doações
@@ -1112,7 +1140,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     sprite(m, 'shelf', 1, 1, 3, 2); sprite(m, 'shelf', 14, 1, 3, 2);
     sprite(m, 'plant', 7, 2, 1, 1); sprite(m, 'plant', 10, 2, 1, 1);
-    m.warps.push({ x: 9, y: 10, to: 'town', tx: 45, ty: 25, dir: 1 });
+    m.warps.push({ x: 9, y: 10, to: 'town', tx: 64, ty: 13, dir: 1 });
     return finalize(m);
   }
   const MAPS = { farm: buildFarm(), town: buildTown(), house: buildHouse(), store: buildStore(), smith: buildSmith(), minetop: buildMineTop(), carpentry: buildCarpentry(), ranch: buildRanch(), bar: buildBar(), fishshop: buildFishShop(), beach: buildBeach(), cc: buildCC(), museum: buildMuseum(), atelie: buildAtelie(), moveis: buildMoveis() };
@@ -2099,7 +2127,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       return;
     }
     if (['house', 'store', 'smith', 'cottage', 'fountain'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
-    if (s.type === 'bed') s.col = (W.farm && W.farm.cama) || '';
+    if (s.type === 'bed' && curMap().id === 'house') s.col = (W.farm && W.farm.cama) || '';
     blit(buildingCanvas(s.type, w, h, night && ['house', 'cottage', 'tv'].includes(s.type), s.col), x - 8, y - 36);
     const t = performance.now() / 1000;
     if (s.type === 'smith' || s.type === 'house') { const cxp = x + w - (s.type === 'smith' ? 19 : 24), cyp = y - (s.type === 'smith' ? 30 : 22); for (let k = 0; k < 3; k++) { const p = (t * 0.4 + k / 3) % 1; ctx.fillStyle = `rgba(220,220,230,${0.55 * (1 - p)})`; ctx.beginPath(); ctx.arc(cxp + Math.sin(p * 6 + k) * 3, cyp - p * 24, 2 + p * 4, 0, TAU); ctx.fill(); } }
@@ -2122,7 +2150,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['coreto', 'moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -2145,6 +2173,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       ctx.translate(8, 36);
       switch (type) {
         case 'moveis': drawMoveisB(w, h, night, snow); break;
+        case 'coreto': drawCoreto(w, h, night, snow); break;
         case 'atelie': {
           R(2, 18, w - 4, h - 18, '#f4dce4');
           for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');
@@ -3185,7 +3214,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function checkWarp() {
     const m = curMap(), x = Math.floor(P.x / T), y = Math.floor((P.y - 2) / T);
     if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && g.door) { const b = farmB()[g.id]; if (bReady(b) && ['coop', 'barn', 'greenhouse'].includes(b.type)) { const im = animalHouseMap(g.id); goMap('b:' + g.id, im.entry[0] * T + 8, im.entry[1] * T + 12, 0); return; } } }
-    for (const w of m.warps) if (x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1)) { goMap(w.to, w.tx * T + 8, w.ty * T + 12, w.dir); return; }
+    for (const w of m.warps) if (x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1)) {
+      if (w.lar && !larOpen()) { toast(`A casa de ${LAR_DONO[w.lar]} está fechada. Visite entre 7h e 21h.`, '', null, 'lar'); P.y = (w.y + 1) * T + 10; return; }
+      goMap(w.to, w.tx * T + 8, w.ty * T + 12, w.dir); return;
+    }
   }
   function goMap(id, x, y, dir) {
     sfx.door();
@@ -3204,8 +3236,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ================= coletáveis da vila =================
   function townForage() {
     const out = [], m = MAPS.town, s = season(), list = FORAGE[s], d = W.meta.day;
-    for (let i = 0; i < 5; i++) {
-      const x = 1 + Math.floor(hash(d, i, 3) * 47), y = 3 + Math.floor(hash(d, i, 9) * 25);
+    for (let i = 0; i < 9; i++) {
+      const x = 1 + Math.floor(hash(d, i, 3) * (m.w - 2)), y = 3 + Math.floor(hash(d, i, 9) * 44);
       if (m.solid[y * m.w + x] || ![G.GRASS, G.FLOWERS].includes(m.at(x, y))) continue;
       const k = `${d}:town:${x},${y}`;
       if (W.meta.taken && W.meta.taken[k]) continue;
@@ -3874,7 +3906,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     renderInventory();
   }
   function renderInventory() {
-    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['diario', 'Diário'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['items', 'Mochila'], ['craft', 'Criar'], ['skills', 'Habilidades'], ['rel', 'Amizades'], ['ach', 'Troféus'], ['diario', 'Diário'], ['mapa', 'Mapa'], ['coop', 'Chacrinha']].map(([k, l]) => `<button type="button" data-a="tab" data-t="${k}" class="${invTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (invTab === 'items') {
       const s = invSel >= 0 ? P.inv[invSel] : null, it = s ? item(s.id) : null;
@@ -3899,6 +3931,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       body = achHTML();
     } else if (invTab === 'diario') {
       body = diaryHTML();
+    } else if (invTab === 'mapa') {
+      body = mapaHTML();
     } else if (invTab === 'rel') {
       body = `<div class="list">${Object.entries(NPCS).map(([id, n]) => `<div class="item"><span class="nm"><b>${n.name}</b> <small>${n.role} · aniversário: ${n.bday[1]} de ${SEASONS[SEASON_ID.indexOf(n.bday[0])].toLowerCase()}</small><span>${heartsHTML(hearts(id), 10)}</span><small>${rel(id).talk === W.meta.day ? 'Conversaram hoje' : 'Ainda não conversaram hoje'} · presentes na semana: ${giftsThisWeek(id)}/2</small></span></div>`).join('')}</div>
         <p style="font-size:13px">Converse todo dia e dê presentes (até 2 por semana). Com mais corações, os moradores mandam receitas pelo correio.</p>`;
@@ -3917,6 +3951,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
     }
     openPanel(`<h2>${P.name}</h2>${tabs}${body}`, 'inv');
+    if (invTab === 'mapa') drawMapa();
   }
   const farmName = () => (W.meta && W.meta.name) || 'Minha Chacrinha';
   function invClick(i) {
@@ -4554,14 +4589,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= moradores: agenda, desenho e conversa =================
-  function npcPath(map, a, b) {
-    const A = [a[2] * T + 8, a[3] * T + 14], Bp = [b[2] * T + 8, b[3] * T + 14];
-    const lane = map === 'town' ? 24 * T + 8 : map === 'beach' ? 20 * T + 8 : null;
-    if (lane == null) return [A, Bp];
-    return [A, [lane, A[1]], [lane, Bp[1]], Bp];
-  }
+  function npcPath(map, a, b) { return vilaPath(map, a, b); }
   function npcPos(id) {
-    const n = NPCS[id], now = nowMinF(), sc = n.sched;
+    const n = NPCS[id], now = nowMinF(), sc = npcSchedOf(id);
+    const fs = festSpot(id, now); if (fs) return fs;
     let i = -1;
     for (let k = 0; k < sc.length; k++) if (sc[k][0] <= now) i = k;
     if (i < 0 || !sc[i][1]) return null;
@@ -4615,6 +4646,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (!text) {
       text = festTalk(id) || npcLine(id);
       if (r.talk !== d) { r.talk = d; r.pts = Math.min(2500, r.pts + 20); dirty(); }
+      const mo = momentoFor(id); if (mo) { openMomento(id, mo); return; }
     }
     const s = held(), can = giftable(s);
     const q = W.meta.quest, questItem = q && q.npc === id && !q.done && s && s.id === q.id;
@@ -4918,7 +4950,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -5176,7 +5208,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= carrinhos de mina =================
-  const CARTS = [['farm', 'Chacrinha', 16, 7], ['town', 'Vila', 21, 5], ['beach', 'Praia', 17, 3], ['minetop', 'Mina', 13, 8]];
+  const CARTS = [['farm', 'Chacrinha', 16, 7], ['town', 'Vila', 41, 5], ['beach', 'Praia', 17, 3], ['minetop', 'Mina', 13, 8]];
   function openCarts() {
     if (!ccDone('artesanato')) { toast('O carrinho está quebrado. Talvez o Centro Comunitário consiga consertar.'); return; }
     openPanel(`<h2>Carrinho de mina</h2><p style="text-align:center">Para onde vamos?</p><div class="row">${CARTS.filter(c => c[0] !== P.map).map(([id, nm]) => `<button class="btn g" data-a="cart" data-id="${id}" type="button">${nm}</button>`).join('')}</div>`, 'carts');
@@ -5935,7 +5967,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     'winter:25': { id: 'estrela', name: 'Estrela de Inverno', desc: 'Amigo secreto: escolha um presente para a outra pessoa.' },
   };
   const festOn = (d = W.meta.day) => FESTS[season(d) + ':' + dom(d)] || null;
-  const BOOTH = { x: 18, y: 13 };
+  const BOOTH = VILA.booth;
   const HOST_LOOK = { hair: 3, style: 1, shirt: 4, skin: 1, pants: '#6a3a5a', apron: '#d84a6a' };
   const festMine = () => ((W.meta.fest || {})[W.meta.day] || {})[P.uid] || null;
   function festSave(data) {
@@ -5994,7 +6026,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function startEggHunt() {
     const m = MAPS.town, eggs = [];
     for (let i = 0; i < 400 && eggs.length < 26; i++) {
-      const x = 4 + Math.floor(Math.random() * 40), y = 4 + Math.floor(Math.random() * 24);
+      const x = BOOTH.x - 14 + Math.floor(Math.random() * 32), y = BOOTH.y - 14 + Math.floor(Math.random() * 22);
       if (m.solid[y * m.w + x] || [G.WATER, G.FOREST].includes(m.at(x, y)) || eggs.some(e => e.x === x && e.y === y)) continue;
       eggs.push({ x, y, c: pick(['#e8402a', '#4a8ae8', '#f4c83a', '#5ad84a', '#c86ae8', '#ff8ac8']) });
     }
@@ -6687,12 +6719,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     openShop('festa');
   }
   // decoração extra do luau: tochas tiki e fogueira perto da barraca
+  const luauTorches = () => { const b = VILA.booth; return [[b.x - 2, b.y + 1], [b.x + 4, b.y + 1], [b.x - 2, b.y - 2], [b.x + 4, b.y - 2]]; };
   function luauDecor(m, ents, t) {
     const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return;
-    for (const [x, y] of [[16, 14], [22, 14], [16, 11], [22, 11]]) ents.push({ y: y * T + 15, f: () => { R(x * T + 7, y * T - 6, 2, 20, '#7a4a22'); R(x * T + 5, y * T - 9, 6, 4, '#a86a32'); disc(x * T + 8, y * T - 12 + Math.sin(t * 9 + x) * 0.6, 3, '#ff8a1a'); R(x * T + 7, y * T - 13, 2, 2, '#ffe04a'); } });
-    ents.push({ y: 15 * T + 12, f: () => { const fx = 14 * T + 8, fy = 15 * T + 8; for (const [dx, dy] of [[-6, 2], [5, 2], [-3, 4], [2, 4]]) R(fx + dx, fy + dy, 5, 2, '#6a3a1a'); for (let k = 0; k < 3; k++) disc(fx + (k - 1) * 3, fy - 2 - Math.abs(Math.sin(t * 7 + k)) * 3, 3 - k * 0.5, k === 1 ? '#ffd040' : '#ff7a1a'); } });
+    for (const [x, y] of luauTorches()) ents.push({ y: y * T + 15, f: () => { R(x * T + 7, y * T - 6, 2, 20, '#7a4a22'); R(x * T + 5, y * T - 9, 6, 4, '#a86a32'); disc(x * T + 8, y * T - 12 + Math.sin(t * 9 + x) * 0.6, 3, '#ff8a1a'); R(x * T + 7, y * T - 13, 2, 2, '#ffe04a'); } });
+    ents.push({ y: (VILA.booth.y + 2) * T + 12, f: () => { const fx = (VILA.booth.x - 4) * T + 8, fy = (VILA.booth.y + 2) * T + 8; for (const [dx, dy] of [[-6, 2], [5, 2], [-3, 4], [2, 4]]) R(fx + dx, fy + dy, 5, 2, '#6a3a1a'); for (let k = 0; k < 3; k++) disc(fx + (k - 1) * 3, fy - 2 - Math.abs(Math.sin(t * 7 + k)) * 3, 3 - k * 0.5, k === 1 ? '#ffd040' : '#ff7a1a'); } });
   }
-  function luauLights(m, light) { const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return; for (const [x, y] of [[16, 14], [22, 14], [16, 11], [22, 11]]) light(x * T + 8, y * T - 10, 34, 0.5); light(14 * T + 8, 15 * T + 6, 50, 0.6); }
+  function luauLights(m, light) { const f = festOn(); if (!f || f.id !== 'luau' || m.id !== 'town') return; for (const [x, y] of luauTorches()) light(x * T + 8, y * T - 10, 34, 0.5); light((VILA.booth.x - 4) * T + 8, (VILA.booth.y + 2) * T + 6, 50, 0.6); }
 
   // ---------- ícones novos ----------
   function paintIcon5(id) {
@@ -7027,7 +7060,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 4] = 1;
     m.fire = [16, 10];
     m.warps.push({ x: 11, y: 0, w: 2, to: 'mata1', tx: 0, ty: 0, dir: 0 });
-    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 47, ty: 18, dir: 2 });
+    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 77, ty: 28, dir: 2 });
     return finalize(m);
   }
   MAPS.mata = buildMataEntrance();
@@ -8001,6 +8034,309 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     return false;
   }
+  // ================= a vila viva: caminhos, rotinas, casas, conversas, placas e mapa =================
+
+  // ---------- caminhos dos moradores: andam pelas ruas, desviando dos prédios ----------
+  const pathCache = new Map();
+  function vilaPath(map, a, b) {
+    const A = [a[2] * T + 8, a[3] * T + 14], Bp = [b[2] * T + 8, b[3] * T + 14];
+    const m = MAPS[map];
+    if (!m || !m.outdoor) return [A, Bp];
+    const key = map + '|' + a[2] + ',' + a[3] + '|' + b[2] + ',' + b[3];
+    if (pathCache.has(key)) return pathCache.get(key);
+    const W0 = m.w, N = W0 * m.h, sx = a[2], sy = a[3], tx = b[2], ty = b[3];
+    const cost = i => { const g = m.g[i]; return g === G.COBBLE || g === G.BRIDGE || g === G.DIRT ? 1 : 3; };
+    const free = (x, y) => x >= 0 && y >= 0 && x < W0 && y < m.h && (!m.solid[y * W0 + x] || (x === tx && y === ty) || (x === sx && y === sy));
+    // Dijkstra com baldes (custos 1 ou 3): rápido numa grade pequena
+    const dist = new Int32Array(N).fill(1e9), prev = new Int32Array(N).fill(-1), buckets = [[]];
+    const s0 = sy * W0 + sx, goal = ty * W0 + tx; dist[s0] = 0; buckets[0].push(s0);
+    for (let d = 0; d < buckets.length; d++) {
+      const bk = buckets[d]; if (!bk) continue;
+      for (const i of bk) {
+        if (dist[i] !== d) continue;
+        if (i === goal) { d = buckets.length; break; }
+        const x = i % W0, y = (i / W0) | 0;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy; if (!free(nx, ny)) continue;
+          const j = ny * W0 + nx, nd = d + cost(j);
+          if (nd < dist[j]) { dist[j] = nd; prev[j] = i; (buckets[nd] = buckets[nd] || []).push(j); }
+        }
+      }
+    }
+    let out;
+    if (prev[goal] < 0 && goal !== s0) out = [A, Bp];
+    else {
+      const cells = []; for (let i = goal; i >= 0; i = prev[i]) { cells.push(i); if (i === s0) break; }
+      cells.reverse();
+      // só as curvas
+      out = [A];
+      for (let k = 1; k < cells.length - 1; k++) {
+        const p0 = cells[k - 1], p1 = cells[k], p2 = cells[k + 1];
+        if ((p1 - p0) !== (p2 - p1)) out.push([(p1 % W0) * T + 8, ((p1 / W0) | 0) * T + 14]);
+      }
+      out.push(Bp);
+    }
+    if (pathCache.size > 400) pathCache.clear();
+    pathCache.set(key, out);
+    return out;
+  }
+
+  // ---------- rotinas: dia comum, domingo e chuva; em dia de festa todo mundo vai para a praça ----------
+  const V = VILA, lar = id => 'lar_' + id;
+  const ROTINAS = {
+    pedro: { sched: [[360, null], [540, 'store', 6, 2, 1], [1020, 'town', 36, 26, 1], [1140, 'bar', 13, 4, 1], [1320, null]],
+      schedRain: [[360, null], [540, 'store', 6, 2, 1], [1020, 'bar', 13, 4, 1], [1320, null]] },
+    claudio: { sched: [[360, null], [540, 'smith', 5, 2, 1], [960, 'town', 35, 16, 1], [1080, 'bar', 4, 6, 3], [1380, null]],
+      schedRain: [[360, null], [540, 'smith', 5, 2, 1], [960, 'bar', 4, 6, 3], [1380, null]] },
+    rosa: { sched: [[360, lar('rosa'), 4, 4, 1], [480, 'town', 46, 16, 1], [540, 'carpentry', 5, 2, 1], [1020, 'town', 45, 35, 1], [1140, lar('rosa'), 5, 4, 1], [1320, null]],
+      schedSun: [[360, lar('rosa'), 4, 4, 1], [540, 'carpentry', 5, 2, 1], [900, 'town', 70, 23, 1], [1080, lar('rosa'), 5, 4, 1], [1320, null]] },
+    marta: { sched: [[360, null], [540, 'ranch', 5, 2, 1], [960, 'town', 16, 34, 1], [1140, null]],
+      schedRain: [[360, null], [540, 'ranch', 5, 2, 1], [1140, null]] },
+    lia: { sched: [[360, null], [480, 'town', 37, 30, 1], [720, 'bar', 5, 2, 1], [1500, null]],
+      schedRain: [[360, null], [600, 'bar', 5, 2, 1], [1500, null]] },
+    bia: { sched: [[360, lar('bia'), 4, 4, 1], [480, 'town', 25, 48, 1], [540, 'atelie', 6, 2, 1], [1020, 'town', 57, 48, 1], [1140, 'bar', 11, 7, 3], [1260, lar('bia'), 5, 4, 1], [1380, null]],
+      schedRain: [[360, lar('bia'), 4, 4, 1], [540, 'atelie', 6, 2, 1], [1020, lar('bia'), 8, 3, 1], [1380, null]] },
+    davi: { sched: [[360, lar('davi'), 4, 4, 1], [480, 'town', 36, 25, 1], [720, 'town', 41, 36, 1], [960, 'town', 30, 29, 1], [1080, 'bar', 6, 6, 2], [1260, lar('davi'), 5, 4, 1], [1380, null]],
+      schedSun: [[360, lar('davi'), 4, 4, 1], [540, 'town', 71, 23, 1], [780, 'town', 42, 34, 1], [1080, 'bar', 6, 6, 2], [1260, lar('davi'), 5, 4, 1], [1380, null]],
+      schedRain: [[360, lar('davi'), 4, 4, 1], [1080, 'bar', 6, 6, 2], [1260, lar('davi'), 5, 4, 1], [1380, null]] },
+    nena: { sched: [[360, lar('nena'), 4, 4, 1], [480, 'town', 33, 33, 1], [720, 'town', 42, 30, 1], [960, 'town', 34, 24, 1], [1140, lar('nena'), 5, 4, 1], [1320, null]],
+      schedSun: [[360, lar('nena'), 4, 4, 1], [540, 'town', 36, 35, 1], [840, 'town', 44, 35, 1], [1080, lar('nena'), 5, 4, 1], [1320, null]],
+      schedRain: [[360, lar('nena'), 4, 4, 1], [1320, null]] },
+    caio: { sched: [[360, lar('nena'), 8, 3, 1], [480, 'town', 30, 47, 1], [660, 'beach', 10, 10, 1], [900, 'town', 38, 30, 1], [1080, lar('nena'), 8, 3, 1], [1260, null]],
+      schedSun: [[360, lar('nena'), 8, 3, 1], [540, 'town', 37, 35, 1], [840, 'town', 21, 50, 1], [1080, lar('nena'), 8, 3, 1], [1260, null]],
+      schedRain: [[360, lar('nena'), 8, 3, 1], [1260, null]] },
+    cida: { sched: [[360, lar('cida'), 4, 4, 1], [480, 'town', V.stall[0] + 1, V.stall[1], 1], [1080, 'bar', 9, 6, 2], [1260, lar('cida'), 5, 4, 1], [1380, null]] },
+    tonico: { sched: [[360, lar('tonico'), 4, 4, 1], [480, 'town', 24, 26, 1], [540, 'moveis', 6, 2, 1], [1020, 'town', 46, 35, 1], [1200, lar('tonico'), 5, 4, 1], [1320, null]],
+      schedRain: [[360, lar('tonico'), 4, 4, 1], [540, 'moveis', 6, 2, 1], [1020, lar('tonico'), 5, 4, 1], [1320, null]] },
+  };
+  for (const [id, r] of Object.entries(ROTINAS)) if (NPCS[id]) Object.assign(NPCS[id], r);
+  const isSunday = () => W.meta && (W.meta.day - 1) % 7 === 6;
+  function npcSchedOf(id) { const n = NPCS[id], rain = W.meta && W.meta.rain; return (rain && n.schedRain) || (isSunday() && n.schedSun) || n.sched; }
+  // em dia de festa, do fim da tarde até a noite, todo mundo em volta da barraca
+  function festSpot(id, now) {
+    const f = typeof festOn === 'function' && festOn(); if (!f || now < 1020 || now >= 1320) return null;
+    const ids = Object.keys(NPCS).filter(k => !NPCS[k].kid || true).sort(), i = ids.indexOf(id), n = ids.length;
+    const a = (i / n) * TAU, cx = V.booth.x + 1.5, cy = V.booth.y + 3.5;
+    let x = Math.round(cx + Math.cos(a) * 5), y = Math.round(cy + Math.sin(a) * 3.2);
+    const m = MAPS.town; for (let k = 0; k < 6 && m.solid[y * m.w + x]; k++) y++;
+    return { map: 'town', x: x * T + 8, y: y * T + 14, dir: Math.abs(Math.cos(a)) > 0.6 ? (Math.cos(a) > 0 ? 2 : 3) : (Math.sin(a) > 0 ? 0 : 1), walk: false };
+  }
+
+  // ---------- casas dos moradores: dá para visitar das 7h às 21h ----------
+  const LAR_DONO = { nena: 'Vó Nena e Caio', davi: 'Doutor Davi', helena: 'Professora Helena', juca: 'Seu Juca', rosa: 'Rosa', bia: 'Bia', tonico: 'Seu Tonico', cida: 'Dona Cida' };
+  function buildLar(id) {
+    const [hx, hy] = V.casas[id];
+    const m = newMap(lar(id), 11, 8, G.WOOD, { name: 'Casa de ' + LAR_DONO[id], outdoor: false, lar: id });
+    m.rect(0, 0, 10, 1, G.WALL); m.rect(0, 0, 0, 7, G.WALL); m.rect(10, 0, 10, 7, G.WALL); m.rect(0, 7, 10, 7, G.WALL);
+    m.set(5, 7, G.WOOD); m.rect(3, 4, 7, 6, G.CARPET);
+    sprite(m, 'bed', 1, 2, 3, 3, { col: { nena: 'camaflorida', bia: 'camacoracoes', helena: 'camaestrelas', davi: 'camala' }[id] || '' });
+    sprite(m, 'table', 6, 4, 2, 2); sprite(m, 'plant', 9, 2, 1, 1);
+    m.warps.push({ x: 5, y: 7, to: 'town', tx: hx + 3, ty: hy + 4, dir: 1 });
+    return finalize(m);
+  }
+  for (const id of Object.keys(V.casas)) MAPS[lar(id)] = buildLar(id);
+  const larOpen = () => { const t = nowMin(); return t >= 420 && t < 1260; };
+  // decoração de cada casa conforme quem mora
+  function larEnts(m, ents, t) {
+    if (!m.lar) return;
+    const id = m.lar, night = nightF() > 0.2;
+    ents.push({ y: -998, f: () => {
+      // quadro na parede e janela
+      R(5 * T, 3, 22, 15, '#7a4a24'); R(5 * T + 2, 5, 18, 11, night ? '#2a3a6a' : '#a8d8f0'); R(5 * T + 10, 5, 1, 11, '#7a4a24');
+      if (id === 'helena' || id === 'davi') { R(8 * T, 4, 26, 22, '#5a2a10'); for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) R(8 * T + 2 + i * 4, 6 + r * 10, 3, 8, ['#c83a3a', '#3a7ad0', '#f4c83a', '#5aa83a', '#f4f0e8', '#b05ae0'][(i + r) % 6]); }
+      if (id === 'bia') { R(8 * T + 4, 2, 2, 24, '#8a5a2a'); R(8 * T, 4, 14, 12, '#f8f4ec'); R(8 * T + 2, 6, 5, 4, '#e86a8a'); R(8 * T + 7, 9, 4, 5, '#5ab8e8'); }
+      if (id === 'tonico') { for (let k = 0; k < 4; k++) R(8 * T + k * 6, 2 + (k % 2) * 3, 4, 22, ['#d8b070', '#7a4a28', '#c8763a', '#5a2a1a'][k]); }
+      if (id === 'juca') { R(8 * T, 8, 24, 16, '#8a5a2a'); for (let k = 0; k < 6; k++) R(8 * T + 2 + (k % 3) * 7, 10 + Math.floor(k / 3) * 6, 6, 4, '#f4f0e8'); }
+      if (id === 'cida') { for (let k = 0; k < 3; k++) { R(8 * T + k * 9, 14, 8, 8, '#c8944a'); disc(8 * T + k * 9 + 4, 13, 3, ['#e8402a', '#f4c83a', '#5aa83a'][k]); } }
+      if (id === 'nena') { R(8 * T + 2, 10, 20, 12, '#c86a9a'); for (let k = 0; k < 3; k++) disc(8 * T + 6 + k * 6, 8, 3, ['#ff8ac8', '#f4c83a', '#ffffff'][k]); }
+      if (id === 'rosa') { R(8 * T, 6, 26, 3, '#7a4a24'); for (const [x, c] of [[2, '#8a8a92'], [9, '#c8a050'], [16, '#8a8a92']]) R(8 * T + x, 9, 4, 12, c); }
+    } });
+    // brinquedo do Caio na casa da Vó Nena
+    if (id === 'nena') ents.push({ y: 6 * T, f: () => { disc(8 * T + 8, 6 * T + 10, 4, '#e8402a'); R(8 * T + 6, 6 * T + 7, 4, 1, '#ffffff'); } });
+  }
+
+  // ---------- placas com nome e horário ----------
+  const PLACAS = [['store', 'Armazém', 'pedro'], ['atelie', 'Ateliê', 'bia'], ['moveis', 'Marcenaria', 'tonico'], ['smith', 'Ferraria', 'claudio'], ['carpentry', 'Carpintaria', 'rosa'], ['bar', 'Bar da Lia', 'lia'], ['ranch', 'Rancho', 'marta'], ['cc', 'Centro Comunitário'], ['museum', 'Museu']];
+  const hh = m => `${Math.floor(m / 60) % 24}h`;
+  function placa(txt, x, y) {
+    ctx.font = '700 7px "Pixelify Sans", monospace';
+    const w = Math.ceil(ctx.measureText(txt).width) + 8;
+    R(Math.round(x - w / 2) - 1, y - 6, w + 2, 12, '#5a3418'); R(Math.round(x - w / 2), y - 5, w, 10, '#e8c890');
+    drawText(txt, x, y, '#3a1e0a', 7);
+  }
+  function placaEnts(m, ents) {
+    if (m.id !== 'town') return;
+    for (const [k, nome, who] of PLACAS) {
+      const p = V[k]; if (!p) continue;
+      const n = who && NPCS[who], txt = n && n.hours ? `${nome} · ${hh(n.hours[0])}–${hh(n.hours[1])}` : nome;
+      ents.push({ y: (p[1] + p[3]) * T + 1, f: () => placa(txt, p[4] * T + 8, (p[1] + p[3]) * T - 30) });
+    }
+    for (const [id, [x, y]] of Object.entries(V.casas)) ents.push({ y: (y + 4) * T + 1, f: () => placa(LAR_DONO[id].replace(/^(Doutor|Professora|Seu|Dona) /, '').split(' e ')[0], (x + 1.4) * T, (y + 4) * T - 12) });
+  }
+
+  // postes acesos e janelas das lojas à noite
+  function vilaLights(m, light, nf) {
+    if (!m.outdoor || !m.lanterns || nf <= 0) return;
+    for (const [lx, ly] of m.lanterns) light(lx * T + 8, ly * T + 8, 48, nf * 0.7);
+    for (const s of m.sprites) if (['atelie', 'moveis', 'ccbuilding', 'museumb', 'coreto'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
+  }
+  // ---------- coreto da praça ----------
+  function drawCoreto(w, h, night, snow) {
+    const c = '#f4f0e8', d = '#c8b8a0';
+    R(0, h - 10, w, 10, '#b8a888'); R(2, h - 12, w - 4, 3, '#d8c8a8');
+    for (const x of [2, w / 2 - 2, w - 6]) { R(x, 8, 4, h - 18, c); R(x + 3, 8, 1, h - 18, d); }
+    for (let x = 4; x < w - 4; x += 4) R(x, h - 22, 2, 10, c); R(2, h - 23, w - 4, 2, c);
+    poly([[-6, 10], [w / 2, -22], [w + 6, 10]], snow ? '#e8eef4' : '#2a6a5a'); poly([[-6, 10], [w / 2, -18], [w + 6, 10], [w + 6, 13], [-6, 13]], snow ? '#ffffff' : '#3a8a6a');
+    for (let k = 0; k < 8; k++) disc(k * (w / 7), 13, 3, snow ? '#ffffff' : '#3a8a6a');
+    R(w / 2 - 1, -26, 2, 6, '#c8a050'); disc(w / 2, -27, 2, '#f4c83a');
+    for (let k = 0; k < 6; k++) disc(6 + k * ((w - 12) / 5), 17, 1.6, night ? ['#ffe08a', '#ff8ac8', '#8ad8ff'][k % 3] : '#c8b8a0');
+  }
+
+  // ---------- moradores conversando ----------
+  const CONVOS = {
+    'caio|nena': [['caio', 'Vó, posso ir na praia?'], ['nena', 'Só se levar o chapéu!'], ['caio', 'Tá booom...']],
+    'nena|caio': [['nena', 'Comeu o lanche, meu neto?'], ['caio', 'Comi! E o biscoito também!']],
+    'rosa|tonico': [['tonico', 'Rosa, me arruma um prego?'], ['rosa', 'Prego eu tenho. Paciência, não!'], ['tonico', 'Haha, justo.']],
+    'tonico|rosa': [['rosa', 'Esse ipê ficou lindo, Tonico.'], ['tonico', 'Veio lá da Mata Antiga!']],
+    'davi|lia': [['davi', 'Lia, menos sal hoje, hein?'], ['lia', 'Doutor, sal é amor!']],
+    'lia|davi': [['lia', 'O de sempre, doutor?'], ['davi', 'Uma salada. E uma pizza.']],
+    'cida|pedro': [['pedro', 'Como estão os preços hoje?'], ['cida', 'A abóbora disparou!'], ['pedro', 'Vou plantar mais, então.']],
+    'pedro|cida': [['cida', 'Seu Pedro, me vende semente?'], ['pedro', 'Pra você, a melhor!']],
+    'claudio|tonico': [['claudio', 'Precisa de prego de ferro?'], ['tonico', 'Do bom! Os seus duram.']],
+    'bia|nena': [['bia', 'Posso pintar o seu jardim?'], ['nena', 'Ai, que honra, minha filha!']],
+    'caio|bia': [['caio', 'Me desenha um dragão?'], ['bia', 'Só se você posar de cavaleiro!']],
+    'davi|nena': [['davi', 'Tomando o remédio, Vó?'], ['nena', 'Tomando, doutor. Com chá!']],
+    'marta|cida': [['marta', 'Leite fresquinho chegando!'], ['cida', 'Guarda dois litros pra mim!']],
+    'claudio|davi': [['davi', 'Machucou a mão de novo?'], ['claudio', 'Martelo teimoso...']],
+  };
+  const CONVO_GERAL = {
+    rain: [['Que chuvarada!', 'Bom pra horta, pelo menos.'], ['Esqueci o guarda-chuva...', 'Corre pro bar!']],
+    spring: [['As flores voltaram!', 'A praça fica linda assim.'], ['Que cheirinho de primavera.', 'É o jardim da Vó Nena!']],
+    summer: [['Que calor!', 'Bora pra praia mais tarde?'], ['Viu o pôr do sol ontem?', 'Lindo demais!']],
+    fall: [['Olha as folhas caindo.', 'Época de abóbora!'], ['Já tá esfriando...', 'Hora do cachecol.']],
+    winter: [['Que frio!', 'Chocolate quente no bar?'], ['Nevou na mina?', 'Dizem que sim!']],
+    fest: [['Animado pra festa?', 'Muito! Vai ter comidinha!'], ['Que festa bonita!', 'A vila caprichou.']],
+    casal: [['Viu o casal da chacrinha?', 'Trabalham tanto! Uns fofos.'], ['A chacrinha tá linda.', 'Dá gosto de ver.']],
+  };
+  let convos = [], convoT = 0;
+  const convoRecent = new Map();
+  function npcVisible(m) { const out = []; for (const id of Object.keys(NPCS)) { const p = npcPos(id); if (p && p.map === m.id) out.push([id, p]); } return out; }
+  // quem salvou na vila antiga pode cair dentro de um prédio: vai para a praça
+  let vilaFixed = false;
+  function vilaFix() {
+    if (vilaFixed || !P || !W.meta) return; vilaFixed = true;
+    const m = MAPS.town;
+    if (P.map === 'town' && blocked(m, P.x, P.y)) { P.x = 40 * T + 8; P.y = 29 * T + 10; dirty(); }
+    const pt = P.pet; if (pt && pt.mode === 'roam' && pt.map === 'town' && (!pt.hx || blocked(m, pt.hx, pt.hy))) { pt.hx = 38 * T; pt.hy = 30 * T; petSt.x = pt.hx; petSt.y = pt.hy; dirty(); }
+  }
+  function updateConvos(dt) {
+    vilaFix();
+    const m = curMap(); if (!m) return;
+    const now = performance.now();
+    for (const c of convos) { c.t -= dt; if (c.t <= 0) { c.i++; c.t = 3; } }
+    convos = convos.filter(c => c.i < c.lines.length && c.map === m.id);
+    convoT -= dt; if (convoT > 0) return; convoT = 1.5;
+    const vis = npcVisible(m).filter(([, p]) => !p.walk), busy = new Set(convos.flatMap(c => [c.a, c.b]));
+    for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) {
+      const [a, pa] = vis[i], [b, pb] = vis[j];
+      if (busy.has(a) || busy.has(b) || Math.hypot(pa.x - pb.x, pa.y - pb.y) > 3.2 * T) continue;
+      const key = [a, b].sort().join('|'); if (convoRecent.has(key) && now - convoRecent.get(key) < 45000) continue;
+      if (Math.random() > 0.5) continue;
+      convoRecent.set(key, now);
+      let lines = CONVOS[a + '|' + b] || CONVOS[b + '|' + a];
+      if (!lines || Math.random() < 0.3) {
+        const f = typeof festOn === 'function' && festOn(), pool = f ? CONVO_GERAL.fest : W.meta.rain ? CONVO_GERAL.rain : Math.random() < 0.25 ? CONVO_GERAL.casal : CONVO_GERAL[season()];
+        const [x, y] = pick(pool); lines = [[a, x], [b, y]];
+      }
+      convos.push({ a, b, lines, i: 0, t: 3, map: m.id }); busy.add(a); busy.add(b);
+    }
+  }
+  function balao(txt, x, y) {
+    ctx.font = '700 7px "Pixelify Sans", monospace';
+    const w = Math.ceil(ctx.measureText(txt).width) + 8, bx = Math.round(x - w / 2), by = Math.round(y - 12);
+    R(bx - 1, by - 1, w + 2, 13, '#3a1e0a'); R(bx, by, w, 11, '#ffffff'); poly([[x - 3, by + 11], [x + 3, by + 11], [x, by + 15]], '#ffffff');
+    drawText(txt, x, by + 6, '#3a1e0a', 7);
+  }
+  function convoEnts(m, ents) {
+    for (const c of convos) {
+      if (c.map !== m.id) continue;
+      const [who, txt] = c.lines[c.i] || []; if (!who) continue;
+      ents.push({ y: 1e9, f: () => { const p = npcPos(who); if (p && p.map === m.id) balao(txt, p.x, p.y - 40); } });
+    }
+  }
+
+  // ---------- momentos com os moradores (com 4 e 8 corações) ----------
+  const MOMENTOS = {
+    pedro: [{ h: 4, falas: ['Sabe, meu pai abriu esse armazém com um saco de feijão e muita teimosia.', 'Ver vocês dois plantando me lembra ele. Ele ia gostar de vocês.'], presente: ['s_morango', 10] },
+      { h: 8, falas: ['Tenho uma coisa pra vocês. É a balança antiga do armazém.', 'Ela já pesou a colheita da vila inteira. Agora pesa a de vocês, simbolicamente!'], presente: ['ouro', 3] }],
+    claudio: [{ h: 4, falas: ['O fogo da forja nunca apagou desde que eu era menino.', 'Meu avô dizia: ferro bom é igual amizade, só fica firme se passar pelo fogo.'], presente: ['barraferro', 3] },
+      { h: 8, falas: ['Forjei isso pensando em vocês. Um par de alianças de ferro... brincadeira!', 'Mas o carinho é de verdade. Toma, uma barra de ouro pra caprichar nas ferramentas.'], presente: ['barraouro', 2] }],
+    rosa: [{ h: 4, falas: ['Todo prédio da vila tem um pedacinho de mim. O coreto foi o primeiro.', 'Quando a chacrinha crescer, quero construir algo bem bonito pra vocês.'], presente: ['madeira', 50] },
+      { h: 8, falas: ['Guardei as melhores tábuas de carvalho que já vi.', 'São de vocês. Façam algo que dure a vida inteira.'], presente: ['mcarvalho', 20] }],
+    marta: [{ h: 4, falas: ['A Mimosa, minha vaca mais velha, me acordou às 4h hoje. De novo.', 'Mas sabe que eu nem ligo? Bicho é família.'], presente: ['feno', 30] },
+      { h: 8, falas: ['Vocês cuidam tão bem dos animais que eu fico orgulhosa.', 'Esse queijo é da receita da minha mãe. Ninguém mais tem.'], presente: ['queijo', 5] }],
+    ze: [{ h: 4, falas: ['Uma vez fisguei um peixe tão grande que ele me puxou pro rio!', 'Até hoje não sei quem pescou quem.'], presente: ['isca', 30] },
+      { h: 8, falas: ['Essa vara foi do meu pai. A linha é nova, mas a sorte é antiga.', 'Pega essas iscas especiais. E um segredo: o peixe gosta de silêncio.'], presente: ['anzolgiratorio', 1] }],
+    lia: [{ h: 4, falas: ['Abri o bar porque queria um lugar onde todo mundo se sentisse em casa.', 'E vocês dois sempre chegam sorrindo. Isso faz meu dia.'], presente: ['pizza', 3] },
+      { h: 8, falas: ['Inventei um prato novo e quero que vocês sejam os primeiros a provar.', 'Se gostarem, ele vai se chamar "o prato do casal"!'], presente: ['parmegiana', 2] }],
+    bia: [{ h: 4, falas: ['Tô pintando um quadro da vila inteira, casinha por casinha.', 'A chacrinha de vocês vai ficar bem no meio. É a parte mais bonita.'], presente: ['narciso', 5] },
+      { h: 8, falas: ['Terminei o quadro! Olha vocês dois aqui, de mãos dadas na horta.', 'Fiz uma cópia pequenininha pra vocês guardarem.'], presente: ['frutaestelar', 1] }],
+    davi: [{ h: 4, falas: ['Vim pra vila só por um verão. Já faz doze anos.', 'Acho que o ar daqui cura mais do que meus remédios.'], presente: ['cafereforcado', 2] },
+      { h: 8, falas: ['Promete que vão cuidar um do outro quando estiverem cansados?', 'Isso aqui é por conta da casa. Receita do doutor: descanso e carinho.'], presente: ['tortamirtilo', 2] }],
+    nena: [{ h: 4, falas: ['Meu Joaquim plantou o primeiro canteiro da praça para mim.', 'Toda primavera, quando as flores abrem, parece que ele tá me dando bom-dia.'], presente: ['biscoito', 4] },
+      { h: 8, falas: ['Vocês dois me lembram tanto eu e o Joaquim...', 'Toma essas sementes do jardim dele. Plantem juntinhos.'], presente: ['s_jazz', 10] }],
+    caio: [{ h: 4, falas: ['Psiu! Quer saber meu esconderijo secreto? Fica atrás do coreto!', 'Não conta pra Vó, tá?'], presente: ['concha', 3] },
+      { h: 8, falas: ['Quando eu crescer quero ser igual a vocês e ter uma chacrinha!', 'Toma, achei essa pedra brilhante na praia. É a minha mais especial.'], presente: ['ametista', 2] }],
+    cida: [{ h: 4, falas: ['Trinta anos de feira, sabia? Já vi essa vila mudar tanto!', 'Mas freguês bom igual vocês, poucas vezes.'], presente: ['melao', 3] },
+      { h: 8, falas: ['Sabe o que é o segredo de uma boa feira? Gente que volta.', 'E vocês sempre voltam. Isso aqui é presente da tia Cida.'], presente: ['mel', 5] }],
+    tonico: [{ h: 4, falas: ['Meu primeiro móvel foi uma cadeira torta pra minha mãe.', 'Ela usou até o fim. Disse que era a mais confortável do mundo.'], presente: ['mpinho', 20] },
+      { h: 8, falas: ['Fiz uma coisa pra vocês sem cobrar nada. Uma cadeira de pinho.', 'Essa não ficou torta. Mas é feita com o mesmo carinho.'], presente: ['cadeirapinho', 2] }],
+  };
+  function momentoFor(id) {
+    const evs = MOMENTOS[id]; if (!evs) return null;
+    const seen = P.flags.mom || {};
+    return evs.find(e => hearts(id) >= e.h && !seen[id + e.h]) || null;
+  }
+  function openMomento(id, e) {
+    P.flags.mom = { ...(P.flags.mom || {}), [id + e.h]: W.meta.day };
+    const [pid, pn] = e.presente || [];
+    if (pid && ITEMS[pid]) addItem(pid, pn, true);
+    dirty(); sfx.level();
+    openPanel(`<div class="talk"><canvas id="portrait" width="40" height="40" aria-hidden="true"></canvas><div><h2 style="text-align:left;margin:0">Um momento com ${NPCS[id].name}</h2><small>${e.h} corações</small></div></div>
+      ${e.falas.map(f => `<p class="speech">${esc(f)}</p>`).join('')}
+      ${pid && ITEMS[pid] ? `<p style="text-align:center"><img src="${iconURL(pid)}" alt="" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle"> Você ganhou ${pn}× ${item(pid).name}!</p>` : ''}
+      <div class="row"><button class="btn g" data-a="close" type="button">Obrigado!</button></div>`, 'talk', id);
+    drawPortrait(id);
+  }
+
+  // ---------- onde fica cada coisa (para o mapa) ----------
+  const LUGARES = [['Praça', 31, 19, 49, 37], ['Rua do Comércio', 3, 17, 30, 26], ['Rua de cima', 3, 3, 78, 16], ['Bairro das casas', 50, 30, 78, 44], ['Rancho e pasto', 3, 30, 30, 44], ['Beira-rio', 1, 45, 78, 54], ['Rua principal', 0, 27, 79, 29], ['Leste da vila', 50, 17, 78, 29]];
+  function lugarNome(map, x, y) {
+    if (map === 'town') { const tx = x / T, ty = y / T; const l = LUGARES.find(([, x0, y0, x1, y1]) => tx >= x0 && tx <= x1 + 1 && ty >= y0 && ty <= y1 + 1); return l ? l[0] : 'na vila'; }
+    const m = getMap(map); return m ? m.name : map;
+  }
+  const MAPA_ROTULOS = [['store', 'Armazém'], ['atelie', 'Ateliê'], ['moveis', 'Marcenaria'], ['smith', 'Ferraria'], ['carpentry', 'Carpintaria'], ['cc', 'Centro'], ['museum', 'Museu'], ['bar', 'Bar'], ['ranch', 'Rancho']];
+  function mapaHTML() {
+    const list = Object.keys(NPCS).map(id => { const p = npcPos(id); return `<div class="item"><span class="nm"><b>${NPCS[id].name}</b><small>${p ? lugarNome(p.map, p.x, p.y) : 'em casa, descansando'}</small></span></div>`; }).join('');
+    return `<p style="text-align:center;font-size:13px">A vila agora: você é o ponto vermelho; os moradores são os pontinhos amarelos.</p>
+      <canvas id="mapcv" width="${V.w * 6}" height="${V.h * 6}" style="width:100%;image-rendering:pixelated;border:2px solid #6b3410;border-radius:6px"></canvas>
+      <h3>Onde está cada um</h3><div class="list">${list}</div>`;
+  }
+  function drawMapa() {
+    const c = document.getElementById('mapcv'); if (!c) return;
+    const x = c.getContext('2d'), m = MAPS.town, k = 6;
+    const col = g => ({ [G.GRASS]: '#6ab04a', [G.FLOWERS]: '#7ab85a', [G.COBBLE]: '#d8c8a0', [G.WATER]: '#4a8ad8', [G.SAND]: '#e8d8a0', [G.FOREST]: '#2a6a2a', [G.BRIDGE]: '#a8743a', [G.DIRT]: '#b88a5a', [G.CLIFF]: '#7a6a5a' }[g] || '#6ab04a');
+    for (let ty = 0; ty < m.h; ty++) for (let tx = 0; tx < m.w; tx++) { x.fillStyle = col(m.at(tx, ty)); x.fillRect(tx * k, ty * k, k, k); }
+    x.fillStyle = '#9a5a3a'; for (const s of m.sprites) if (s.w >= 3 && s.type !== 'fountain' && s.type !== 'marketstall' && s.type !== 'bench') x.fillRect(s.x * k, s.y * k, s.w * k, s.h * k);
+    x.fillStyle = '#5ab8e8'; x.fillRect(V.fonte[0] * k, V.fonte[1] * k, 3 * k, 3 * k);
+    x.font = '700 9px "Pixelify Sans", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    const label = (t, px, py) => { x.fillStyle = '#3a1e0a'; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) x.fillText(t, px + dx, py + dy); x.fillStyle = '#ffffff'; x.fillText(t, px, py); };
+    for (const [key, nome] of MAPA_ROTULOS) { const p = V[key]; if (p) label(nome, (p[0] + p[2] / 2) * k, (p[1] + p[3] / 2) * k); }
+    for (const [id, [hx, hy]] of Object.entries(V.casas)) label(LAR_DONO[id].split(' ')[0], (hx + 2.5) * k, (hy + 2) * k);
+    label('Praça', 40 * k, 23 * k); label('Mina', 40 * k, 4 * k); label('Praia', 40 * k, 52 * k); label('Chacrinha', 6 * k, 28 * k); label('Mata', 74 * k, 28 * k);
+    for (const id of Object.keys(NPCS)) { const p = npcPos(id); if (!p || p.map !== 'town') continue; x.fillStyle = '#3a1e0a'; x.fillRect(p.x / T * k - 3, p.y / T * k - 3, 6, 6); x.fillStyle = '#ffd040'; x.fillRect(p.x / T * k - 2, p.y / T * k - 2, 4, 4); }
+    if (P.map === 'town') { x.fillStyle = '#ffffff'; x.fillRect(P.x / T * k - 4, P.y / T * k - 4, 8, 8); x.fillStyle = '#e8402a'; x.fillRect(P.x / T * k - 3, P.y / T * k - 3, 6, 6); }
+  }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -8157,7 +8493,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (m.id === 'farm') for (const b of Object.values(farmB())) if (bReady(b) && (b.type === 'coop' || b.type === 'barn')) light((b.x + BUILDS[b.type].w / 2) * T, (b.y + 1) * T, 40, nf * 0.3);
       for (const s of m.sprites) if (['house', 'store', 'smith', 'cottage', 'carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
       if (m.cave) light(P.x, P.y - 10, 60, 0.15);
-      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light);
+      festLights(m, light); luauLights(m, light); bugLights(m, light); mataLights(m, light); casaLights(m, light); vilaLights(m, light, nf);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (m.cave) {
@@ -8198,7 +8534,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt); updateBugs(dt); diaryTick();
+      updateFishing(dt); updateBugs(dt); diaryTick(); updateConvos(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }

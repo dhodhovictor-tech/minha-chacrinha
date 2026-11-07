@@ -36,9 +36,9 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(Math.abs(dur - 0.28 * 0.85) < 0.001, 'encanto Ligeireza deixa o golpe 15% mais rápido: ' + dur);
   await p.waitForTimeout(300);
   // Marcenaria do Tonico
-  await ev(() => __sv.goMap('town', 17 * 16 + 8, 15 * 16 + 10, 0)); await p.waitForTimeout(800); await clearToasts();
+  await ev(() => __sv.goMap('town', 24 * 16 + 8, 27 * 16 + 10, 0)); await p.waitForTimeout(800); await clearToasts();
   await p.screenshot({ path: SHOTS + 'e14_praca.png' });
-  await ev(() => { const P = __sv.P; P.x = 17 * 16 + 8; P.y = 14 * 16 + 10; P.dir = 0; }); await walk('ArrowUp');
+  await ev(() => { const P = __sv.P; P.x = 24 * 16 + 8; P.y = 26 * 16 + 10; P.dir = 0; }); await walk('ArrowUp');
   ok(await ev(() => __sv.P.map) === 'moveis', 'a porta leva para dentro da Marcenaria do Tonico');
   ok(await ev(() => (__sv.npcPos('tonico') || {}).map) === 'moveis', 'o Seu Tonico está atrás do balcão às 10h');
   await clearToasts(); await p.waitForTimeout(300); await p.screenshot({ path: SHOTS + 'e14_marcenaria.png' });

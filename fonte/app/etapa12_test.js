@@ -20,7 +20,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const sm = await ev(() => { const m = __sv.getMap('town'), s = m.sprites.find(x => x.type === 'smith'), a = m.sprites.find(x => x.type === 'atelie'); return { s: [s.w, s.h], a: a && [a.x, a.y, a.w, a.h] }; });
   ok(sm.s[0] === 6 && sm.s[1] === 5 && sm.a, 'ferreiro menor (6×5) e ateliê na praça: ' + JSON.stringify(sm));
   // entrar no ateliê pela porta
-  await ev(() => { const P = __sv.P; P.x = 28 * 16 + 8; P.y = 14 * 16 + 10; P.dir = 0; }); await walk('ArrowUp', 500);
+  await ev(() => { const P = __sv.P; P.x = 17 * 16 + 8; P.y = 26 * 16 + 10; P.dir = 0; }); await walk('ArrowUp', 500);
   ok(await ev(() => __sv.P.map) === 'atelie', 'a porta leva para dentro do Ateliê da Bia');
   ok(await ev(() => (__sv.npcPos('bia') || {}).map) === 'atelie', 'a Bia está atrás do balcão às 10h');
   await clearToasts(); await p.waitForTimeout(400); await p.screenshot({ path: SHOTS + 'e12_atelie.png' });
@@ -35,10 +35,10 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await ev(() => { const P = __sv.P; P.x = 6 * 16 + 8; P.y = 7 * 16 + 10; P.dir = 1; }); await walk('ArrowDown', 500);
   ok(await ev(() => __sv.P.map) === 'town', 'sai do ateliê de volta para a praça');
   // ferreiro continua abrindo pela porta
-  await ev(() => { const P = __sv.P; P.x = 35 * 16 + 8; P.y = 14 * 16 + 10; P.dir = 0; }); await walk('ArrowUp', 500);
+  await ev(() => { const P = __sv.P; P.x = 35 * 16 + 8; P.y = 13 * 16 + 10; P.dir = 0; }); await walk('ArrowUp', 500);
   ok(await ev(() => __sv.P.map) === 'smith', 'a porta do ferreiro continua funcionando');
   // mata à direita da vila (e não mais pela chacrinha)
-  await ev(() => __sv.goMap('town', 47.5 * 16, 18 * 16 + 10, 3)); await p.waitForTimeout(600); await walk('ArrowRight');
+  await ev(() => __sv.goMap('town', 77.5 * 16, 28 * 16 + 10, 3)); await p.waitForTimeout(600); await walk('ArrowRight');
   ok(await ev(() => __sv.P.map) === 'mata', 'a rua da vila continua para a direita até a mata');
   await clearToasts(); await p.screenshot({ path: SHOTS + 'e12_mata.png' });
   await ev(() => { const P = __sv.P; P.x = 1 * 16 + 8; P.y = 10 * 16 + 4; }); await walk('ArrowLeft', 500);

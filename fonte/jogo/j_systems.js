@@ -382,14 +382,10 @@
   }
 
   // ================= moradores: agenda, desenho e conversa =================
-  function npcPath(map, a, b) {
-    const A = [a[2] * T + 8, a[3] * T + 14], Bp = [b[2] * T + 8, b[3] * T + 14];
-    const lane = map === 'town' ? 24 * T + 8 : map === 'beach' ? 20 * T + 8 : null;
-    if (lane == null) return [A, Bp];
-    return [A, [lane, A[1]], [lane, Bp[1]], Bp];
-  }
+  function npcPath(map, a, b) { return vilaPath(map, a, b); }
   function npcPos(id) {
-    const n = NPCS[id], now = nowMinF(), sc = n.sched;
+    const n = NPCS[id], now = nowMinF(), sc = npcSchedOf(id);
+    const fs = festSpot(id, now); if (fs) return fs;
     let i = -1;
     for (let k = 0; k < sc.length; k++) if (sc[k][0] <= now) i = k;
     if (i < 0 || !sc[i][1]) return null;
@@ -443,6 +439,7 @@
     if (!text) {
       text = festTalk(id) || npcLine(id);
       if (r.talk !== d) { r.talk = d; r.pts = Math.min(2500, r.pts + 20); dirty(); }
+      const mo = momentoFor(id); if (mo) { openMomento(id, mo); return; }
     }
     const s = held(), can = giftable(s);
     const q = W.meta.quest, questItem = q && q.npc === id && !q.done && s && s.id === q.id;
@@ -746,7 +743,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }

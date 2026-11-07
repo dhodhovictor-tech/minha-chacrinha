@@ -32,8 +32,8 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await p.screenshot({ path: SHOTS + 'e9_equip.png' });
   await closeAll();
   // luau: mais diversão
-  await ev(() => { __sv.goMap('town', 19.5 * 16, 15 * 16 + 12, 0); }); await p.waitForTimeout(700);
-  await ev(() => { const P = __sv.P; P.x = 19.5 * 16; P.y = 15 * 16 + 12; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300);
+  await ev(() => { __sv.goMap('town', 34.5 * 16, 33 * 16 + 12, 0); }); await p.waitForTimeout(700);
+  await ev(() => { const P = __sv.P; P.x = 34.5 * 16; P.y = 33 * 16 + 12; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300);
   const lu = await ev(() => document.querySelector('.win').innerText);
   ok(/Mais diversão/.test(lu) && /Pegue os cocos/.test(lu) && /marshmallow/.test(lu) && /comidinhas/.test(lu), 'Luau tem sopa, 2 minijogos e barraca');
   await p.click('[data-a="fxGame"][data-g="cocos"]'); await p.waitForTimeout(2500);

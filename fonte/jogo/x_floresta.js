@@ -73,7 +73,7 @@
     m.solid[10 * m.w + 16] = 1; spot(m, 16, 10, { kind: 'fogueirafix' }); m.solid[12 * m.w + 4] = 1;
     m.fire = [16, 10];
     m.warps.push({ x: 11, y: 0, w: 2, to: 'mata1', tx: 0, ty: 0, dir: 0 });
-    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 47, ty: 18, dir: 2 });
+    m.warps.push({ x: 0, y: 9, h: 2, to: 'town', tx: 77, ty: 28, dir: 2 });
     return finalize(m);
   }
   MAPS.mata = buildMataEntrance();

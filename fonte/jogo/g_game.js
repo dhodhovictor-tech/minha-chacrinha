@@ -97,7 +97,10 @@
   function checkWarp() {
     const m = curMap(), x = Math.floor(P.x / T), y = Math.floor((P.y - 2) / T);
     if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && g.door) { const b = farmB()[g.id]; if (bReady(b) && ['coop', 'barn', 'greenhouse'].includes(b.type)) { const im = animalHouseMap(g.id); goMap('b:' + g.id, im.entry[0] * T + 8, im.entry[1] * T + 12, 0); return; } } }
-    for (const w of m.warps) if (x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1)) { goMap(w.to, w.tx * T + 8, w.ty * T + 12, w.dir); return; }
+    for (const w of m.warps) if (x >= w.x && x < w.x + (w.w || 1) && y >= w.y && y < w.y + (w.h || 1)) {
+      if (w.lar && !larOpen()) { toast(`A casa de ${LAR_DONO[w.lar]} está fechada. Visite entre 7h e 21h.`, '', null, 'lar'); P.y = (w.y + 1) * T + 10; return; }
+      goMap(w.to, w.tx * T + 8, w.ty * T + 12, w.dir); return;
+    }
   }
   function goMap(id, x, y, dir) {
     sfx.door();
@@ -116,8 +119,8 @@
   // ================= coletáveis da vila =================
   function townForage() {
     const out = [], m = MAPS.town, s = season(), list = FORAGE[s], d = W.meta.day;
-    for (let i = 0; i < 5; i++) {
-      const x = 1 + Math.floor(hash(d, i, 3) * 47), y = 3 + Math.floor(hash(d, i, 9) * 25);
+    for (let i = 0; i < 9; i++) {
+      const x = 1 + Math.floor(hash(d, i, 3) * (m.w - 2)), y = 3 + Math.floor(hash(d, i, 9) * 44);
       if (m.solid[y * m.w + x] || ![G.GRASS, G.FLOWERS].includes(m.at(x, y))) continue;
       const k = `${d}:town:${x},${y}`;
       if (W.meta.taken && W.meta.taken[k]) continue;
