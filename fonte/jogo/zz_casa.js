@@ -60,7 +60,7 @@
   const needTxtC = need => Object.entries(need).map(([k, n]) => `<span style="color:${count(k) >= n ? '#2a7a2a' : '#a83a2a'}">${n} ${item(k).name.toLowerCase()} (${count(k)})</span>`).join(', ');
   const canMake = f => gold() >= f.gold && Object.entries(f.need).every(([k, n]) => count(k) >= n);
   function moveisHTML() {
-    return `<p style="text-align:center;font-size:13px">Cada móvel é feito na hora, com a madeira que vocês trazem da mata.</p><div class="list">${Object.entries(MOVEIS).map(([k, f]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${f.name}</b><small>${f.desc} · ${fmt(f.gold)} ₲ + ${needTxtC(f.need)}</small></span><button class="btn g" data-a="movelMake" data-id="${k}" type="button" ${canMake(f) ? '' : 'disabled'}>Encomendar</button></div>`).join('')}</div>`;
+    return `<p style="text-align:center;font-size:13px">Cada móvel é feito na hora, com a madeira que vocês trazem da mata.</p><div class="list">${Object.entries(MOVEIS).filter(([, f]) => !f.pet).map(([k, f]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${f.name}</b><small>${f.desc} · ${fmt(f.gold)} ₲ + ${needTxtC(f.need)}</small></span><button class="btn g" data-a="movelMake" data-id="${k}" type="button" ${canMake(f) ? '' : 'disabled'}>Encomendar</button></div>`).join('')}</div>`;
   }
   function camasHTML() {
     return `<p style="text-align:center;font-size:13px">Também dá para fazer em casa, na aba Criar, com fibra, lã e tecido.</p><div class="list">${Object.entries(CAMAS).map(([k, c]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${c.name}</b><small>${c.desc}</small></span><span class="price">${fmt(c.gold)} ₲</span><button class="btn g" data-a="camaBuy" data-id="${k}" type="button" ${gold() >= c.gold ? '' : 'disabled'}>Comprar</button></div>`).join('')}</div>`;
@@ -70,6 +70,7 @@
     if (who === 'claudio' && tab === 'enc') return encHTML();
     if (who === 'tonico' && tab === 'moveis') return moveisHTML();
     if (who === 'tonico' && tab === 'cama') return camasHTML();
+    if (who === 'davi' && tab === 'consulta') return consultaHTML();
     return null;
   }
 
@@ -149,6 +150,7 @@
 
   // ---------- desenho dos móveis ----------
   function drawMovel(id, px, py, t, night) {
+    if (drawMovelPet(id, px, py)) return;
     switch (id) {
       case 'cadeirapinho': shadowAt(px + 8, py + 14, 6, 2); R(px + 4, py - 6, 8, 12, '#b88a4a'); R(px + 5, py - 5, 6, 2, '#d8b070'); R(px + 5, py - 1, 6, 1, '#d8b070'); R(px + 3, py + 5, 10, 4, '#d8b070'); R(px + 3, py + 5, 10, 1, '#f0d098'); R(px + 4, py + 9, 2, 5, '#9a6a3a'); R(px + 10, py + 9, 2, 5, '#9a6a3a'); break;
       case 'mesapinho': shadowAt(px + 8, py + 14, 6, 2); oval(px + 8, py + 5, 7, 3.5, '#b88a4a'); oval(px + 8, py + 4, 7, 3, '#d8b070'); R(px + 7, py + 7, 2, 7, '#9a6a3a'); R(px + 4, py + 13, 8, 1, '#9a6a3a'); R(px + 7, py, 3, 3, '#f4f0e8'); R(px + 8, py - 1, 1, 1, '#ffffff99'); break;

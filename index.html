@@ -162,7 +162,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '09caa01'; window.__APP_DATE = '07/11/2026';</script>
+<script>window.__APP_VERSION = 'ac5a391'; window.__APP_DATE = '07/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1731,7 +1731,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function drawObj(o, px, py, k, nf) {
     const t = performance.now() / 1000;
-    if (drawObj2(o, px, py, k) || drawObj3(o, px, py) || drawObj5(o, px, py)) return;
+    if (drawObj2(o, px, py, k) || drawObj3(o, px, py) || drawObj5(o, px, py) || drawObj6(o, px, py)) return;
     switch (o.k) {
       case 'tree': drawTree(px + 8, py + 15, 1, o.v || 0, o.hp, o.shake > performance.now()); if (o.tap) drawTapper(px, py, o); break;
       case 'stump': shadowAt(px + 8, py + 15, 7, 2); blit(STUMP(), px - 1, py); break;
@@ -2121,7 +2121,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.type === 'ccplaque') extra = ccRoomDone(s.room) ? 'on' : '';
       if (s.type === 'museumb' || s.type === 'ccbuilding') shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
       if (s.type === 'mcase') { blit(building2Canvas(s.type, w, h, false), x - 8, y - 36); s.slots.forEach((id, i) => { if (W.meta.museum && W.meta.museum[id]) drawIconAt(id, x + i * w / 3 + (w / 3 - 10) / 2, y - 7, 0.62); }); return; }
-      if (['carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
+      if (['carpentry', 'ranch', 'bar', 'fishshop', 'atelie', 'moveis', 'coreto', 'padaria', 'flores', 'petshop', 'clinica', 'biblioteca'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
       if (s.type === 'palm') shadowAt(x + 10, y + 15, 8, 3);
       blit(building2Canvas(s.type, w, h, night, extra), x - 8, y - 36);
       return;
@@ -2150,7 +2150,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // ================= novos prédios, móveis e decoração =================
-  const B2 = new Set(['coreto', 'moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
+  const B2 = new Set(['padaria', 'flores', 'petshop', 'clinica', 'biblioteca', 'coreto', 'moveis', 'atelie', 'carpentry', 'ranch', 'bar', 'fishshop', 'palm', 'driftwood', 'minechest', 'lumber', 'haybale', 'barshelf', 'bartable', 'barrels', 'fishtank', 'nets', 'fridge', 'stove', 'sink', 'hopper', 'trough', 'coop', 'barn', 'stable', 'silo', 'well', 'scaffold', 'greenhouse', 'marketstall', 'basin', 'ccbuilding', 'museumb', 'minecart', 'ccaltar', 'ccplaque', 'mcase']);
   function planks(x, y, w, h, c, step = 5) {
     const d = shade(c, -0.3), l = shade(c, 0.18);
     R(x, y, w, h, c);
@@ -2174,6 +2174,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       switch (type) {
         case 'moveis': drawMoveisB(w, h, night, snow); break;
         case 'coreto': drawCoreto(w, h, night, snow); break;
+        case 'padaria': case 'flores': case 'petshop': case 'clinica': case 'biblioteca': lojaFrente(type, w, h, night, snow); break;
         case 'atelie': {
           R(2, 18, w - 4, h - 18, '#f4dce4');
           for (let xx = 6; xx < w - 4; xx += 8) R(xx, 18, 1, h - 26, '#e8c4d0');
@@ -2705,7 +2706,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon8(id) || paintIcon5(id)) return;
+    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon8(id) || paintIcon9(id) || paintIcon5(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
@@ -3271,7 +3272,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const k = tx + ',' + ty;
     // gente e bichos na frente
     const d = DIRS[P.dir], fx = P.x + d[0] * 13, fy = P.y - 6 + d[1] * 13;
-    if (petCatAt(m, fx, fy)) return;
+    if (petCatAt(m, fx, fy) || vidaBichoAct(m, fx, fy)) return;
     const npc = npcAt(m, fx, fy) || npcAt(m, P.x + d[0] * 6, P.y - 6 + d[1] * 6);
     if (npc) { openTalk(npc); return; }
     const pr = peerAt(fx, fy);
@@ -3286,7 +3287,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
-    if (casaAct(m, tx, ty) || mataAct(m, tx, ty)) return;
+    if (casaAct(m, tx, ty) || mataAct(m, tx, ty) || bancoAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -3314,7 +3315,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'up': goMap('minetop', 8 * T + 8, 5 * T + 4, 1); return true;
       case 'elevator': openElevator(); return true;
     }
-    return false;
+    return eventoSpot(sp);
   }
   function interactFarm(tx, ty, m) {
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
@@ -3394,7 +3395,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
       // cortar árvores gasta 15% a mais (a camisa de lenhador devolve um pouco)
-      if (!useEnergy((s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0))) * (s.id === 'axe' ? 1.15 * (eqHas('xadrezlenhador') ? 0.85 : 1) : 1))) return;
+      if (!useEnergy((s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0))) * (s.id === 'axe' ? 1.15 * (eqHas('xadrezlenhador') ? 0.85 : 1) * (livro('livrolenha') ? 0.95 : 1) : 1))) return;
       swing(s.id, lv);
       if (s.id === 'hoe' && digArtifact(m, tx, ty)) return;
       if (m.rocks) { mineHit(m, tx, ty, s.id, power + (buffLv('mining') ? 1 : 0)); return; }
@@ -3473,6 +3474,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
     if (it.cat === 'movel') { placeMovel(m, tx, ty, s); return; }
+    if (it.cat === 'livro') { lerLivro(s); return; }
+    if (it.cat === 'acessorio') { toast('Segure e toque no Darth.', '', null, 'darth'); return; }
     if (it.cat === 'cama') { toast('Toque na cama de casa segurando a roupa de cama.', '', null, 'cama'); return; }
     if (it.cat === 'place') {
       if (!farmable(m)) { toast('Coloque isso na chacrinha.'); return; }
@@ -3670,7 +3673,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1) * (eqHas('colete') ? 1.08 : 1) + (eqHas('colarhavaiano') ? 2.5 : 0); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1) * (eqHas('colete') ? 1.08 : 1) * (livro('livropesca') ? 1.05 : 1) + (eqHas('colarhavaiano') ? 2.5 : 0); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
       document.getElementById('fish').hidden = false;
     }
   }
@@ -4000,6 +4003,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
+    const l3 = lojaList(who) || feiraList(who) || (who === 'mercador' ? mercList() : null); if (l3) return l3;
     switch (who) {
       case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).filter(([, f]) => !f.rare).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];
@@ -4245,6 +4249,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function buffLv(k) { const b = P && P.buff; return b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0; }
   function afterEat(id) {
     const it = item(id);
+    if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
     if (id === 'frutaestelar') { P.maxEnergy += 34; P.energy = P.maxEnergy; P.flags.stars = (P.flags.stars || 0) + 1; dirty(); sfx.level(); toast('Você sente uma energia nova! Energia máxima +34.', 'big'); return; }
     if (it.buff) {
       P.buff = { b: it.buff, until: nowMin() + 7 * 60, day: W.meta.day, name: it.name };
@@ -4798,7 +4803,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (const [id, n] of Object.entries(NPCS)) if (n.bday[0] === s) bdays[n.bday[1]] = n.name;
     for (const [k, f] of Object.entries(FESTS)) if (k.startsWith(s + ':')) { const dd = +k.split(':')[1]; bdays[dd] = bdays[dd] ? bdays[dd] + ' · ' + f.name : '🎉 ' + f.name; }
     const cal = Array.from({ length: 28 }, (_, i) => `<div class="${i + 1 === dom() ? 'today' : ''}${bdays[i + 1] ? ' bd' : ''}"><b>${i + 1}</b>${bdays[i + 1] ? `<small>${esc(bdays[i + 1])}</small>` : ''}</div>`).join('');
-    openPanel(`<h2>Quadro de avisos</h2>
+    openPanel(`<h2>Quadro de avisos</h2>${pedidosHTML()}
       <h3>Pedido de ajuda</h3>${q ? `<div class="item"><img src="${iconURL(q.id)}" alt=""><span class="nm"><b>${NPCS[q.npc].name} precisa de ${item(q.id).name.toLowerCase()}</b><small>${q.done ? 'Já foi entregue. Obrigado!' : `Recompensa: ${fmt(q.reward)} ₲. Segure o item e converse com ${NPCS[q.npc].name}. Vale só hoje.`}</small></span></div>` : '<p>Nenhum pedido hoje.</p>'}
       <h3>${SEASONS[SEASON_ID.indexOf(s)]} · aniversários</h3><div class="cal">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(d => `<div class="hd">${d}</div>`).join('')}${cal}</div>`, 'board');
   }
@@ -4950,7 +4955,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -5224,7 +5229,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   function panelAction3(a, b) {
-    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b)) return true;
+    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b) || loja3Action(a) || vidaAction(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
@@ -5320,10 +5325,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     else { s.mv = 0; s.idle += dt; }
     if (p.mode === 'come' && d < 22) { p.mode = 'follow'; meow(); toast('Darth chegou! 💚'); dirty(); updatePetButton(); }
   }
-  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0] : null);
+  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0, P.pet.coleira || 0] : null);
   // desenho: de lado, andando, sentado ou dormindo enroladinho
-  function catCanvas(pose, f, coat) {
-    return bake(`cat|${pose}|${f}|${coat ? 1 : 0}`, 20, 16, () => {
+  function catCanvas(pose, f, coat, col) {
+    return bake(`cat|${pose}|${f}|${coat ? 1 : 0}|${col || ''}`, 20, 16, () => {
       const body = () => {
       const c = '#1c1c24', l = '#34343f', eye = '#5ae05a';
       if (pose === 'sleep') {
@@ -5347,11 +5352,12 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       };
       body();
       if (coat) drawCatCoat(pose, f);
+      if (col && pose !== 'sleep') { if (pose === 'sit') { R(10, 8, 5, 1, col); R(12, 9, 1, 1, '#f4c83a'); } else { R(13, 8, 3, 2, col); R(14, 10, 1, 1, '#f4c83a'); } }
     });
   }
-  function drawCat(x, y, dir, mv, pose, coat) {
+  function drawCat(x, y, dir, mv, pose, coat, col) {
     const f = mv ? Math.floor(performance.now() / 120) % 2 : 0;
-    const c = catCanvas(mv ? 'walk' : pose || 'walk', f, coat);
+    const c = catCanvas(mv ? 'walk' : pose || 'walk', f, coat, col);
     x = Math.round(x); y = Math.round(y);
     shadowAt(x, y, 6, 1.6);
     ctx.save(); ctx.translate(x, y - 15);
@@ -5363,20 +5369,20 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function petEnts(m, ents) {
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
-      s.coat = darthDeCapa(m.id);
-      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      s.coat = darthDeCapa(m.id); s.collar = coleiraCol(P.pet.coleira);
+      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat, coleiraCol(P.pet.coleira)); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
-      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25; r.coat = !!p.pt[6];
-      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25; r.coat = !!p.pt[6]; r.collar = coleiraCol(p.pt[7]);
+      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat, r.collar); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)
   function petCatAt(m, px, py) {
-    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (vestirDarth()) return true; if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
+    if (P.pet && petSt.map === m.id && Math.hypot(petSt.x - px, petSt.y - 6 - py) < 14) { if (vestirDarth() || coleiraDarth()) return true; if (feedCat(true)) { catReact(petSt); return true; } petSt.idle = 3; petOwnCat(); return true; }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const r = remote.get('pet:' + p.peer) || { x: p.pt[0], y: p.pt[1] };
@@ -5393,7 +5399,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const withQ = (id, q) => (q ? id + '#' + q : id);
   // chance de prata e ouro na colheita: nível de Lavoura e adubo na terra
   function cropQuality(tl) {
-    const lvl = Math.min(10, skillLv(P.skills.farming) + (eqHas('chapeupalha') ? 1 : 0)), fq = tl && tl.fe === 'adubobom' ? 2 : tl && tl.fe === 'adubo' ? 1 : 0;
+    const lvl = Math.min(10, skillLv(P.skills.farming) + (eqHas('chapeupalha') ? 1 : 0) + (livro('livrohorta') ? 1 : 0)), fq = tl && tl.fe === 'adubobom' ? 2 : tl && tl.fe === 'adubo' ? 1 : 0;
     const gold = 0.01 + 0.2 * (lvl / 10) + 0.2 * fq * ((lvl + 2) / 12), silver = Math.min(0.75, gold * 2), r = Math.random();
     return r < gold ? 2 : r < silver ? 1 : 0;
   }
@@ -5787,7 +5793,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const eq = () => P.eq || (P.eq = {});
   const eqHas = id => { const e = P && P.eq; return !!e && Object.values(e).includes(id); };
   const eqAtk = () => (eqHas('anelguerreiro') ? 2 : 0) + (eqHas('luvascouro') ? 1 : 0);
-  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0) + (eqHas('chapeuapicultor') && curMap().mata ? 2 : 0);
+  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0) + (eqHas('chapeuapicultor') && curMap().mata ? 2 : 0) + (livro('livromina') ? 1 : 0);
   const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0) + (eqHas('botastrilha') && !(W.meta && W.meta.rain) ? 0.05 : 0) + (eqHas('botasmata') && curMap().mata ? 0.1 : 0);
   const defTotal = () => buffLv('defense') + profDef() + eqDef();
   function equipSlot(i) {
@@ -6462,12 +6468,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ---------- petiscos e presentinhos do Darth ----------
   ITEMS.petisco = { name: 'Petisco do Darth', cat: 'res', sell: 10, desc: 'Um petisco de gato. Segure e toque no Darth para dar. Peixes também servem!' };
-  const isTreat = s => s && (s.id === 'petisco' || item(s.id).cat === 'fish');
+  const isTreat = s => s && (s.id === 'petisco' || s.id === 'racaopremium' || item(s.id).cat === 'fish');
   // dar petisco para o próprio Darth (dono) ou para o Darth da outra pessoa (vai por mensagem)
   function feedCat(own, peerUid) {
     const s = held(); if (!isTreat(s)) return false;
+    const extra = s.id === 'racaopremium' ? 8 : 0;
     useHeld(1); meow(); logAct('darth', 'petisco', 1);
-    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco!', 'Darth comeu tudo e lambeu os bigodes.', 'Darth ronrona de barriguinha cheia.']), 'big', null, 'darth'); }
+    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8 + extra); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco!', 'Darth comeu tudo e lambeu os bigodes.', 'Darth ronrona de barriguinha cheia.']), 'big', null, 'darth'); }
     else { emitP2P({ type: 'petfeed', to: peerUid }); toast('Darth adorou o petisco!', 'big', null, 'darth'); }
     return true;
   }
@@ -6501,9 +6508,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (r && r.t > 0) {
       r.t -= 1 / 60;
       const k = 1.8 - r.t;
-      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat); }
-      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat); }
-      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat); }
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat, st.collar); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat, st.collar); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat, st.collar); }
       for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
       if (r.t <= 0) st.react = null;
       return true;
@@ -6853,8 +6860,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     bugs = bugs.filter(b => b.life > 0);
     bugSpawnT -= dt;
     if (bugSpawnT <= 0) {
-      bugSpawnT = rnd(5, 9);
-      const max = season() === 'summer' ? 4 : 3;
+      bugSpawnT = rnd(5, 9) * (livro('livroinsetos') ? 0.7 : 1);
+      const max = (season() === 'summer' ? 4 : 3) + (livro('livroinsetos') ? 1 : 0);
       const pool = bugPool(m);
       if (pool.length && bugs.length < max) {
         // os mais difíceis aparecem menos
@@ -7864,7 +7871,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const needTxtC = need => Object.entries(need).map(([k, n]) => `<span style="color:${count(k) >= n ? '#2a7a2a' : '#a83a2a'}">${n} ${item(k).name.toLowerCase()} (${count(k)})</span>`).join(', ');
   const canMake = f => gold() >= f.gold && Object.entries(f.need).every(([k, n]) => count(k) >= n);
   function moveisHTML() {
-    return `<p style="text-align:center;font-size:13px">Cada móvel é feito na hora, com a madeira que vocês trazem da mata.</p><div class="list">${Object.entries(MOVEIS).map(([k, f]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${f.name}</b><small>${f.desc} · ${fmt(f.gold)} ₲ + ${needTxtC(f.need)}</small></span><button class="btn g" data-a="movelMake" data-id="${k}" type="button" ${canMake(f) ? '' : 'disabled'}>Encomendar</button></div>`).join('')}</div>`;
+    return `<p style="text-align:center;font-size:13px">Cada móvel é feito na hora, com a madeira que vocês trazem da mata.</p><div class="list">${Object.entries(MOVEIS).filter(([, f]) => !f.pet).map(([k, f]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${f.name}</b><small>${f.desc} · ${fmt(f.gold)} ₲ + ${needTxtC(f.need)}</small></span><button class="btn g" data-a="movelMake" data-id="${k}" type="button" ${canMake(f) ? '' : 'disabled'}>Encomendar</button></div>`).join('')}</div>`;
   }
   function camasHTML() {
     return `<p style="text-align:center;font-size:13px">Também dá para fazer em casa, na aba Criar, com fibra, lã e tecido.</p><div class="list">${Object.entries(CAMAS).map(([k, c]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${c.name}</b><small>${c.desc}</small></span><span class="price">${fmt(c.gold)} ₲</span><button class="btn g" data-a="camaBuy" data-id="${k}" type="button" ${gold() >= c.gold ? '' : 'disabled'}>Comprar</button></div>`).join('')}</div>`;
@@ -7874,6 +7881,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (who === 'claudio' && tab === 'enc') return encHTML();
     if (who === 'tonico' && tab === 'moveis') return moveisHTML();
     if (who === 'tonico' && tab === 'cama') return camasHTML();
+    if (who === 'davi' && tab === 'consulta') return consultaHTML();
     return null;
   }
 
@@ -7953,6 +7961,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ---------- desenho dos móveis ----------
   function drawMovel(id, px, py, t, night) {
+    if (drawMovelPet(id, px, py)) return;
     switch (id) {
       case 'cadeirapinho': shadowAt(px + 8, py + 14, 6, 2); R(px + 4, py - 6, 8, 12, '#b88a4a'); R(px + 5, py - 5, 6, 2, '#d8b070'); R(px + 5, py - 1, 6, 1, '#d8b070'); R(px + 3, py + 5, 10, 4, '#d8b070'); R(px + 3, py + 5, 10, 1, '#f0d098'); R(px + 4, py + 9, 2, 5, '#9a6a3a'); R(px + 10, py + 9, 2, 5, '#9a6a3a'); break;
       case 'mesapinho': shadowAt(px + 8, py + 14, 6, 2); oval(px + 8, py + 5, 7, 3.5, '#b88a4a'); oval(px + 8, py + 4, 7, 3, '#d8b070'); R(px + 7, py + 7, 2, 7, '#9a6a3a'); R(px + 4, py + 13, 8, 1, '#9a6a3a'); R(px + 7, py, 3, 3, '#f4f0e8'); R(px + 8, py - 1, 1, 1, '#ffffff99'); break;
@@ -8178,7 +8187,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   function vilaLights(m, light, nf) {
     if (!m.outdoor || !m.lanterns || nf <= 0) return;
     for (const [lx, ly] of m.lanterns) light(lx * T + 8, ly * T + 8, 48, nf * 0.7);
-    for (const s of m.sprites) if (['atelie', 'moveis', 'ccbuilding', 'museumb', 'coreto'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
+    for (const s of m.sprites) if (['atelie', 'moveis', 'ccbuilding', 'museumb', 'coreto', 'padaria', 'flores', 'petshop', 'clinica', 'biblioteca'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
   }
   // ---------- coreto da praça ----------
   function drawCoreto(w, h, night, snow) {
@@ -8337,6 +8346,486 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (const id of Object.keys(NPCS)) { const p = npcPos(id); if (!p || p.map !== 'town') continue; x.fillStyle = '#3a1e0a'; x.fillRect(p.x / T * k - 3, p.y / T * k - 3, 6, 6); x.fillStyle = '#ffd040'; x.fillRect(p.x / T * k - 2, p.y / T * k - 2, 4, 4); }
     if (P.map === 'town') { x.fillStyle = '#ffffff'; x.fillRect(P.x / T * k - 4, P.y / T * k - 4, 8, 8); x.fillStyle = '#e8402a'; x.fillRect(P.x / T * k - 3, P.y / T * k - 3, 6, 6); }
   }
+  // ================= lojas e moradores novos da vila =================
+  // Padaria (Dona Glória), Floricultura (Vó Nena), Clínica (Doutor Davi), Pet shop (Tati), Biblioteca (Professora Helena) e o carteiro Seu Juca.
+
+  // ---------- moradores novos ----------
+  Object.assign(NPCS, {
+    gloria: { name: 'Dona Glória', role: 'padeira', look: { hair: 1, style: 2, shirt: 0, skin: 2, pants: '#6a4a3a', apron: '#f4f0e8' }, bday: ['spring', 18],
+      loves: ['trigo', 'leite', 'ovo', 'mel', 'cafereforcado'], likes: ['*food', '*fruit', 'acucar'], hates: ['gosma', 'asamorcego'], shop: 'padaria', hours: [420, 900],
+      lines: ['Pão quentinho saindo agora!', 'Acordo às 4h todo dia. O forno não espera ninguém.', 'O segredo do pão de queijo? Paciência e queijo bom.', 'Quem toma café da manhã direito trabalha melhor.', 'Hoje tem bolo de cenoura com cobertura de chocolate!'],
+      hi: ['Separei o pão mais bonito pra vocês.', 'Vocês são meus fregueses preferidos. Não conta pros outros!'],
+      season: ['Primavera: hora do bolo de morango.', 'No verão o pão cresce rapidinho com o calor.', 'Outono pede um bolo de abóbora.', 'Inverno é tempo de chocolate quente com rabanada.'],
+      sched: [[360, null], [420, 'padaria', 6, 2, 1], [900, 'town', 36, 25, 1], [1080, 'bar', 12, 6, 2], [1260, null]] },
+    helena: { name: 'Professora Helena', role: 'bibliotecária', look: { hair: 0, style: 1, shirt: 5, skin: 0, pants: '#3a3a5a', glasses: true }, bday: ['fall', 21],
+      loves: ['tortamirtilo', 'cafereforcado', 'rosafada', 'ametista'], likes: ['*fruit', '*art', 'narciso'], hates: ['gosma', 'peixepedra'], shop: 'biblioteca', hours: [600, 1080],
+      lines: ['Silêncio na biblioteca, mas pode falar baixinho comigo.', 'Todo livro é uma janela. Escolha a sua!', 'Ensinei metade da vila a ler. A outra metade fugia da aula.', 'Estou escrevendo a história da vila. Vocês vão aparecer nela.', 'Um capítulo por noite antes de dormir. É a regra.'],
+      hi: ['Guardei um livro novo pensando em vocês.', 'Vocês leem juntos à noite? Que coisa mais linda.'],
+      season: ['Primavera: livros de jardinagem esgotam.', 'Verão é para ler na beira do rio.', 'No outono, a biblioteca fica mais cheia.', 'Inverno, cobertor e um bom romance.'],
+      sched: [[360, 'lar_helena', 4, 4, 1], [540, 'town', 42, 24, 1], [600, 'biblioteca', 6, 2, 1], [1080, 'town', 26, 48, 1], [1200, 'lar_helena', 5, 4, 1], [1380, null]],
+      schedSun: [[360, 'lar_helena', 4, 4, 1], [540, 'town', 72, 23, 1], [900, 'biblioteca', 6, 2, 1], [1080, 'lar_helena', 5, 4, 1], [1380, null]] },
+    tati: { name: 'Tati', role: 'dona do pet shop', look: { hair: 6, style: 1, shirt: 1, skin: 3, pants: '#4a6a8a', apron: '#5ab8e8' }, bday: ['summer', 7],
+      loves: ['petisco', 'sardinha', 'morango', 'sorvete'], likes: ['*fish', '*fruit', 'pena'], hates: ['gosma', 'asamorcego'], shop: 'petshop', hours: [540, 1020],
+      lines: ['Como está o Darth? Manda um beijo pra ele!', 'Gato preto dá sorte, viu? Não acredite no contrário.', 'Ração premium deixa o pelo brilhando.', 'Um dia ainda abro um abrigo de bichinhos na vila.', 'Já pensou numa coleira com sininho pro Darth?'],
+      hi: ['O Darth é o gato mais fofo da vila. Empate com nenhum.', 'Vocês cuidam tão bem do Darth...'],
+      season: ['Primavera: época de filhotinhos!', 'No verão, água fresquinha pros bichos.', 'Outono: hora de escovar o pelo.', 'Inverno: caminha quentinha pro Darth!'],
+      sched: [[360, null], [480, 'town', 21, 16, 1], [540, 'petshop', 6, 2, 1], [1020, 'town', 30, 47, 1], [1140, 'bar', 10, 4, 1], [1320, null]] },
+    juca: { name: 'Seu Juca', role: 'carteiro', look: { hair: 4, shirt: 1, skin: 1, pants: '#3a4a7a', beard: true, apron: '#c8a03a' }, bday: ['winter', 3],
+      loves: ['cafereforcado', 'pao', 'queijo', 'vinho:uva'], likes: ['*food', '*art'], hates: ['gosma'],
+      lines: ['Carta pra vocês? Hoje não, mas amanhã quem sabe!', 'Conheço cada porta dessa vila.', 'Trinta anos de carteiro e nunca perdi uma carta. Bom, quase nunca.', 'O correio mais bonito do mundo é o de vocês.', 'Andar faz bem. Ando uns dez quilômetros por dia!'],
+      hi: ['Vocês recebem as cartinhas mais lindas da vila.', 'Fico feliz de entregar coisas boas pra vocês.'],
+      season: ['Primavera: muita carta de amor por aí.', 'Verão: carta da praia e cartão-postal.', 'Outono: convites de festa!', 'No inverno o correio dobra. Todo mundo manda presente.'],
+      sched: [[360, 'lar_juca', 4, 4, 1], [480, 'town', 60, 37, 1], [540, 'town', 8, 26, 1], [600, 'farm', 14, 8, 1], [660, 'town', 20, 16, 1], [720, 'town', 55, 16, 1], [810, 'town', 38, 25, 1], [960, 'town', 45, 46, 1], [1080, 'bar', 3, 5, 1], [1260, 'lar_juca', 5, 4, 1], [1380, null]],
+      schedRain: [[360, 'lar_juca', 4, 4, 1], [540, 'town', 8, 26, 1], [600, 'farm', 14, 8, 1], [660, 'town', 55, 16, 1], [780, 'bar', 3, 5, 1], [1260, 'lar_juca', 5, 4, 1], [1380, null]] },
+  });
+  // a Vó Nena cuida da floricultura e o Doutor Davi atende na clínica
+  Object.assign(NPCS.nena, { shop: 'flores', hours: [540, 1020],
+    sched: [[360, 'lar_nena', 4, 4, 1], [540, 'flores', 6, 2, 1], [1020, 'town', 34, 24, 1], [1140, 'lar_nena', 5, 4, 1], [1320, null]],
+    schedRain: [[360, 'lar_nena', 4, 4, 1], [540, 'flores', 6, 2, 1], [1020, 'lar_nena', 5, 4, 1], [1320, null]] });
+  Object.assign(NPCS.davi, { shop: 'clinica', hours: [540, 900],
+    sched: [[360, 'lar_davi', 4, 4, 1], [540, 'clinica', 6, 2, 1], [900, 'town', 41, 36, 1], [1080, 'bar', 6, 6, 2], [1260, 'lar_davi', 5, 4, 1], [1380, null]],
+    schedRain: [[360, 'lar_davi', 4, 4, 1], [540, 'clinica', 6, 2, 1], [1080, 'bar', 6, 6, 2], [1260, 'lar_davi', 5, 4, 1], [1380, null]] });
+
+  // ---------- produtos ----------
+  Object.assign(ITEMS, {
+    paoqueijo: { name: 'Pão de queijo', cat: 'food', sell: 30, energy: 60, buff: { speed: 1 }, desc: 'Dá Velocidade +1 por um tempo.' },
+    cafecoado: { name: 'Café coado', cat: 'food', sell: 40, energy: 45, drink: true, buff: { speed: 1 }, desc: 'Dá Velocidade +1 por um tempo.' },
+    bolocenoura: { name: 'Bolo de cenoura', cat: 'food', sell: 120, energy: 140, buff: { farming: 1 }, desc: 'Com cobertura de chocolate. Dá Lavoura +1.' },
+    sonho: { name: 'Sonho', cat: 'food', sell: 90, energy: 100, buff: { luck: 1 }, desc: 'Recheado de creme. Dá Sorte +1.' },
+    broa: { name: 'Broa de milho', cat: 'food', sell: 60, energy: 80, buff: { foraging: 1 }, desc: 'Dá Coleta +1 por um tempo.' },
+    cestacafe: { name: 'Cesta de café da manhã', cat: 'food', sell: 300, energy: 260, buff: { farming: 1, fishing: 1, mining: 1 }, desc: 'Para começar o dia: Lavoura, Pesca e Mineração +1.' },
+    buque: { name: 'Buquê de flores', cat: 'art', sell: 200, desc: 'Todo mundo na vila ama receber.' },
+    vasoflores: { name: 'Vaso de flores', cat: 'place', desc: 'Enfeite para a chacrinha.' },
+    bancojardim: { name: 'Banco de jardim', cat: 'place', desc: 'Enfeite para a chacrinha. Dá para sentar e descansar.' },
+    arcoflores: { name: 'Arco de flores', cat: 'place', desc: 'Enfeite romântico para a chacrinha.' },
+    curativo: { name: 'Curativo', cat: 'food', sell: 40, energy: 5, hp: 40, desc: 'Recupera 40 de vida.' },
+    xaropeenergia: { name: 'Xarope de energia', cat: 'food', sell: 100, energy: 120, drink: true, desc: 'Recupera bastante energia.' },
+    vitamina: { name: 'Vitamina do doutor', cat: 'food', sell: 120, energy: 40, hp: 20, buff: { defense: 1 }, drink: true, desc: 'Dá Defesa +1 e recupera vida.' },
+    racaopremium: { name: 'Ração premium', cat: 'animal', sell: 40, desc: 'O Darth adora: vale o dobro de carinho de um petisco.' },
+    coleiravermelha: { name: 'Coleira vermelha', cat: 'acessorio', sell: 100, desc: 'Segure e toque no Darth para colocar ou tirar.', col: '#d8302a' },
+    coleiraazul: { name: 'Coleira azul', cat: 'acessorio', sell: 100, desc: 'Segure e toque no Darth para colocar ou tirar.', col: '#2a6ad8' },
+    coleiralaco: { name: 'Lacinho rosa', cat: 'acessorio', sell: 150, desc: 'Segure e toque no Darth para colocar ou tirar.', col: '#ff6aa8' },
+    livropesca: { name: 'Manual do Pescador', cat: 'livro', sell: 500, desc: 'Segure e toque em Usar para ler: a barra da pesca fica 5% maior para sempre.' },
+    livrohorta: { name: 'Hortas Felizes', cat: 'livro', sell: 500, desc: 'Segure e toque em Usar para ler: colheitas um pouco melhores para sempre.' },
+    livromina: { name: 'Guia da Mina', cat: 'livro', sell: 500, desc: 'Segure e toque em Usar para ler: +1 de defesa para sempre.' },
+    livrolenha: { name: 'Diário do Lenhador', cat: 'livro', sell: 500, desc: 'Segure e toque em Usar para ler: cortar árvores gasta 5% menos energia para sempre.' },
+    livroreceitas: { name: 'Receitas da Vó', cat: 'livro', sell: 400, desc: 'Segure e toque em Usar para ler: aprende 3 receitas novas.' },
+    livroinsetos: { name: 'Atlas das Borboletas', cat: 'livro', sell: 400, desc: 'Segure e toque em Usar para ler: aparecem mais bichinhos para a rede.' },
+  });
+  UNIVERSAL.loves.push('buque');
+  PLACED.push('vasoflores', 'bancojardim', 'arcoflores'); for (const k of ['vasoflores', 'bancojardim', 'arcoflores']) SOLID_OBJ.add(k);
+  Object.assign(MOVEIS, {
+    caminhagato: { name: 'Caminha do Darth', pet: true, w: 1, h: 1, gold: 800, need: {}, desc: 'Fofinha, do tamanho de um gato.' },
+    arranhador: { name: 'Arranhador', pet: true, w: 1, h: 1, gold: 1200, need: {}, desc: 'Torre com casinha para o Darth.' },
+  });
+  for (const k of ['caminhagato', 'arranhador']) ITEMS[k] = { name: MOVEIS[k].name, cat: 'movel', sell: Math.round(MOVEIS[k].gold / 3), desc: MOVEIS[k].desc + ' Segure dentro de casa e toque no chão para colocar.' };
+  const livro = id => !!(P && P.flags && P.flags.livros && P.flags.livros[id]);
+  function lerLivro(s) {
+    const id = s.id; if (livro(id)) { toast('Você já leu esse livro. Dá para vender ou dar de presente.', '', null, 'livro'); return; }
+    P.flags.livros = { ...(P.flags.livros || {}), [id]: W.meta.day };
+    useHeld(1); sfx.level();
+    if (id === 'livroreceitas') {
+      const novas = COOK.filter(r => !P.recipes.includes(r.id) && String(r.learn || '').startsWith('npc:')).slice(0, 3);
+      for (const r of novas) P.recipes.push(r.id);
+      toast(novas.length ? `Você aprendeu: ${novas.map(r => r.name).join(', ')}!` : 'Você já sabia todas essas receitas!', 'big', null, 'livro');
+    } else toast(`Você leu ${item(id).name}! ${item(id).desc.split(': ')[1] || ''}`, 'big', null, 'livro');
+    dirty();
+  }
+
+  // ---------- as lojas na vila ----------
+  const LOJAS3 = [['padaria', 'gloria', 'Padaria da Glória', G.WOOD], ['flores', 'nena', 'Floricultura da Vó Nena', G.WOOD], ['petshop', 'tati', 'Pet Shop da Tati', G.TILE], ['clinica', 'davi', 'Clínica do Doutor Davi', G.TILE], ['biblioteca', 'helena', 'Biblioteca da Vila', G.WOOD]];
+  for (const [k, who, nome, piso] of LOJAS3) {
+    const p = VILA[k], top = p[1] + p[3] < VILA.ruaN ? VILA.ruaN - 1 : VILA.rua - 1;
+    predio(MAPS.town, k, p, k, top);
+    const m = shopRoom(k, nome, 12, 9, piso, who, () => {});
+    for (const [x, y] of [[1, 2], [10, 2], [1, 5], [10, 5], [9, 2]]) m.solid[y * m.w + x] = 1;
+    m.warps.push({ x: 6, y: 8, to: 'town', tx: p[4], ty: p[1] + p[3], dir: 1 });
+    MAPS[k] = finalize(m);
+  }
+  PLACAS.push(['padaria', 'Padaria', 'gloria'], ['flores', 'Floricultura', 'nena'], ['petshop', 'Pet Shop', 'tati'], ['clinica', 'Clínica', 'davi'], ['biblioteca', 'Biblioteca', 'helena']);
+  MAPA_ROTULOS.push(['padaria', 'Padaria'], ['flores', 'Flores'], ['petshop', 'Pet shop'], ['clinica', 'Clínica'], ['biblioteca', 'Biblioteca']);
+  Object.assign(SHOP_INFO, {
+    gloria: { title: 'Padaria da Glória', tabs: [['buy', 'Comprar'], ['sell', 'Vender']], greet: () => '“Bom dia! Pão quentinho e café passado agorinha.”' },
+    nena: { title: 'Floricultura da Vó Nena', tabs: [['buy', 'Comprar'], ['sell', 'Vender']], greet: () => '“Flor é carinho que a gente planta, minha filha.”' },
+    tati: { title: 'Pet Shop da Tati', tabs: [['buy', 'Comprar'], ['sell', 'Vender']], greet: () => '“Oi! Como está o Darth hoje?”' },
+    davi: { title: 'Clínica do Doutor Davi', tabs: [['consulta', 'Consulta'], ['buy', 'Remédios']], greet: () => '“Vamos ver como está essa saúde.”' },
+    helena: { title: 'Biblioteca da Vila', tabs: [['buy', 'Livros']], greet: () => '“Cada livro ensina algo para a vida toda.”' },
+  });
+  const LOJA3_ITENS = {
+    gloria: [['pao', 120], ['paoqueijo', 80], ['cafecoado', 90], ['broa', 140], ['sonho', 200], ['bolocenoura', 280], ['cestacafe', 650]],
+    nena: () => [...Object.entries(CROPS).filter(([k, c]) => c.cat === 'flower' && c.seasons.includes(season())).map(([k, c]) => ['s_' + k, Math.round(c.seed * 1.1)]), ['buque', 600], ['vasoflores', 900], ['bancojardim', 1800], ['arcoflores', 3500]],
+    tati: [['petisco', 30], ['racaopremium', 120], ['coleiravermelha', 600], ['coleiraazul', 600], ['coleiralaco', 900], ['caminhagato', 800], ['arranhador', 1200]],
+    davi: [['curativo', 150], ['xaropeenergia', 300], ['vitamina', 450]],
+    helena: [['livroreceitas', 2500], ['livroinsetos', 2000], ['livropesca', 3000], ['livrohorta', 3000], ['livromina', 3000], ['livrolenha', 3000]],
+  };
+  const LOJA3_UMA = new Set(['coleiravermelha', 'coleiraazul', 'coleiralaco', 'livropesca', 'livrohorta', 'livromina', 'livrolenha', 'livroreceitas', 'livroinsetos']);
+  function lojaList(who) {
+    let l = LOJA3_ITENS[who]; if (!l) return null; if (typeof l === 'function') l = l();
+    return l.map(([id, price]) => ({ id, price, one: LOJA3_UMA.has(id) || (id.startsWith('livro') && livro(id)) }));
+  }
+  function consultaHTML() {
+    const pr = 200;
+    return `<p style="text-align:center">“Deita aqui que eu dou uma olhada.” A consulta cura toda a vida e devolve um pouco de energia.</p>
+      <div class="item"><span class="nm"><b>Consulta</b><small>Vida ${Math.round(P.hp)}/100 · energia +30</small></span><span class="price">${pr} ₲</span><button class="btn g" data-a="consulta" type="button" ${gold() >= pr && P.hp < 100 ? '' : 'disabled'}>Consultar</button></div>`;
+  }
+  function loja3Action(a) {
+    if (a !== 'consulta') return false;
+    if (spend(200)) { P.hp = 100; P.energy = Math.min(P.maxEnergy, P.energy + 30); dirty(); sfx.level(); toast('“Pronto! Novinho em folha.” Vida cheia.', 'big', null, 'clinica'); }
+    renderShop(panelArg); return true;
+  }
+
+  // ---------- coleira do Darth ----------
+  function coleiraDarth() {
+    const s = held(); if (!s || !ITEMS[s.id] || !ITEMS[s.id].col || !P.pet) return false;
+    P.pet.coleira = P.pet.coleira === s.id ? null : s.id; dirty(); meow(); catReact(petSt);
+    toast(P.pet.coleira ? `Darth está de ${item(s.id).name.toLowerCase()}! Que charme.` : 'Você tirou a coleira do Darth.', 'big', null, 'darth');
+    return true;
+  }
+  const coleiraCol = id => (id && ITEMS[id] && ITEMS[id].col) || '';
+
+  // ---------- enfeites de jardim na chacrinha ----------
+  function drawObj6(o, px, py) {
+    const t = performance.now() / 1000;
+    if (o.k === 'vasoflores') { shadowAt(px + 8, py + 14, 6, 2); R(px + 3, py + 7, 10, 8, '#b85a3a'); R(px + 3, py + 7, 10, 2, '#d8805a'); for (const [dx, dy, c] of [[-3, 0, '#ff6aa8'], [3, -1, '#f4c83a'], [0, -3, '#ffffff'], [-1, 2, '#c86ad8'], [3, 2, '#ff8a4a']]) { disc(px + 8 + dx, py + 5 + dy, 2, c); R(px + 8 + dx, py + 5 + dy, 1, 1, '#ffe080'); } return true; }
+    if (o.k === 'bancojardim') { shadowAt(px + 8, py + 14, 9, 2); R(px - 2, py + 2, 20, 4, '#a86a3a'); R(px - 2, py + 2, 20, 1, '#c88a5a'); R(px - 2, py + 7, 20, 3, '#a86a3a'); R(px - 1, py + 10, 2, 5, '#3a3a3a'); R(px + 15, py + 10, 2, 5, '#3a3a3a'); return true; }
+    if (o.k === 'arcoflores') { shadowAt(px + 8, py + 14, 9, 2); R(px - 2, py - 18, 3, 33, '#f4f0e8'); R(px + 15, py - 18, 3, 33, '#f4f0e8'); ctx.strokeStyle = '#f4f0e8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px + 8, py - 18, 9, Math.PI, 0); ctx.stroke(); for (let k = 0; k < 11; k++) { const a = Math.PI + k / 10 * Math.PI; disc(px + 8 + Math.cos(a) * 9, py - 18 + Math.sin(a) * 9, 2, k % 2 ? '#ff6aa8' : '#ffffff'); } for (let k = 0; k < 5; k++) { disc(px - 1, py - 14 + k * 6, 1.8, '#ff6aa8'); disc(px + 17, py - 12 + k * 6, 1.8, '#ffffff'); } return true; }
+    return false;
+  }
+  // sentar no banco do jardim: descansa um pouco
+  function bancoAct(m, tx, ty) {
+    if (m.id !== 'farm') return false; const tl = tile(tx + ',' + ty); if (!tl || !tl.o || tl.o.k !== 'bancojardim') return false;
+    const s = held(); if (s && item(s.id).cat === 'tool') return false;
+    const d = W.meta.day, f = P.flags; if (f.bancoD === d) { toast('Você já descansou no banco hoje.', '', null, 'banco'); return true; }
+    f.bancoD = d; P.energy = Math.min(P.maxEnergy, P.energy + 15); dirty(); sfx.pop(); toast('Você senta um pouquinho no banco do jardim. +15 de energia.', '', null, 'banco'); return true;
+  }
+
+  // ---------- desenho dos prédios ----------
+  function lojaFrente(type, w, h, night, snow) {
+    const S = {
+      padaria: { wall: '#f4e4c4', line: '#e0cc9c', roof: '#a8542a', toldo: ['#e8862a', '#fff4e0'], door: '#7a4a24' },
+      flores: { wall: '#f4f8ec', line: '#dce8cc', roof: '#4a9a5a', toldo: ['#5ab86a', '#ffffff'], door: '#3a7a4a' },
+      petshop: { wall: '#d8eef8', line: '#bcdcec', roof: '#3a7ac8', toldo: ['#5ab8e8', '#ffffff'], door: '#2a5a9a' },
+      clinica: { wall: '#f8f8f4', line: '#e0e0dc', roof: '#4a6a9a', toldo: ['#e8402a', '#ffffff'], door: '#5a7a9a' },
+      biblioteca: { wall: '#b8584a', line: '#9a463a', roof: '#3a3a4a', toldo: null, door: '#4a2a1a' },
+    }[type];
+    R(2, 18, w - 4, h - 18, S.wall); for (let yy = 20; yy < h - 6; yy += 6) R(2, yy, w - 4, 1, S.line);
+    if (type === 'biblioteca') { for (let yy = 19; yy < h - 6; yy += 5) for (let xx = 2 + ((yy / 5) & 1) * 4; xx < w - 4; xx += 8) R(xx, yy, 7, 4, '#c8685a'); for (const x of [6, w - 12]) { R(x, 20, 6, h - 26, '#e8e0d0'); R(x + 4, 20, 2, h - 26, '#c8c0b0'); } }
+    R(2, h - 6, w - 4, 6, '#8a7a6a');
+    shingleRoof(-6, -12, w + 12, 32, snow ? '#e8eef4' : S.roof); R(-6, 18, w + 12, 3, shade(S.roof, -0.4));
+    if (S.toldo) { for (let k = 0; k < 8; k++) R(3 + k * ((w - 6) / 8), 24, (w - 6) / 8 + 1, 6, S.toldo[k % 2]); for (let k = 0; k < 8; k++) disc(3 + (k + 0.5) * ((w - 6) / 8), 30, (w - 6) / 16, S.toldo[k % 2]); }
+    winPx(type === 'biblioteca' ? 14 : 7, 36, 22, 18, true, '#f4e8d0');
+    const wx = type === 'biblioteca' ? 14 : 7;
+    // vitrine de cada loja
+    if (type === 'padaria') { for (let k = 0; k < 3; k++) { oval(wx + 5 + k * 6, 48, 3, 2, '#c8843a'); R(wx + 3 + k * 6, 47, 4, 1, '#e8b060'); } disc(wx + 11, 41, 3, '#f4d8a0'); }
+    if (type === 'flores') { for (let k = 0; k < 4; k++) { R(wx + 3 + k * 5, 46, 3, 6, '#7a4a24'); disc(wx + 4 + k * 5, 44, 2.4, ['#ff6aa8', '#f4c83a', '#c86ad8', '#ffffff'][k]); } }
+    if (type === 'petshop') { oval(wx + 11, 49, 6, 3, '#e8402a'); oval(wx + 11, 47, 3, 2.5, '#1c1c24'); R(wx + 12, 44, 2, 2, '#1c1c24'); disc(wx + 5, 42, 1.5, '#8a5a2a'); }
+    if (type === 'clinica') { R(wx + 9, 39, 4, 12, '#e8402a'); R(wx + 5, 43, 12, 4, '#e8402a'); }
+    if (type === 'biblioteca') { for (let k = 0; k < 5; k++) R(wx + 3 + k * 4, 41, 3, 10, ['#c83a3a', '#3a7ad0', '#f4c83a', '#5aa83a', '#b05ae0'][k]); }
+    // placa no telhado
+    R(w / 2 - 16, -6, 32, 14, '#5a3418'); R(w / 2 - 14, -4, 28, 10, '#f8ecd0');
+    const cx = w / 2;
+    if (type === 'padaria') { oval(cx, 1, 7, 3, '#c8843a'); R(cx - 5, 0, 10, 1, '#e8b060'); }
+    if (type === 'flores') { for (const [dx, c] of [[-6, '#ff6aa8'], [0, '#f4c83a'], [6, '#c86ad8']]) { disc(cx + dx, 0, 2.5, c); R(cx + dx, 2, 1, 3, '#4aa83a'); } }
+    if (type === 'petshop') { disc(cx, 2, 3, '#3a7ac8'); for (const [dx, dy] of [[-4, -2], [-1.5, -4], [1.5, -4], [4, -2]]) disc(cx + dx, 2 + dy, 1.4, '#3a7ac8'); }
+    if (type === 'clinica') { R(cx - 1.5, -3, 3, 9, '#e8402a'); R(cx - 4.5, 0, 9, 3, '#e8402a'); }
+    if (type === 'biblioteca') { R(cx - 7, -2, 6, 8, '#3a7ad0'); R(cx + 1, -2, 6, 8, '#c83a3a'); R(cx - 1, -2, 2, 8, '#5a3418'); }
+    doorPx(2 * T + 1, h - 22, S.door);
+    if (type === 'flores') for (let k = 0; k < 5; k++) disc(w - 28 + k * 5, h - 9, 2.4, ['#ff6aa8', '#f4c83a', '#ffffff', '#c86ad8', '#ff8a4a'][k]);
+  }
+  // decoração de dentro de cada loja
+  function loja3Ents(m, ents, t) {
+    const k = m.id; if (!LOJA3_ITENS[{ padaria: 'gloria', flores: 'nena', petshop: 'tati', clinica: 'davi', biblioteca: 'helena' }[k]]) return;
+    ents.push({ y: -998, f: () => {
+      if (k === 'padaria') { R(1 * T, 2, 30, 26, '#8a5a3a'); for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) oval(T + 5 + i * 7, 8 + r * 8, 3, 2, ['#c8843a', '#e8b060', '#f4d8a0'][r]); R(9 * T, 0, 30, 28, '#8a8278'); R(9 * T + 4, 8, 22, 14, '#2a1a10'); R(9 * T + 6, 12, 18, 8, Math.sin(t * 6) > 0 ? '#ff7a2a' : '#ffa040'); }
+      if (k === 'flores') { for (let i = 0; i < 6; i++) { R(T + i * 6, 14, 5, 10, '#6a8a9a'); for (let j = 0; j < 3; j++) disc(T + 2 + i * 6, 12 - j * 3, 2, ['#ff6aa8', '#f4c83a', '#c86ad8', '#ffffff', '#ff8a4a', '#e8402a'][(i + j) % 6]); } R(9 * T, 6, 30, 3, '#7a4a24'); for (let i = 0; i < 4; i++) { R(9 * T + 2 + i * 7, 9, 1, 6, '#4aa83a'); disc(9 * T + 2 + i * 7, 16, 3, '#c86a3a'); } }
+      if (k === 'petshop') { R(T, 4, 30, 22, '#4a8ab8'); R(T + 2, 6, 26, 18, '#8ad8f8'); for (let i = 0; i < 3; i++) { const fx = T + 8 + ((t * 10 + i * 9) % 18); R(fx, 10 + i * 4, 4, 2, ['#f4a03a', '#e8402a', '#f4d84a'][i]); } R(9 * T + 4, 2, 6, 26, '#c8a070'); R(9 * T, 2, 14, 6, '#e8c890'); R(9 * T + 14, 16, 12, 10, '#e8c890'); }
+      if (k === 'clinica') { R(T, 4, 26, 24, '#e8e8e4'); R(T + 2, 6, 22, 20, '#ffffff'); R(T + 11, 9, 4, 12, '#e8402a'); R(T + 7, 13, 12, 4, '#e8402a'); R(9 * T, 10, 30, 18, '#d8e8f4'); R(9 * T, 10, 30, 4, '#ffffff'); }
+      if (k === 'biblioteca') { for (const bx of [T, 9 * T]) { R(bx, 0, 30, 30, '#5a2a10'); for (let r = 0; r < 3; r++) for (let i = 0; i < 7; i++) R(bx + 2 + i * 4, 3 + r * 9, 3, 7, ['#c83a3a', '#3a7ad0', '#f4c83a', '#5aa83a', '#f4f0e8', '#b05ae0', '#e8862a'][(i + r) % 7]); } }
+    } });
+    // peças embaixo
+    ents.push({ y: 5 * T + 14, f: () => {
+      if (k === 'padaria') { R(T, 5 * T, 16, 14, '#c89a6a'); for (let i = 0; i < 3; i++) oval(T + 4 + i * 4, 5 * T + 4, 2, 1.5, '#e8b060'); R(10 * T, 5 * T, 16, 14, '#c89a6a'); oval(10 * T + 8, 5 * T + 4, 6, 3, '#f4f0e8'); oval(10 * T + 8, 5 * T + 2, 5, 2.5, '#e8862a'); }
+      if (k === 'flores') { for (const bx of [T, 10 * T]) { R(bx + 2, 5 * T + 6, 12, 9, '#b85a3a'); for (let i = 0; i < 4; i++) disc(bx + 4 + i * 3, 5 * T + 3, 2.4, ['#ff6aa8', '#ffffff', '#f4c83a', '#c86ad8'][i]); } }
+      if (k === 'petshop') { oval(T + 8, 5 * T + 10, 7, 4, '#e8402a'); oval(T + 8, 5 * T + 9, 5, 2.5, '#f4c8c8'); R(10 * T + 2, 5 * T + 4, 12, 10, '#8a5a3a'); R(10 * T + 4, 5 * T + 6, 8, 6, '#2a1a10'); }
+      if (k === 'clinica') { R(T, 5 * T - 4, 16, 18, '#a8c8e8'); R(T, 5 * T - 4, 16, 5, '#ffffff'); R(10 * T + 3, 5 * T - 6, 10, 20, '#8a8a92'); R(10 * T + 5, 5 * T - 4, 6, 6, '#e8402a'); }
+      if (k === 'biblioteca') { R(T + 2, 5 * T + 4, 12, 8, '#7a4a24'); disc(10 * T + 8, 5 * T + 2, 6, '#3a8ad8'); R(10 * T + 4, 5 * T - 1, 5, 3, '#5aa83a'); R(10 * T + 7, 5 * T + 8, 2, 6, '#7a4a24'); }
+    } });
+  }
+  // ícones
+  function paintIcon9(id) {
+    switch (id) {
+      case 'paoqueijo': for (const [x, y] of [[5, 9], [11, 9], [8, 5]]) { disc(x, y, 3.5, '#e8b060'); disc(x - 1, y - 1, 1.5, '#f8d898'); } return true;
+      case 'cafecoado': R(4, 6, 8, 8, '#f4f0e8'); R(12, 8, 2, 4, '#f4f0e8'); R(5, 6, 6, 2, '#5a3018'); R(6, 2, 1, 3, '#ffffff99'); R(9, 3, 1, 2, '#ffffff99'); return true;
+      case 'bolocenoura': R(2, 8, 12, 6, '#e8862a'); R(2, 6, 12, 3, '#5a2a10'); R(2, 13, 12, 1, '#c86a1a'); for (const x of [4, 8, 11]) R(x, 6, 1, 1, '#f4c83a'); return true;
+      case 'sonho': oval(8, 9, 6, 4.5, '#e8a858'); R(3, 8, 10, 2, '#fff4d8'); for (let x = 3; x < 13; x += 2) R(x, 5, 1, 1, '#ffffff'); return true;
+      case 'broa': disc(8, 9, 5.5, '#e8c048'); disc(7, 8, 3, '#f4d870'); for (const [x, y] of [[5, 7], [10, 10], [8, 12]]) R(x, y, 1, 1, '#c89a28'); return true;
+      case 'cestacafe': R(2, 8, 12, 7, '#b8843a'); for (let x = 3; x < 14; x += 3) R(x, 8, 1, 7, '#8a5a2a'); ctx.strokeStyle = '#8a5a2a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(8, 8, 5, Math.PI, 0); ctx.stroke(); disc(5, 7, 2, '#e8b060'); R(9, 5, 4, 4, '#f4f0e8'); disc(12, 7, 1.5, '#e8402a'); return true;
+      case 'buque': poly([[5, 9], [11, 9], [9, 15], [7, 15]], '#f4f0e8'); R(7, 11, 2, 1, '#e8402a'); for (const [x, y, c] of [[5, 6, '#ff6aa8'], [8, 4, '#f4c83a'], [11, 6, '#ffffff'], [7, 8, '#c86ad8'], [10, 8, '#e8402a']]) disc(x, y, 2.2, c); return true;
+      case 'vasoflores': case 'bancojardim': case 'arcoflores': { ctx.save(); ctx.translate(id === 'arcoflores' ? 3 : 0, id === 'arcoflores' ? 13 : 0); ctx.scale(id === 'arcoflores' ? 0.6 : 0.8, id === 'arcoflores' ? 0.6 : 0.8); drawObj6({ k: id }, id === 'bancojardim' ? 2 : 2, 0); ctx.restore(); return true; }
+      case 'curativo': R(2, 6, 12, 5, '#f4d8b8'); R(6, 6, 4, 5, '#ffffff'); R(7, 8, 2, 1, '#e8a0a0'); return true;
+      case 'xaropeenergia': R(5, 4, 6, 11, '#3ab86a'); R(6, 2, 4, 2, '#5a3a2a'); R(6, 7, 4, 4, '#f4f0e8'); R(7, 8, 2, 2, '#e8402a'); return true;
+      case 'vitamina': R(5, 4, 6, 11, '#f4a03a'); R(5, 4, 6, 2, '#ffffff'); R(10, 1, 1, 5, '#e8402a'); R(6, 9, 4, 1, '#ffd060'); return true;
+      case 'racaopremium': R(3, 4, 10, 11, '#3a7ac8'); R(3, 4, 10, 2, '#5a9ae8'); disc(8, 10, 2.5, '#f4f0e8'); for (const [dx, dy] of [[-2, -2], [0, -3], [2, -2]]) R(8 + dx, 10 + dy - 1, 1, 1, '#f4f0e8'); return true;
+      case 'coleiravermelha': case 'coleiraazul': case 'coleiralaco': { const c = ITEMS[id].col; ctx.strokeStyle = c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(8, 8, 5.5, 4, 0, 0, TAU); ctx.stroke(); disc(8, 13, 2, '#f4c83a'); if (id === 'coleiralaco') { poly([[8, 3], [3, 0], [3, 6]], c); poly([[8, 3], [13, 0], [13, 6]], c); } return true; }
+      case 'caminhagato': case 'arranhador': { ctx.save(); ctx.translate(0, 6); ctx.scale(0.55, 0.55); drawMovel(id, 6, 6, 0, false); ctx.restore(); return true; }
+    }
+    if (id && id.startsWith('livro') && ITEMS[id]) {
+      const c = { livropesca: '#3a7ad0', livrohorta: '#5aa83a', livromina: '#7a6a5a', livrolenha: '#a8543a', livroreceitas: '#e8862a', livroinsetos: '#b05ae0' }[id] || '#c83a3a';
+      R(3, 2, 10, 13, c); R(3, 2, 2, 13, shade(c, -0.3)); R(6, 4, 6, 1, '#f4f0e8'); R(6, 6, 5, 1, '#f4f0e8'); R(12, 3, 1, 11, '#f4f0e8'); R(6, 10, 4, 3, shade(c, 0.35));
+      return true;
+    }
+    return false;
+  }
+  // caminha e arranhador do Darth
+  function drawMovelPet(id, px, py) {
+    if (id === 'caminhagato') { shadowAt(px + 8, py + 13, 7, 2); oval(px + 8, py + 10, 7, 4, '#a83a5a'); oval(px + 8, py + 9, 5, 2.5, '#f4c8d8'); return true; }
+    if (id === 'arranhador') { shadowAt(px + 8, py + 14, 7, 2); R(px + 2, py + 10, 12, 4, '#c8a070'); R(px + 6, py - 10, 4, 20, '#d8c098'); for (let y = -8; y < 10; y += 3) R(px + 6, py + y, 4, 1, '#b89868'); R(px + 1, py - 16, 14, 7, '#e8c890'); R(px + 5, py - 14, 6, 4, '#3a2a1a'); return true; }
+    return false;
+  }
+
+  // ---------- conversas e momentos dos novos moradores ----------
+  Object.assign(CONVOS, {
+    'gloria|juca': [['juca', 'Bom dia, Dona Glória! Tem pão?'], ['gloria', 'Pra você, sempre o primeiro!']],
+    'helena|bia': [['helena', 'Li um livro sobre Monet ontem.'], ['bia', 'Me empresta? Por favor!']],
+    'tati|caio': [['caio', 'Tati, posso ter um gato?'], ['tati', 'Pergunta pra sua avó primeiro!']],
+    'gloria|lia': [['lia', 'Me vende pão pro lanche?'], ['gloria', 'Separei uma fornada só pra você.']],
+    'helena|davi': [['davi', 'Tem livro de medicina novo?'], ['helena', 'Chegou ontem! Guardei pra você.']],
+    'juca|cida': [['juca', 'Carta pra senhora, Dona Cida!'], ['cida', 'Ai, é do meu sobrinho!']],
+    'tati|nena': [['nena', 'Tati, o gato da vila sumiu?'], ['tati', 'Tá dormindo no coreto, Vó!']],
+  });
+  Object.assign(MOMENTOS, {
+    gloria: [{ h: 4, falas: ['Aprendi a fazer pão com a minha avó, num forno de barro.', 'Até hoje acordo cedinho só pra sentir o cheiro da primeira fornada.'], presente: ['paoqueijo', 6] },
+      { h: 8, falas: ['Inventei uma receita pra vocês: a cesta do casal!', 'Tem pão de queijo, bolo e café. Tudo em dobro, claro.'], presente: ['cestacafe', 2] }],
+    helena: [{ h: 4, falas: ['Quando cheguei, a biblioteca era um depósito cheio de poeira.', 'Hoje é o meu cantinho favorito no mundo.'], presente: ['livroinsetos', 1] },
+      { h: 8, falas: ['Estou escrevendo um capítulo só sobre vocês dois.', 'Chama "O casal da chacrinha". Ainda não tem fim. Que bom.'], presente: ['livroreceitas', 1] }],
+    tati: [{ h: 4, falas: ['Achei um gatinho na chuva quando eu era pequena. Foi aí que tudo começou.', 'O Darth me lembra ele. Os mesmos olhos verdes.'], presente: ['racaopremium', 5] },
+      { h: 8, falas: ['Fiz um lacinho especial pro Darth, com o nome dele bordado.', 'Ele é parte da família de vocês, e um pouquinho da minha também.'], presente: ['coleiralaco', 1] }],
+    juca: [{ h: 4, falas: ['Sabia que eu entrego cartas pra chacrinha desde antes de vocês chegarem?', 'Era tudo mato. Agora dá gosto de passar por lá.'], presente: ['cafereforcado', 2] },
+      { h: 8, falas: ['Guardei uma coisa: a primeira cartinha que vocês trocaram passou pela minha mão.', 'Não li, prometo! Mas o envelope tinha um coraçãozinho.'], presente: ['buque', 2] }],
+  });
+  // ================= vida na vila e eventos: bichos, pombos, pasto, varais, feira de sábado, mercador e pedidos =================
+
+  // ---------- pasto da Marta (cercado com vacas e ovelhas) ----------
+  const PASTO = { x0: 13, y0: 31, x1: 26, y1: 38, porta: 35 };
+  { const m = MAPS.town;
+    for (let x = PASTO.x0; x <= PASTO.x1; x++) for (const y of [PASTO.y0, PASTO.y1]) m.solid[y * m.w + x] = 1;
+    for (let y = PASTO.y0; y <= PASTO.y1; y++) for (const x of [PASTO.x0, PASTO.x1]) if (!(x === PASTO.x0 && y === PASTO.porta)) m.solid[y * m.w + x] = 1; }
+
+  // ---------- bichos da vila (cada aparelho vê os seus; só enfeite e carinho) ----------
+  const VILA_BICHOS = [
+    { id: 'mingau', nome: 'Mingau', tipo: 'gato', cor: '#e8862a', cor2: '#f8c88a', area: [31, 20, 49, 37] },
+    { id: 'nuvem', nome: 'Nuvem', tipo: 'gato', cor: '#e8e8e8', cor2: '#a8a8b0', area: [50, 30, 78, 44] },
+    { id: 'pipoca', nome: 'Pipoca', tipo: 'cachorro', cor: '#c8944a', cor2: '#7a4a24', area: [3, 40, 78, 48] },
+    { id: 'mimosa', nome: 'Mimosa', tipo: 'vaca', area: [PASTO.x0 + 1, PASTO.y0 + 1, PASTO.x1 - 1, PASTO.y1 - 1] },
+    { id: 'estrela', nome: 'Estrela', tipo: 'vaca', v: 1, area: [PASTO.x0 + 1, PASTO.y0 + 1, PASTO.x1 - 1, PASTO.y1 - 1] },
+    { id: 'algodao', nome: 'Algodão', tipo: 'ovelha', area: [PASTO.x0 + 1, PASTO.y0 + 1, PASTO.x1 - 1, PASTO.y1 - 1] },
+  ];
+  const bichoSt = {};
+  function updateVidaBichos(dt) {
+    if (P.map !== 'town') return;
+    const m = MAPS.town;
+    for (const b of VILA_BICHOS) {
+      let s = bichoSt[b.id];
+      if (!s) { const [x0, y0, x1, y1] = b.area; s = bichoSt[b.id] = { x: (x0 + (x1 - x0) * hash(b.id.length, 3, 7)) * T, y: (y0 + (y1 - y0) * hash(b.id.length, 5, 9)) * T, tx: 0, ty: 0, wait: rnd(0, 3), mv: 0, dir: 3, heart: 0 }; s.tx = s.x; s.ty = s.y; }
+      s.heart = Math.max(0, s.heart - dt);
+      if (s.mv) {
+        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (b.tipo === 'cachorro' ? 40 : b.tipo === 'gato' ? 26 : 12) * dt;
+        if (d < sp) { s.mv = 0; s.wait = rnd(2, 7); }
+        else { const nx = s.x + dx / d * sp, ny = s.y + dy / d * sp; if (!m.solid[Math.floor((ny - 3) / T) * m.w + Math.floor(nx / T)]) { s.x = nx; s.y = ny; if (Math.abs(dx) > 0.5) s.dir = dx < 0 ? 2 : 3; } else { s.mv = 0; s.wait = 1; } }
+      } else {
+        s.wait -= dt;
+        if (s.wait <= 0) { const [x0, y0, x1, y1] = b.area; s.tx = (x0 + Math.random() * (x1 - x0)) * T + 8; s.ty = (y0 + Math.random() * (y1 - y0)) * T + 12; s.mv = 1; }
+      }
+    }
+  }
+  function quadrupede(b, x, y, dir, mv) {
+    const f = mv ? Math.floor(performance.now() / 140) % 2 : 0, c = b.cor, d = b.cor2;
+    const key = `vb|${b.id}|${f}|${mv ? 1 : 0}`;
+    const cv = bake(key, 22, 16, () => {
+      const leg = f ? 1 : -1, cachorro = b.tipo === 'cachorro';
+      R(5 + leg, 11, 2, 4, d); R(8 - leg, 11, 2, 4, d); R(12 + leg, 11, 2, 4, d); R(15 - leg, 11, 2, 4, d);
+      oval(11, 9, 7, cachorro ? 3.8 : 3.4, c); R(7, 7, 7, 1, b.cor2 && !cachorro ? shade(c, 0.2) : shade(c, 0.15));
+      disc(17, 6, cachorro ? 3.6 : 3.3, c);
+      if (cachorro) { R(18, 6, 3, 2, d); R(20, 6, 1, 1, '#1a1010'); R(14, 3, 3, 5, d); R(17, 5, 1, 1, '#1a1010'); ctx.strokeStyle = d; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 8); ctx.quadraticCurveTo(1, 6, 2, 3); ctx.stroke(); }
+      else { poly([[14.5, 4], [15, 0.5], [17, 3]], c); poly([[18, 3], [20, 0.5], [20, 4.5]], c); R(18, 5, 1, 2, '#3a8a2a'); R(16, 5, 1, 2, '#3a8a2a'); R(19, 7, 1, 1, '#e88a9a'); for (const xx of [8, 11, 14]) R(xx, 6, 1, 3, d); ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 8); ctx.quadraticCurveTo(0, f ? 6 : 8, 1, 2); ctx.stroke(); }
+    });
+    x = Math.round(x); y = Math.round(y); shadowAt(x, y, 6, 1.6);
+    ctx.save(); ctx.translate(x, y - 15); if (dir === 2) { ctx.scale(-1, 1); } ctx.drawImage(cv, -11, 0); ctx.restore();
+  }
+  // carinho nos bichos da vila
+  function vidaBichoAct(m, fx, fy) {
+    if (m.id !== 'town') return false;
+    for (const b of VILA_BICHOS) {
+      const s = bichoSt[b.id]; if (!s || Math.hypot(s.x - fx, s.y - 6 - fy) > 14) continue;
+      s.heart = 1.6; s.mv = 0; s.wait = 3;
+      if (b.tipo === 'gato') meow(); else if (b.tipo === 'cachorro') { tone(320, 240, 0.08, 'square', 0.05); tone(340, 260, 0.08, 'square', 0.05, 0.12); } else tone(180, 140, 0.4, 'sawtooth', 0.04);
+      const fala = { gato: `${b.nome} se esfrega na sua perna e ronrona.`, cachorro: `${b.nome} abana o rabo e pede mais carinho!`, vaca: `${b.nome} faz "muuu" bem satisfeita.`, ovelha: `${b.nome} encosta a cabeça fofinha em você.` }[b.tipo];
+      toast(fala, '', null, 'bichovila');
+      if (!(P.flags.bichos && P.flags.bichos[b.id] === W.meta.day)) { P.flags.bichos = { ...(P.flags.bichos || {}), [b.id]: W.meta.day }; P.energy = Math.min(P.maxEnergy, P.energy + 3); dirty(); }
+      return true;
+    }
+    return false;
+  }
+
+  // ---------- pombos na praça: voam quando alguém chega perto ----------
+  const POMBOS = Array.from({ length: 6 }, (_, i) => ({ hx: (34 + i * 2.2 + (i % 2)) * T, hy: (24 + (i % 3) * 1.5) * T, x: 0, y: 0, voo: 0, volta: 0, ph: i * 1.7 }));
+  for (const p of POMBOS) { p.x = p.hx; p.y = p.hy; }
+  function updatePombos(dt) {
+    if (P.map !== 'town') return;
+    for (const p of POMBOS) {
+      if (p.voo > 0) { p.voo += dt; p.x += (p.ph % 2 ? 60 : -60) * dt; p.y -= 70 * dt; if (p.voo > 2.5) { p.voo = 0; p.volta = rnd(12, 25); } continue; }
+      if (p.volta > 0) { p.volta -= dt; if (p.volta <= 0) { p.x = p.hx; p.y = p.hy; } continue; }
+      if (Math.hypot(P.x - p.x, P.y - p.y) < 30 && walkT > 0) { p.voo = 0.01; tone(900, 1300, 0.06, 'triangle', 0.02); }
+    }
+  }
+  function drawPombo(p, t) {
+    const x = Math.round(p.x), y = Math.round(p.y);
+    if (p.volta > 0) return;
+    if (p.voo > 0) { const asa = Math.sin(t * 30 + p.ph) > 0; R(x - 3, y - 2, 6, 3, '#8a8a98'); R(x - (asa ? 6 : 4), y - (asa ? 4 : 1), 3, 2, '#a8a8b8'); R(x + (asa ? 3 : 1), y - (asa ? 4 : 1), 3, 2, '#a8a8b8'); return; }
+    const bica = Math.sin(t * 3 + p.ph) > 0.7 ? 1 : 0;
+    shadowAt(x, y + 1, 3, 1); oval(x, y - 2, 3, 2, '#8a8a98'); disc(x + 3, y - 4 + bica, 1.6, '#6a6a7a'); R(x + 4, y - 4 + bica, 1, 1, '#e8a03a'); R(x + 2, y - 3 + bica, 1, 1, '#5ab88a'); R(x - 1, y, 1, 1, '#e8806a'); R(x + 1, y, 1, 1, '#e8806a');
+  }
+
+  // ---------- enfeites: cerca do pasto, varais, chaminés e a bola do Caio ----------
+  const VARAIS = [[56, 42.8], [63, 42.8], [70, 42.8]];
+  function vidaEnts(m, ents, t) {
+    if (m.id !== 'town') return;
+    // cerca
+    ents.push({ y: PASTO.y0 * T + 12, f: () => { for (let x = PASTO.x0; x <= PASTO.x1; x++) { R(x * T, PASTO.y0 * T + 4, 16, 2, '#a8743a'); R(x * T, PASTO.y0 * T + 9, 16, 2, '#a8743a'); R(x * T + 7, PASTO.y0 * T + 1, 3, 13, '#7a4a24'); } } });
+    ents.push({ y: PASTO.y1 * T + 12, f: () => { for (let x = PASTO.x0; x <= PASTO.x1; x++) { R(x * T, PASTO.y1 * T + 4, 16, 2, '#a8743a'); R(x * T, PASTO.y1 * T + 9, 16, 2, '#a8743a'); R(x * T + 7, PASTO.y1 * T + 1, 3, 13, '#7a4a24'); } } });
+    for (let y = PASTO.y0 + 1; y < PASTO.y1; y++) for (const x of [PASTO.x0, PASTO.x1]) { if (x === PASTO.x0 && y === PASTO.porta) continue; ents.push({ y: y * T + 12, f: () => { R(x * T + 7, y * T, 3, 16, '#7a4a24'); R(x * T + 6, y * T, 5, 2, '#a8743a'); } }); }
+    // bichos e pombos
+    for (const b of VILA_BICHOS) {
+      const s = bichoSt[b.id]; if (!s) continue;
+      ents.push({ y: s.y, f: () => {
+        if (b.tipo === 'vaca' || b.tipo === 'ovelha') drawAnimal({ kind: b.tipo, v: b.v || 0 }, s.x, s.y, s.dir, s.mv, false, false);
+        else quadrupede(b, s.x, s.y, s.dir, s.mv);
+        if (s.heart > 0) drawHeart(s.x, s.y - 22 - (1.6 - s.heart) * 6, '#e83a6a');
+      } });
+    }
+    for (const p of POMBOS) ents.push({ y: p.voo > 0 ? 1e8 : p.y, f: () => drawPombo(p, t) });
+    // varais no bairro das casas
+    for (const [vx, vy] of VARAIS) ents.push({ y: vy * T + 12, f: () => {
+      const x = vx * T, y = vy * T; R(x, y - 18, 2, 20, '#7a4a24'); R(x + 30, y - 18, 2, 20, '#7a4a24'); R(x, y - 18, 32, 1, '#e8e0d0');
+      for (let k = 0; k < 3; k++) { const sw = Math.sin(t * 2 + k) * 1, c = ['#e8402a', '#3a8ad8', '#f4f0e8', '#f4c83a', '#5ab83a'][(k + vx) % 5]; R(x + 4 + k * 9 + sw, y - 17, 7, k % 2 ? 9 : 7, c); R(x + 4 + k * 9 + sw, y - 17, 7, 1, shade(c, -0.3)); }
+    } });
+    // chaminés com fumaça nas casinhas
+    for (const [hx, hy] of Object.values(VILA.casas)) ents.push({ y: (hy + 4) * T + 2, f: () => {
+      const cx = (hx + 4) * T + 2, cy = hy * T - 10;
+      R(cx - 3, cy - 6, 7, 12, '#8a6a5a'); R(cx - 4, cy - 7, 9, 2, '#6a4a3a');
+      for (let k = 0; k < 3; k++) { const pr = (t * 0.35 + k / 3) % 1; ctx.fillStyle = `rgba(230,230,235,${0.5 * (1 - pr)})`; ctx.beginPath(); ctx.arc(cx + Math.sin(pr * 6 + k) * 3, cy - 8 - pr * 22, 2 + pr * 4, 0, TAU); ctx.fill(); }
+    } });
+    // a bola do Caio quando ele está brincando na vila
+    const caio = npcPos('caio');
+    if (caio && caio.map === 'town' && !caio.walk) ents.push({ y: caio.y + 1, f: () => { const b = Math.abs(Math.sin(t * 4)) * 10; shadowAt(caio.x + 12, caio.y + 1, 3, 1); disc(caio.x + 12, caio.y - 3 - b, 3, '#e8402a'); R(caio.x + 11, caio.y - 5 - b, 2, 1, '#ffffff'); } });
+  }
+
+  // ---------- feira de sábado na praça ----------
+  const isSabado = () => W.meta && (W.meta.day - 1) % 7 === 5;
+  const feiraAberta = () => isSabado() && nowMin() >= 480 && nowMin() < 960;
+  const FEIRA = [
+    { id: 'feira1', x: 32, y: 25, nome: 'Barraca do Seu Bento', look: { hair: 5, shirt: 2, skin: 2, pants: '#5a4a3a', beard: true, apron: '#5aa83a' }, cor: '#5aa83a', titulo: 'Sementes de outras estações', greet: '“Semente boa de toda estação! Pra quem tem estufa, é ouro.”' },
+    { id: 'feira2', x: 45, y: 25, nome: 'Barraca da Dona Lurdes', look: { hair: 3, style: 2, shirt: 4, skin: 0, pants: '#6a4a7a', apron: '#c86ad8' }, cor: '#c86ad8', titulo: 'Artesanato e raridades', greet: '“Tudo feito à mão ou achado longe daqui!”' },
+  ];
+  { const m = MAPS.town; for (const f of FEIRA) for (let x = f.x; x < f.x + 3; x++) spot(m, x, f.y + 1, { kind: 'feira', id: f.id }); }
+  for (const f of FEIRA) SHOP_INFO[f.id] = { title: f.titulo, tabs: [['buy', 'Comprar']], greet: () => f.greet };
+  function feiraList(id) {
+    if (id === 'feira1') { const s = season(); return Object.entries(CROPS).filter(([k, c]) => !c.mix && !c.seasons.includes(s)).map(([k, c]) => ({ id: 's_' + k, price: Math.round(c.seed * 2) })).slice(0, 12); }
+    if (id === 'feira2') return [['tecido', 900], ['la', 600], ['mel', 400], ['buque', 500], ['ametista', 300], ['topazio', 250], ['trufa', 1300], ['frutaestelar', 9000]].map(([id, price]) => ({ id, price, one: id === 'frutaestelar' }));
+    return null;
+  }
+  function feiraEnts(m, ents, t) {
+    if (m.id !== 'town' || !feiraAberta()) return;
+    for (const f of FEIRA) {
+      ents.push({ y: (f.y - 1) * T + 14, f: () => drawFarmer(f.x * T + 24, (f.y - 1) * T + 14, f.look, 1, 0) });
+      ents.push({ y: (f.y + 1) * T + 15, f: () => {
+        const x = f.x * T, y = f.y * T;
+        R(x + 1, y + 6, 46, 20, '#a86a3a'); R(x + 1, y + 6, 46, 3, '#c88a5a');
+        for (let k = 0; k < 6; k++) R(x + k * 8, y - 8, 8, 8, k % 2 ? '#ffffff' : f.cor);
+        for (let k = 0; k < 6; k++) poly([[x + k * 8, y], [x + k * 8 + 8, y], [x + k * 8 + 4, y + 3]], k % 2 ? '#ffffff' : f.cor);
+        R(x + 1, y, 2, 8, '#5a3418'); R(x + 45, y, 2, 8, '#5a3418');
+        for (let k = 0; k < 5; k++) disc(x + 7 + k * 8, y + 9, 3, f.id === 'feira1' ? ['#c8a060', '#a87a40', '#d8b878', '#b88a50', '#c8a060'][k] : ['#e8e0f0', '#f4c83a', '#c86ad8', '#5ab8e8', '#ff6aa8'][k]);
+      } });
+    }
+    ents.push({ y: 1e8, f: () => placa('Feira de sábado', 40 * T, 24 * T + 4) });
+  }
+
+  // ---------- mercador viajante (alguns dias por mês, perto da saída para a mata) ----------
+  const MERC = { x: 71, y: 25 };
+  const mercadorHoje = () => W.meta && !isSabado() && hash(W.meta.day, 7, 13) < 0.22 && nowMin() >= 540 && nowMin() < 1080;
+  { const m = MAPS.town; for (let x = MERC.x; x < MERC.x + 3; x++) spot(m, x, MERC.y + 1, { kind: 'mercador' }); }
+  SHOP_INFO.mercador = { title: 'Carroça do mercador viajante', tabs: [['buy', 'Comprar']], greet: () => '“Coisas raras de terras distantes. Só hoje, amanhã eu já fui!”' };
+  const MERC_POOL = [['diamante', 2500], ['esmeralda', 900], ['anelsorte', 3500], ['botasvelozes', 4500], ['trufa', 1400], ['cogumelorei', 900], ['mdourada', 2500], ['madeiralei', 300], ['frutaestelar', 8000], ['oleotrufa', 2500], ['racaopremium', 90], ['cestacafe', 500], ['s_rosafada', 400], ['coroaflores', 1500], ['colarhavaiano', 1800], ['livroinsetos', 1600]];
+  function mercList() {
+    const r = srand(W.meta.day * 977 + 5), pool = MERC_POOL.slice(), out = [];
+    for (let i = 0; i < 6 && pool.length; i++) { const [id, price] = pool.splice(Math.floor(r() * pool.length), 1)[0]; if (ITEMS[id]) out.push({ id, price, one: ['anelsorte', 'botasvelozes', 'frutaestelar', 'livroinsetos', 'coroaflores', 'colarhavaiano'].includes(id) }); }
+    return out;
+  }
+  function mercEnts(m, ents, t) {
+    if (m.id !== 'town' || !mercadorHoje()) return;
+    const x = MERC.x * T, y = MERC.y * T;
+    ents.push({ y: y + 6, f: () => drawFarmer(x + 24, y + 4, { hair: 4, shirt: 4, skin: 3, pants: '#3a2a4a', beard: true, hat: 'beanie' }, 1, 0) });
+    ents.push({ y: y + 31, f: () => {
+      shadowAt(x + 24, y + 30, 24, 4);
+      R(x, y + 8, 48, 18, '#7a3a1a'); R(x, y + 8, 48, 3, '#9a5a2a'); for (let k = 0; k < 6; k++) R(x + 2 + k * 8, y + 12, 1, 14, '#5a2a10');
+      ctx.fillStyle = '#e8d8b0'; ctx.beginPath(); ctx.ellipse(x + 24, y + 8, 26, 14, 0, Math.PI, 0); ctx.fill(); for (let k = 0; k < 5; k++) R(x + 4 + k * 10, y - 4, 2, 12, '#c8b890');
+      disc(x + 8, y + 27, 5, '#3a2a1a'); disc(x + 8, y + 27, 2, '#8a6a4a'); disc(x + 40, y + 27, 5, '#3a2a1a'); disc(x + 40, y + 27, 2, '#8a6a4a');
+      for (let k = 0; k < 4; k++) disc(x + 10 + k * 9, y + 13, 2.5, ['#5ab8e8', '#f4c83a', '#c86ad8', '#5ad87a'][k]);
+      R(x + 50, y + 18, 10, 3, '#5a3418');
+    } });
+    ents.push({ y: 1e8, f: () => placa('Mercador viajante', x + 24, y - 20) });
+  }
+  // tocar nas barracas
+  function eventoSpot(sp) {
+    if (sp.kind === 'feira') { if (!feiraAberta()) return false; openShop(sp.id); return true; }
+    if (sp.kind === 'mercador') { if (!mercadorHoje()) return false; openShop('mercador'); return true; }
+    return false;
+  }
+
+  // ---------- pedidos da semana no quadro (um deles só fecha com os dois ajudando) ----------
+  const semana = () => Math.floor(((W.meta && W.meta.day) || 1) / 7);
+  function pedidosDaSemana() {
+    const w = semana(), r = srand(w * 4099 + 17), s = season(w * 7 + 1);
+    const crops = Object.keys(CROPS).filter(k => !CROPS[k].mix && CROPS[k].seasons.includes(s)), fish = Object.keys(FISH).filter(k => !FISH[k].legend && FISH[k].seasons.includes(s) && !FISH[k].where.includes('mine'));
+    const npcs = Object.keys(NPCS).filter(k => !NPCS[k].kid);
+    const pk = a => a[Math.floor(r() * a.length)];
+    const list = [
+      { npc: pk(npcs), id: pk(crops.length ? crops : ['pastinaca']), n: 8 + Math.floor(r() * 8) },
+      { npc: pk(npcs), id: pk(fish.length ? fish : ['carpa']), n: 3 + Math.floor(r() * 3) },
+      { npc: pk(npcs), id: pk(['cobre', 'ferro', 'carvao', 'quartzo', 'barracobre', 'barraferro']), n: 5 + Math.floor(r() * 6) },
+      { npc: 'tonico', id: pk(['mpinho', 'mcarvalho', 'mipe']), n: 30 + Math.floor(r() * 21), dupla: true },
+    ];
+    for (const p of list) p.premio = Math.round((sellPrice(p.id) || 20) * p.n * 1.6 + (p.dupla ? 1500 : 200));
+    return list;
+  }
+  const pedState = () => { const st = (W.meta && W.meta.pedidos) || {}; return st.w === semana() ? st : { w: semana(), got: {}, by: {} }; };
+  const temParceiro = () => Object.values(W.players || {}).some(p => p && p.uid !== P.uid);
+  function pedidosHTML() {
+    const st = pedState(), list = pedidosDaSemana();
+    return `<h3>Pedidos da semana</h3><p style="font-size:13px;text-align:center">Mudam toda semana. Dá para entregar aos poucos; o pedido em dupla só fecha com os dois ajudando.</p><div class="list">${list.map((p, i) => {
+      const got = (st.got || {})[i] || 0, done = got >= p.n, by = Object.keys(((st.by || {})[i]) || {}), falta = p.dupla && temParceiro() && by.length < 2;
+      return `<div class="item${done ? ' dim' : ''}"><img src="${iconURL(p.id)}" alt=""><span class="nm"><b>${NPCS[p.npc].name}${p.dupla ? ' · em dupla' : ''}</b><small>${p.n} ${item(p.id).name.toLowerCase()} · ${got}/${p.n} · prêmio ${fmt(p.premio)} ₲${done ? ' · entregue!' : falta && got > 0 ? ' · falta a outra pessoa ajudar' : ''}</small></span>${done ? '' : `<button class="btn g" data-a="pedEntregar" data-i="${i}" type="button" ${count(p.id) > 0 ? '' : 'disabled'}>Entregar (${count(p.id)})</button>`}</div>`;
+    }).join('')}</div>`;
+  }
+  function pedEntregar(i) {
+    const st = pedState(), list = pedidosDaSemana(), p = list[i]; if (!p) return;
+    const got = (st.got || {})[i] || 0; if (got >= p.n) return;
+    const by = { ...(((st.by || {})[i]) || {}), [P.uid]: 1 }, precisaDois = p.dupla && temParceiro();
+    // no pedido em dupla, quem entrega primeiro deixa pelo menos 1 para a outra pessoa
+    let k = Math.min(count(p.id), p.n - got);
+    if (precisaDois && Object.keys(by).length < 2 && got + k >= p.n) k = p.n - got - 1;
+    if (k <= 0) { toast('Deixe um pouquinho para a outra pessoa completar!', '', null, 'pedido'); return; }
+    removeItem(p.id, k);
+    const ng = got + k;
+    W.meta.pedidos = { w: st.w, got: { ...(st.got || {}), [i]: ng }, by: { ...(st.by || {}), [i]: by } };
+    queueUpdate('world/meta', { pedidos: { w: st.w, got: { [i]: ng }, by: { [i]: { [P.uid]: 1 } } } });
+    const r = rel(p.npc); r.pts = Math.min(2500, r.pts + Math.round(150 * k / p.n));
+    if (ng >= p.n) { earn(p.premio); sfx.level(); toast(`Pedido completo! ${NPCS[p.npc].name} agradece: +${fmt(p.premio)} ₲.`, 'big', null, 'pedido'); }
+    else { sfx.pop(); toast(`Entregou ${k}. Faltam ${p.n - ng}.`, '', null, 'pedido'); }
+    dirty(); openBoard();
+  }
+  function vidaAction(a, b) { if (a === 'pedEntregar') { pedEntregar(+b.dataset.i); return true; } return false; }
+  function updateVida(dt) { if (!P || !W.meta) return; updateVidaBichos(dt); updatePombos(dt); }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado
   function peerPlayers() {
@@ -8534,7 +9023,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       updatePet(dt);
       loveFx = Math.max(0, loveFx - dt);
       updateMonsters(dt); bossBarUpdate(); festUpdate(dt); mazeCheck(); festWatch(); checkAch(dt); musicUpdate(dt); deliverLetters(dt);
-      updateFishing(dt); updateBugs(dt); diaryTick(); updateConvos(dt);
+      updateFishing(dt); updateBugs(dt); diaryTick(); updateConvos(dt); updateVida(dt);
       if (holdUse && !panelOpen && !fishing && !placing && !P.ride && lockT <= 0) { const s = held(); if (s && item(s.id).cat === 'tool' && s.id !== 'rod' && s.id !== 'rede') act(); }
       render(dt);
       hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }

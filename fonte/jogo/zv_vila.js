@@ -142,7 +142,7 @@
   function vilaLights(m, light, nf) {
     if (!m.outdoor || !m.lanterns || nf <= 0) return;
     for (const [lx, ly] of m.lanterns) light(lx * T + 8, ly * T + 8, 48, nf * 0.7);
-    for (const s of m.sprites) if (['atelie', 'moveis', 'ccbuilding', 'museumb', 'coreto'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
+    for (const s of m.sprites) if (['atelie', 'moveis', 'ccbuilding', 'museumb', 'coreto', 'padaria', 'flores', 'petshop', 'clinica', 'biblioteca'].includes(s.type)) light(s.x * T + s.w * T / 2, (s.y + s.h) * T - 20, 50, nf * 0.35);
   }
   // ---------- coreto da praça ----------
   function drawCoreto(w, h, night, snow) {

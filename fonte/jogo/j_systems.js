@@ -38,6 +38,7 @@
   function buffLv(k) { const b = P && P.buff; return b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0; }
   function afterEat(id) {
     const it = item(id);
+    if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
     if (id === 'frutaestelar') { P.maxEnergy += 34; P.energy = P.maxEnergy; P.flags.stars = (P.flags.stars || 0) + 1; dirty(); sfx.level(); toast('Você sente uma energia nova! Energia máxima +34.', 'big'); return; }
     if (it.buff) {
       P.buff = { b: it.buff, until: nowMin() + 7 * 60, day: W.meta.day, name: it.name };
@@ -591,7 +592,7 @@
     for (const [id, n] of Object.entries(NPCS)) if (n.bday[0] === s) bdays[n.bday[1]] = n.name;
     for (const [k, f] of Object.entries(FESTS)) if (k.startsWith(s + ':')) { const dd = +k.split(':')[1]; bdays[dd] = bdays[dd] ? bdays[dd] + ' · ' + f.name : '🎉 ' + f.name; }
     const cal = Array.from({ length: 28 }, (_, i) => `<div class="${i + 1 === dom() ? 'today' : ''}${bdays[i + 1] ? ' bd' : ''}"><b>${i + 1}</b>${bdays[i + 1] ? `<small>${esc(bdays[i + 1])}</small>` : ''}</div>`).join('');
-    openPanel(`<h2>Quadro de avisos</h2>
+    openPanel(`<h2>Quadro de avisos</h2>${pedidosHTML()}
       <h3>Pedido de ajuda</h3>${q ? `<div class="item"><img src="${iconURL(q.id)}" alt=""><span class="nm"><b>${NPCS[q.npc].name} precisa de ${item(q.id).name.toLowerCase()}</b><small>${q.done ? 'Já foi entregue. Obrigado!' : `Recompensa: ${fmt(q.reward)} ₲. Segure o item e converse com ${NPCS[q.npc].name}. Vale só hoje.`}</small></span></div>` : '<p>Nenhum pedido hoje.</p>'}
       <h3>${SEASONS[SEASON_ID.indexOf(s)]} · aniversários</h3><div class="cal">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(d => `<div class="hd">${d}</div>`).join('')}${cal}</div>`, 'board');
   }
@@ -743,7 +744,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }

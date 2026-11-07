@@ -7,7 +7,7 @@
   const withQ = (id, q) => (q ? id + '#' + q : id);
   // chance de prata e ouro na colheita: nível de Lavoura e adubo na terra
   function cropQuality(tl) {
-    const lvl = Math.min(10, skillLv(P.skills.farming) + (eqHas('chapeupalha') ? 1 : 0)), fq = tl && tl.fe === 'adubobom' ? 2 : tl && tl.fe === 'adubo' ? 1 : 0;
+    const lvl = Math.min(10, skillLv(P.skills.farming) + (eqHas('chapeupalha') ? 1 : 0) + (livro('livrohorta') ? 1 : 0)), fq = tl && tl.fe === 'adubobom' ? 2 : tl && tl.fe === 'adubo' ? 1 : 0;
     const gold = 0.01 + 0.2 * (lvl / 10) + 0.2 * fq * ((lvl + 2) / 12), silver = Math.min(0.75, gold * 2), r = Math.random();
     return r < gold ? 2 : r < silver ? 1 : 0;
   }

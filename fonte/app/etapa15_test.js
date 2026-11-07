@@ -30,9 +30,9 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   const path = await ev(() => { const s = __sv, pts = s.vilaPath('town', [0, 'town', 36, 25], [0, 'town', 41, 36]), m = s.getMap('town'); return { n: pts.length, bloq: pts.slice(1, -1).filter(([x, y]) => m.solid[Math.floor((y - 6) / 16) * m.w + Math.floor(x / 16)]).length }; });
   ok(path.n >= 2 && path.bloq === 0, 'o Doutor Davi anda pela praça desviando da fonte: ' + JSON.stringify(path));
   // rotinas: dia comum, chuva, domingo e festa
-  await setT(800, 38, false); const nena1 = await ev(() => __sv.npcPos('nena'));
-  await setT(800, 38, true); const nena2 = await ev(() => __sv.npcPos('nena'));
-  ok(nena1 && nena1.map === 'town' && nena2 && nena2.map === 'lar_nena', `chuva: a Vó Nena fica em casa (${nena1.map} → ${nena2.map})`);
+  await setT(800, 38, false); const nena1 = await ev(() => __sv.npcPos('caio'));
+  await setT(800, 38, true); const nena2 = await ev(() => __sv.npcPos('caio'));
+  ok(nena1 && nena1.map !== 'lar_nena' && nena2 && nena2.map === 'lar_nena', `chuva: o Caio fica em casa com a avó (${nena1.map} → ${nena2.map})`);
   await setT(600, 42, false); const davi = await ev(() => __sv.npcPos('davi'));
   ok(davi && davi.map === 'town' && Math.abs(davi.x / 16 - 71) < 3, 'domingo: o Doutor Davi passeia no parque');
   await setT(1100, 39, false); const fest = await ev(() => { const p = __sv.npcPos('pedro'), b = __sv.VILA.booth; return p && p.map === 'town' && Math.hypot(p.x / 16 - b.x, p.y / 16 - b.y) < 8; });

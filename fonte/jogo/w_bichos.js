@@ -85,8 +85,8 @@
     bugs = bugs.filter(b => b.life > 0);
     bugSpawnT -= dt;
     if (bugSpawnT <= 0) {
-      bugSpawnT = rnd(5, 9);
-      const max = season() === 'summer' ? 4 : 3;
+      bugSpawnT = rnd(5, 9) * (livro('livroinsetos') ? 0.7 : 1);
+      const max = (season() === 'summer' ? 4 : 3) + (livro('livroinsetos') ? 1 : 0);
       const pool = bugPool(m);
       if (pool.length && bugs.length < max) {
         // os mais difíceis aparecem menos

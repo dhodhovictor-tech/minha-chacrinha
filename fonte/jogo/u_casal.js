@@ -84,12 +84,13 @@
 
   // ---------- petiscos e presentinhos do Darth ----------
   ITEMS.petisco = { name: 'Petisco do Darth', cat: 'res', sell: 10, desc: 'Um petisco de gato. Segure e toque no Darth para dar. Peixes também servem!' };
-  const isTreat = s => s && (s.id === 'petisco' || item(s.id).cat === 'fish');
+  const isTreat = s => s && (s.id === 'petisco' || s.id === 'racaopremium' || item(s.id).cat === 'fish');
   // dar petisco para o próprio Darth (dono) ou para o Darth da outra pessoa (vai por mensagem)
   function feedCat(own, peerUid) {
     const s = held(); if (!isTreat(s)) return false;
+    const extra = s.id === 'racaopremium' ? 8 : 0;
     useHeld(1); meow(); logAct('darth', 'petisco', 1);
-    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco!', 'Darth comeu tudo e lambeu os bigodes.', 'Darth ronrona de barriguinha cheia.']), 'big', null, 'darth'); }
+    if (own) { const p = P.pet; p.love = Math.min(100, (p.love || 0) + 8 + extra); p.fedDay = W.meta.day; petSt.heart = 2.2; dirty(); toast(pick(['Darth adorou o petisco!', 'Darth comeu tudo e lambeu os bigodes.', 'Darth ronrona de barriguinha cheia.']), 'big', null, 'darth'); }
     else { emitP2P({ type: 'petfeed', to: peerUid }); toast('Darth adorou o petisco!', 'big', null, 'darth'); }
     return true;
   }
@@ -123,9 +124,9 @@
     if (r && r.t > 0) {
       r.t -= 1 / 60;
       const k = 1.8 - r.t;
-      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat); }
-      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat); }
-      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat); }
+      if (r.k === 'pulo') { drawCat(x, y - Math.abs(Math.sin(k * 7)) * 6, dir, 0, 'walk', st.coat, st.collar); }
+      else if (r.k === 'esfrega') { drawCat(x + Math.sin(k * 10) * 3, y, Math.sin(k * 5) > 0 ? 3 : 2, 1, 'walk', st.coat, st.collar); }
+      else { drawCat(x, y, Math.floor(k * 4) % 2 ? 3 : 2, 0, Math.floor(k * 3) % 2 ? 'sleep' : 'sit', st.coat, st.collar); }
       for (let i = 0; i < 3; i++) { const hk = (k * 1.2 + i * 0.35) % 1.2; drawHeart(x - 6 + i * 6, y - 18 - hk * 14, '#5ae05a'); }
       if (r.t <= 0) st.react = null;
       return true;

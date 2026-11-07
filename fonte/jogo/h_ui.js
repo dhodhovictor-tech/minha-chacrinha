@@ -188,6 +188,7 @@
   }
   const COOK_PRICES = { farinha: 100, acucar: 100, oleo: 200, arroz: 200, vinagre: 200 };
   function shopList(who) {
+    const l3 = lojaList(who) || feiraList(who) || (who === 'mercador' ? mercList() : null); if (l3) return l3;
     switch (who) {
       case 'pedro': return [...SHOP_PEDRO(season()), ...FARM_SHOP, ...Object.entries(COOK_PRICES).map(([id, price]) => ({ id, price })), ...Object.entries(FTREES).filter(([, f]) => !f.rare).map(([k, f]) => ({ id: 'm_' + k, price: f.price })), { id: 'colmeia', price: 1500 }, { id: 'rede', price: 1000, one: true }, ...(P.spouse ? [] : [{ id: 'alianca', price: 5000, one: true }])];
       case 'claudio': return [...SHOP_CLAUDIO, ...WEAPON_SHOP];

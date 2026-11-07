@@ -154,7 +154,7 @@
     const k = tx + ',' + ty;
     // gente e bichos na frente
     const d = DIRS[P.dir], fx = P.x + d[0] * 13, fy = P.y - 6 + d[1] * 13;
-    if (petCatAt(m, fx, fy)) return;
+    if (petCatAt(m, fx, fy) || vidaBichoAct(m, fx, fy)) return;
     const npc = npcAt(m, fx, fy) || npcAt(m, P.x + d[0] * 6, P.y - 6 + d[1] * 6);
     if (npc) { openTalk(npc); return; }
     const pr = peerAt(fx, fy);
@@ -169,7 +169,7 @@
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
-    if (casaAct(m, tx, ty) || mataAct(m, tx, ty)) return;
+    if (casaAct(m, tx, ty) || mataAct(m, tx, ty) || bancoAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -197,7 +197,7 @@
       case 'up': goMap('minetop', 8 * T + 8, 5 * T + 4, 1); return true;
       case 'elevator': openElevator(); return true;
     }
-    return false;
+    return eventoSpot(sp);
   }
   function interactFarm(tx, ty, m) {
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
@@ -277,7 +277,7 @@
       if (s.id === 'scythe') { swing('scythe', lv); scythe(m, tx, ty); return; }
       if (s.id === 'can' && isWater) { swing('can', lv); P.water = canCap(lv); toast('Regador cheio!'); sfx.water(); dirty(); return; }
       // cortar árvores gasta 15% a mais (a camisa de lenhador devolve um pouco)
-      if (!useEnergy((s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0))) * (s.id === 'axe' ? 1.15 * (eqHas('xadrezlenhador') ? 0.85 : 1) : 1))) return;
+      if (!useEnergy((s.id === 'can' ? 1 : Math.max(1, 2 - (buffLv('farming') && s.id === 'hoe' ? 1 : 0))) * (s.id === 'axe' ? 1.15 * (eqHas('xadrezlenhador') ? 0.85 : 1) * (livro('livrolenha') ? 0.95 : 1) : 1))) return;
       swing(s.id, lv);
       if (s.id === 'hoe' && digArtifact(m, tx, ty)) return;
       if (m.rocks) { mineHit(m, tx, ty, s.id, power + (buffLv('mining') ? 1 : 0)); return; }
@@ -356,6 +356,8 @@
     }
     if (s.id === 'covo') { toast('Fique de frente para a água para colocar o covo.'); return; }
     if (it.cat === 'movel') { placeMovel(m, tx, ty, s); return; }
+    if (it.cat === 'livro') { lerLivro(s); return; }
+    if (it.cat === 'acessorio') { toast('Segure e toque no Darth.', '', null, 'darth'); return; }
     if (it.cat === 'cama') { toast('Toque na cama de casa segurando a roupa de cama.', '', null, 'cama'); return; }
     if (it.cat === 'place') {
       if (!farmable(m)) { toast('Coloque isso na chacrinha.'); return; }
@@ -553,7 +555,7 @@
       const id = pickFish(f.water), d = FISH[id];
       f.phase = 'game'; f.id = id; f.diff = d.diff;
       const lv = skillLv(P.skills.fishing);
-      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1) * (eqHas('colete') ? 1.08 : 1) + (eqHas('colarhavaiano') ? 2.5 : 0); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
+      f.barH = (30 + lv * 2.5 + buffLv('fishing') * 4) * (hasProf('paciente') ? 1.2 : 1) * (tackle() === 'boia' ? 1.24 : 1) * (eqHas('colete') ? 1.08 : 1) * (livro('livropesca') ? 1.05 : 1) + (eqHas('colarhavaiano') ? 2.5 : 0); f.bar = 120 - f.barH - 2; f.bv = 0; f.fy = 80; f.fv = 0; f.target = 60; f.prog = 0.3; f.hold = false; f.tt = 0; f.chestAt = Math.random() < treasureChance() ? rnd(0.8, 3) : -1;
       document.getElementById('fish').hidden = false;
     }
   }

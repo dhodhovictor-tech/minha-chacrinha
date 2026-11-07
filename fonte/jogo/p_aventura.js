@@ -109,7 +109,7 @@
   const eq = () => P.eq || (P.eq = {});
   const eqHas = id => { const e = P && P.eq; return !!e && Object.values(e).includes(id); };
   const eqAtk = () => (eqHas('anelguerreiro') ? 2 : 0) + (eqHas('luvascouro') ? 1 : 0);
-  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0) + (eqHas('chapeuapicultor') && curMap().mata ? 2 : 0);
+  const eqDef = () => (eqHas('anelpedra') ? 2 : 0) + (BOOT_DEF[(P.eq || {}).bt] || 0) + (eqHas('capacete') ? 1 : 0) + (eqHas('macacao') ? 2 : 0) + (eqHas('gorro') && season() === 'winter' ? 1 : 0) + (eqHas('chapeuapicultor') && curMap().mata ? 2 : 0) + (livro('livromina') ? 1 : 0);
   const eqSpeed = () => (eqHas('botasvelozes') || eqHas('botasdragao') ? 0.1 : 0) + (eqHas('botastrilha') && !(W.meta && W.meta.rain) ? 0.05 : 0) + (eqHas('botasmata') && curMap().mata ? 0.1 : 0);
   const defTotal = () => buffLv('defense') + profDef() + eqDef();
   function equipSlot(i) {

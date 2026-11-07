@@ -391,7 +391,7 @@
   }
   function drawObj(o, px, py, k, nf) {
     const t = performance.now() / 1000;
-    if (drawObj2(o, px, py, k) || drawObj3(o, px, py) || drawObj5(o, px, py)) return;
+    if (drawObj2(o, px, py, k) || drawObj3(o, px, py) || drawObj5(o, px, py) || drawObj6(o, px, py)) return;
     switch (o.k) {
       case 'tree': drawTree(px + 8, py + 15, 1, o.v || 0, o.hp, o.shake > performance.now()); if (o.tap) drawTapper(px, py, o); break;
       case 'stump': shadowAt(px + 8, py + 15, 7, 2); blit(STUMP(), px - 1, py); break;
@@ -781,7 +781,7 @@
       if (s.type === 'ccplaque') extra = ccRoomDone(s.room) ? 'on' : '';
       if (s.type === 'museumb' || s.type === 'ccbuilding') shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
       if (s.type === 'mcase') { blit(building2Canvas(s.type, w, h, false), x - 8, y - 36); s.slots.forEach((id, i) => { if (W.meta.museum && W.meta.museum[id]) drawIconAt(id, x + i * w / 3 + (w / 3 - 10) / 2, y - 7, 0.62); }); return; }
-      if (['carpentry', 'ranch', 'bar', 'fishshop'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
+      if (['carpentry', 'ranch', 'bar', 'fishshop', 'atelie', 'moveis', 'coreto', 'padaria', 'flores', 'petshop', 'clinica', 'biblioteca'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
       if (s.type === 'palm') shadowAt(x + 10, y + 15, 8, 3);
       blit(building2Canvas(s.type, w, h, night, extra), x - 8, y - 36);
       return;
