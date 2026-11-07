@@ -9,6 +9,9 @@
     { name: 'Coração da Floresta', from: 37, wood: 'mipe' },
   ];
   const mataArea = n => Math.min(3, Math.floor((n - 1) / 12));
+  // pontos de parada da cabana: a clareira 1 e depois de 5 em 5, como o elevador da mina
+  const mataParada = n => n === 1 || n % 5 === 0;
+  const mataParadas = max => { const l = []; for (let n = 1; n <= Math.min(max, MATA_N); n++) if (mataParada(n)) l.push(n); if (max > 1 && !l.includes(max)) l.push(max); return l.sort((a, b) => a - b); };
   const mataPer = () => Math.floor(((W.meta && W.meta.day) || 1) / MATA_RENOVA);
   const isMataN = id => /^mata\d+$/.test(id || '');
 
@@ -120,6 +123,7 @@
     if (n % 3 === 0 && !boss) place('gigante');
     if (area === 3 && r() < 0.6) place('dourada');
     if (r() < 0.2) place('bau');
+    mataTipo(m, n, r, boss);
     m.total = Object.values(m.wood).filter(o => o.kind !== 'forage' && o.kind !== 'bau').length;
     m.monSeed = r() * 1e9;
     return finalize(m);
@@ -142,7 +146,7 @@
     const m = getMap('mata' + n);
     P.x = (m.start[0] + 1) * T; P.y = m.start[1] * T + 12; P.dir = 0;
     const st = P.stats; st.mata = Math.max(st.mata || 0, n);
-    if ((n - 1) % 12 === 0 && n > (W.meta.mataMax || 0)) { W.meta.mataMax = n; queueUpdate('world/meta', { mataMax: n }); if (n > 1) toast(`A cabana do lenhador agora leva até ${MATA_AREAS[mataArea(n)].name}!`, 'big'); }
+    if (mataParada(n) && n > (W.meta.mataMax || 0)) { W.meta.mataMax = n; queueUpdate('world/meta', { mataMax: n }); if (n > 1) toast(`A cabana do lenhador agora leva até a clareira ${n} (${MATA_AREAS[mataArea(n)].name})!`, 'big'); }
     const r = srand(m.monSeed), list = [], area = m.area, boss = n % 12 === 0, night = nowMin() >= 1140, win = season() === 'winter';
     let cnt = area === 0 ? (n >= 3 ? Math.floor(r() * 2.5) : 0) : 2 + area + Math.floor(r() * 2);
     if (night && cnt) cnt++;
@@ -153,6 +157,7 @@
       do { x = 2 + Math.floor(r() * (m.w - 4)); y = 2 + Math.floor(r() * (m.h - 4)); tries++; } while ((solidAt(m, x, y) || Math.hypot(x - m.start[0], y - m.start[1]) < 7) && tries < 50);
       list.push(mataMon(pool[Math.floor(r() * pool.length)], x * T + 8, y * T + 12, n, r()));
     }
+    mataEntrar(m, n, list, r);
     if (boss) spawnFBoss(m, n, list);
     monsters = list;
     if (n === 1 && !st.mataIntro) { st.mataIntro = 1; toast('Corte árvores com o machado. Uma delas esconde a trilha para a próxima clareira.', 'big'); }
@@ -294,9 +299,9 @@
   // ---------- cabana do lenhador: atalho para as áreas ----------
   function openCabana() {
     const max = Math.max(1, W.meta.mataMax || 0), fb = W.meta.fbosses || {};
-    const btns = MATA_AREAS.map(a => max >= a.from ? `<button class="btn" data-a="mataGo" data-f="${a.from}" type="button">${a.name}</button>` : '').join('');
+    const pars = mataParadas(max), btns = MATA_AREAS.map((a, i) => { const l = pars.filter(n => mataArea(n) === i); return l.length ? `<h3>${a.name}</h3><div class="row">${l.map(n => `<button class="btn" data-a="mataGo" data-f="${n}" type="button">Clareira ${n}${FBOSSES[n] && !fb[n] ? ' ⚔' : ''}</button>`).join('')}</div>` : ''; }).join('');
     const gs = Object.entries(FBOSSES).map(([n, B]) => `<div class="item${fb[n] ? '' : ' dim'}"><span class="nm"><b>${B.name}</b><small>Clareira ${n} · ${fb[n] ? 'vencido!' : 'ainda guarda a mata'}</small></span></div>`).join('');
-    openPanel(`<h2>Cabana do lenhador</h2><p style="text-align:center">Escolha onde começar. As clareiras mudam a cada ${MATA_RENOVA} dias e as árvores voltam a crescer.</p><div class="row">${btns}</div><p style="text-align:center;font-size:13px">Clareira mais funda: ${P.stats.mata || 0} de ${MATA_N}</p><h3>Guardiões da mata</h3><div class="list">${gs}</div>`, 'cabana');
+    openPanel(`<h2>Cabana do lenhador</h2><p style="text-align:center">Escolha onde começar: a cabana guarda uma parada a cada 5 clareiras. As clareiras mudam a cada ${MATA_RENOVA} dias e as árvores voltam a crescer.</p>${btns}<p style="text-align:center;font-size:13px">Clareira mais funda: ${P.stats.mata || 0} de ${MATA_N}</p><h3>Guardiões da mata</h3><div class="list">${gs}</div>`, 'cabana');
   }
 
   // ---------- bichos da mata ----------

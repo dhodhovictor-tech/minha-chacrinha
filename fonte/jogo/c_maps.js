@@ -204,6 +204,7 @@
     // lampiões nas paredes
     m.lanterns = [];
     for (let k = 0; k < 40 && m.lanterns.length < 4; k++) { const x = 1 + Math.floor(r() * (W - 2)), y = Math.floor(r() * (H - 2)); if (m.at(x, y) === G.ROCKWALL && m.at(x, y + 1) === G.CAVE && !m.lanterns.some(([a, b]) => Math.abs(a - x) + Math.abs(b - y) < 5)) m.lanterns.push([x, y]); }
+    minaTipo(m, n, r);
     m.total = Object.keys(m.rocks).length;
     m.monSeed = r() * 1e9;
     return finalize(m);

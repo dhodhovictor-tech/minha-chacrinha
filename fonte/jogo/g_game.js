@@ -197,7 +197,7 @@
       case 'up': goMap('minetop', 8 * T + 8, 5 * T + 4, 1); return true;
       case 'elevator': openElevator(); return true;
     }
-    return eventoSpot(sp) || jardimSpot(sp);
+    return eventoSpot(sp) || jardimSpot(sp) || aventuraSpot(sp);
   }
   function interactFarm(tx, ty, m) {
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
@@ -430,6 +430,7 @@
         list.push({ kind, x: x * T + 8, y: y * T + 12, hp, max: hp, dmg: 5 + Math.floor(n / 5), col: ['#5ad84a', '#4a8ae8', '#b05ae0'][m.tier], ph: r() * 10, vx: 0, vy: 0, cd: 0, hitT: 0, hopT: r() * 2 });
       }
     }
+    minaEntrar(m, n, list, r);
     spawnBoss(m, n, list);
     monsters = list;
     if (n === 1 && !P.stats.mineIntro) { P.stats.mineIntro = 1; toast('Quebre pedras com a picareta. Uma delas esconde a escada para descer.'); }
@@ -456,7 +457,7 @@
       if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01 + (eqHas('anelsorte') ? 0.015 : 0) + (eqHas('coroaflores') ? 0.008 : 0)) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
-      if (!m.ladder && m.floor < MINE_BOTTOM) {
+      if (!m.ladder && !m.infest && m.floor < MINE_BOTTOM) {
         const left = m.total - set.size;
         const p = 0.02 + 0.9 / Math.max(3, left) + (set.size / m.total) * 0.12;
         if (Math.random() < p || left <= 2) { ladder = k; m.ladder = k; toast('Você achou a escada para descer!'); sfx.level(); }
@@ -483,9 +484,10 @@
   }
   function killMonster(mo) {
     mo.dead = true;
+    aventuraKill(mo);
     if (mo.mata) { mataKill(mo); return; }
     if (mo.kind === 'boss') { bossDefeated(mo); return; }
-    gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
+    gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && !curMap().infest && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
     monsterExtraDrops(mo);
   }
   function updateMonsters(dt) {

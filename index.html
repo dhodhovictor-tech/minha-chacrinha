@@ -162,7 +162,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = '100397c'; window.__APP_DATE = '07/11/2026';</script>
+<script>window.__APP_VERSION = '8f727ab'; window.__APP_DATE = '07/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1009,6 +1009,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     // lampiões nas paredes
     m.lanterns = [];
     for (let k = 0; k < 40 && m.lanterns.length < 4; k++) { const x = 1 + Math.floor(r() * (W - 2)), y = Math.floor(r() * (H - 2)); if (m.at(x, y) === G.ROCKWALL && m.at(x, y + 1) === G.CAVE && !m.lanterns.some(([a, b]) => Math.abs(a - x) + Math.abs(b - y) < 5)) m.lanterns.push([x, y]); }
+    minaTipo(m, n, r);
     m.total = Object.keys(m.rocks).length;
     m.monSeed = r() * 1e9;
     return finalize(m);
@@ -1435,6 +1436,23 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         const jx = Math.round((noise2(px * 0.19, py * 0.19, 31) - 0.5) * 9), jy = Math.round((noise2(px * 0.19 + 40, py * 0.19 + 70, 37) - 0.5) * 9);
         const g2 = m.at(Math.floor((px + jx) / T), Math.floor((py + jy) / T));
         if (SOFT.has(g2)) gt = g2;
+      }
+      // ruas mais suaves: beirada levemente ondulada e esquinas arredondadas entre o calçamento e a grama
+      if (m.outdoor && (gt === G.COBBLE || SOFT.has(gt))) {
+        const base = m.at(tx, ty), lx = px - tx * T, ly = py - ty * T;
+        if ((base === G.COBBLE || SOFT.has(base)) && (lx < 3 || ly < 3 || lx > T - 4 || ly > T - 4)) {
+          const g3 = m.at(Math.floor((px + Math.round((noise2(px * 0.2, py * 0.2, 53) - 0.5) * 6)) / T), Math.floor((py + Math.round((noise2(px * 0.2 + 30, py * 0.2 + 60, 57) - 0.5) * 6)) / T));
+          if ((base === G.COBBLE && SOFT.has(g3)) || (SOFT.has(base) && g3 === G.COBBLE)) gt = g3;
+        }
+        const qx = lx < T / 2 ? -1 : 1, qy = ly < T / 2 ? -1 : 1, ex = qx < 0 ? lx : T - 1 - lx, ey = qy < 0 ? ly : T - 1 - ly, RR = 7;
+        if (ex < RR && ey < RR) {
+          const dx = RR - ex - 0.5, dy = RR - ey - 0.5;
+          if (dx * dx + dy * dy > RR * RR) {
+            const hN = m.at(tx + qx, ty), vN = m.at(tx, ty + qy);
+            if (base === G.COBBLE && SOFT.has(hN) && SOFT.has(vN)) gt = hN;
+            else if (SOFT.has(base) && hN === G.COBBLE && vN === G.COBBLE && m.at(tx + qx, ty + qy) === G.COBBLE) gt = G.COBBLE;
+          }
+        }
       }
       const n = fbm(px / 26, py / 26), dith = hash(px, py, 5);
       switch (gt) {
@@ -2708,7 +2726,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
     const out = c => { ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.stroke(); };
     const m = METAL[lv || 0];
-    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon8(id) || paintIcon9(id) || paintIcon10(id) || paintIcon5(id)) return;
+    if (paintTool(id, lv) || paintIcon3(id) || paintIcon4(id) || paintIcon6(id) || paintIcon7(id) || paintIcon8(id) || paintIcon9(id) || paintIcon10(id) || paintIcon11(id) || paintIcon5(id)) return;
     if (FISH[id] && paintFish(id)) return;
     if (paintIcon2(id, it)) return;
     switch (id) {
@@ -3317,7 +3335,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'up': goMap('minetop', 8 * T + 8, 5 * T + 4, 1); return true;
       case 'elevator': openElevator(); return true;
     }
-    return eventoSpot(sp) || jardimSpot(sp);
+    return eventoSpot(sp) || jardimSpot(sp) || aventuraSpot(sp);
   }
   function interactFarm(tx, ty, m) {
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
@@ -3550,6 +3568,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         list.push({ kind, x: x * T + 8, y: y * T + 12, hp, max: hp, dmg: 5 + Math.floor(n / 5), col: ['#5ad84a', '#4a8ae8', '#b05ae0'][m.tier], ph: r() * 10, vx: 0, vy: 0, cd: 0, hitT: 0, hopT: r() * 2 });
       }
     }
+    minaEntrar(m, n, list, r);
     spawnBoss(m, n, list);
     monsters = list;
     if (n === 1 && !P.stats.mineIntro) { P.stats.mineIntro = 1; toast('Quebre pedras com a picareta. Uma delas esconde a escada para descer.'); }
@@ -3576,7 +3595,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (r.kind === 'stone' && Math.random() < (0.025 + (W.meta.luck || 0) * 0.1 + buffLv('luck') * 0.01 + (eqHas('anelsorte') ? 0.015 : 0) + (eqHas('coroaflores') ? 0.008 : 0)) * (hasProf('escavador') ? 2 : 1)) addItem(['geodo', 'geodogelo', 'geodomagma'][m.tier || 0], 1);
       gainXP('mining', r.kind === 'stone' ? 1 : 5);
       let ladder = null;
-      if (!m.ladder && m.floor < MINE_BOTTOM) {
+      if (!m.ladder && !m.infest && m.floor < MINE_BOTTOM) {
         const left = m.total - set.size;
         const p = 0.02 + 0.9 / Math.max(3, left) + (set.size / m.total) * 0.12;
         if (Math.random() < p || left <= 2) { ladder = k; m.ladder = k; toast('Você achou a escada para descer!'); sfx.level(); }
@@ -3603,9 +3622,10 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   function killMonster(mo) {
     mo.dead = true;
+    aventuraKill(mo);
     if (mo.mata) { mataKill(mo); return; }
     if (mo.kind === 'boss') { bossDefeated(mo); return; }
-    gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
+    gainXP('combat', mo.kind === 'slime' ? 5 : 6); const drop = { bat: 'asamorcego', slime: 'gosma', duster: 'carvao', ghost: 'ectoplasma' }[mo.kind]; if (Math.random() < 0.6) addItem(drop, hasProf('ladrao') ? 2 : 1); if (Math.random() < 0.08 && !curMap().ladder && !curMap().infest && curMap().floor < MINE_BOTTOM) { const m = curMap(), [x, y] = [Math.floor(mo.x / T), Math.floor((mo.y - 4) / T)]; if (!solidAt(m, x, y)) { m.ladder = x + ',' + y; toast('Uma escada apareceu!'); } }
     monsterExtraDrops(mo);
   }
   function updateMonsters(dt) {
@@ -4013,7 +4033,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'petisco', price: 30 }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
-      case 'roupas': case 'bia': return CLOTHES_SHOP;
+      case 'roupas': case 'bia': return modaList(shopTab) || CLOTHES_SHOP;
       case 'festa': return festOn() ? FEST_SHOP[festOn().id].map(([id, price]) => ({ id, price })) : [];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
@@ -4037,7 +4057,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     let body = '';
     const ext = extraShopTab(who, shopTab);
     if (ext != null) body = ext;
-    else if (shopTab === 'buy') {
+    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
@@ -4248,7 +4268,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   const nowMinF = () => { const c = W.clock; let m = c.min + (Date.now() - c.at) / MS_PER_TICK * MIN_PER_TICK; if (!host) m = Math.min(m, c.min + 20); return Math.min(m, DAY_END); };
 
   // ================= efeitos de comida =================
-  function buffLv(k) { const b = P && P.buff; return b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0; }
+  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k); }
   function afterEat(id) {
     const it = item(id);
     if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
@@ -4958,7 +4978,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -6589,7 +6609,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (eqHas('galochas') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.75;
     if (eqHas('cachecol') && season() === 'winter') f *= 0.9;
     if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
-    return f;
+    return f * modaEnergia();
   }
   // a loja da Bia é um prédio na praça; ela fica atrás do balcão das 9h às 17h
   SHOP_INFO.bia = { ...SHOP_INFO.roupas, npc: undefined };
@@ -7006,6 +7026,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     { name: 'Coração da Floresta', from: 37, wood: 'mipe' },
   ];
   const mataArea = n => Math.min(3, Math.floor((n - 1) / 12));
+  // pontos de parada da cabana: a clareira 1 e depois de 5 em 5, como o elevador da mina
+  const mataParada = n => n === 1 || n % 5 === 0;
+  const mataParadas = max => { const l = []; for (let n = 1; n <= Math.min(max, MATA_N); n++) if (mataParada(n)) l.push(n); if (max > 1 && !l.includes(max)) l.push(max); return l.sort((a, b) => a - b); };
   const mataPer = () => Math.floor(((W.meta && W.meta.day) || 1) / MATA_RENOVA);
   const isMataN = id => /^mata\d+$/.test(id || '');
 
@@ -7117,6 +7140,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (n % 3 === 0 && !boss) place('gigante');
     if (area === 3 && r() < 0.6) place('dourada');
     if (r() < 0.2) place('bau');
+    mataTipo(m, n, r, boss);
     m.total = Object.values(m.wood).filter(o => o.kind !== 'forage' && o.kind !== 'bau').length;
     m.monSeed = r() * 1e9;
     return finalize(m);
@@ -7139,7 +7163,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     const m = getMap('mata' + n);
     P.x = (m.start[0] + 1) * T; P.y = m.start[1] * T + 12; P.dir = 0;
     const st = P.stats; st.mata = Math.max(st.mata || 0, n);
-    if ((n - 1) % 12 === 0 && n > (W.meta.mataMax || 0)) { W.meta.mataMax = n; queueUpdate('world/meta', { mataMax: n }); if (n > 1) toast(`A cabana do lenhador agora leva até ${MATA_AREAS[mataArea(n)].name}!`, 'big'); }
+    if (mataParada(n) && n > (W.meta.mataMax || 0)) { W.meta.mataMax = n; queueUpdate('world/meta', { mataMax: n }); if (n > 1) toast(`A cabana do lenhador agora leva até a clareira ${n} (${MATA_AREAS[mataArea(n)].name})!`, 'big'); }
     const r = srand(m.monSeed), list = [], area = m.area, boss = n % 12 === 0, night = nowMin() >= 1140, win = season() === 'winter';
     let cnt = area === 0 ? (n >= 3 ? Math.floor(r() * 2.5) : 0) : 2 + area + Math.floor(r() * 2);
     if (night && cnt) cnt++;
@@ -7150,6 +7174,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       do { x = 2 + Math.floor(r() * (m.w - 4)); y = 2 + Math.floor(r() * (m.h - 4)); tries++; } while ((solidAt(m, x, y) || Math.hypot(x - m.start[0], y - m.start[1]) < 7) && tries < 50);
       list.push(mataMon(pool[Math.floor(r() * pool.length)], x * T + 8, y * T + 12, n, r()));
     }
+    mataEntrar(m, n, list, r);
     if (boss) spawnFBoss(m, n, list);
     monsters = list;
     if (n === 1 && !st.mataIntro) { st.mataIntro = 1; toast('Corte árvores com o machado. Uma delas esconde a trilha para a próxima clareira.', 'big'); }
@@ -7291,9 +7316,9 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   // ---------- cabana do lenhador: atalho para as áreas ----------
   function openCabana() {
     const max = Math.max(1, W.meta.mataMax || 0), fb = W.meta.fbosses || {};
-    const btns = MATA_AREAS.map(a => max >= a.from ? `<button class="btn" data-a="mataGo" data-f="${a.from}" type="button">${a.name}</button>` : '').join('');
+    const pars = mataParadas(max), btns = MATA_AREAS.map((a, i) => { const l = pars.filter(n => mataArea(n) === i); return l.length ? `<h3>${a.name}</h3><div class="row">${l.map(n => `<button class="btn" data-a="mataGo" data-f="${n}" type="button">Clareira ${n}${FBOSSES[n] && !fb[n] ? ' ⚔' : ''}</button>`).join('')}</div>` : ''; }).join('');
     const gs = Object.entries(FBOSSES).map(([n, B]) => `<div class="item${fb[n] ? '' : ' dim'}"><span class="nm"><b>${B.name}</b><small>Clareira ${n} · ${fb[n] ? 'vencido!' : 'ainda guarda a mata'}</small></span></div>`).join('');
-    openPanel(`<h2>Cabana do lenhador</h2><p style="text-align:center">Escolha onde começar. As clareiras mudam a cada ${MATA_RENOVA} dias e as árvores voltam a crescer.</p><div class="row">${btns}</div><p style="text-align:center;font-size:13px">Clareira mais funda: ${P.stats.mata || 0} de ${MATA_N}</p><h3>Guardiões da mata</h3><div class="list">${gs}</div>`, 'cabana');
+    openPanel(`<h2>Cabana do lenhador</h2><p style="text-align:center">Escolha onde começar: a cabana guarda uma parada a cada 5 clareiras. As clareiras mudam a cada ${MATA_RENOVA} dias e as árvores voltam a crescer.</p>${btns}<p style="text-align:center;font-size:13px">Clareira mais funda: ${P.stats.mata || 0} de ${MATA_N}</p><h3>Guardiões da mata</h3><div class="list">${gs}</div>`, 'cabana');
   }
 
   // ---------- bichos da mata ----------
@@ -7665,6 +7690,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     if (m && GLOVE_COL[m]) o.eqm = m;
     if (b && BOOT_COL[b]) o.boot = BOOT_COL[b];
     if (c === 'macacao') o.pants = '#3a5aa8';
+    const rv = c && ROUPAS[c]; if (rv && rv.vest) o.pants = rv.meia || SKINS[look.skin || 0];
     return o;
   }
   // corpo e mãos (desenhado depois da roupa normal e antes da cabeça)
@@ -7713,6 +7739,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         break;
       }
       case 'capachuva': if (!look.rc) drawRaincoat(look, dir, step, true); break;
+      default: if (c) drawModa(look, dir, step, side);
     }
     // luvas
     if (look.eqm) {
@@ -7777,6 +7804,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         for (let x = hx - 1; x < hx + 13; x += 2) R(x, 3, 1, 9, '#1a1a1a55');
         break;
       }
+      default: drawModaHat(look, dir, hx, side);
     }
   }
   // ================= encantamentos: pedras preciosas nas armas (com o Seu Cláudio) =================
@@ -9101,7 +9129,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     for (let k = 0; x + 2 + k * 4 < x + w; k++) { disc(x + 2 + k * 4, y - 1, 2.2, '#3a8a2a'); disc(x + 2 + k * 4, y - 2, 1.6, cols[k % cols.length]); }
   }
   function vaso(x, y, c, flor) { R(x, y, 8, 7, c); R(x, y, 8, 1, shade(c, 0.3)); R(x + 1, y + 6, 6, 1, shade(c, -0.3)); oval(x + 4, y - 3, 5, 4, '#3a8a2a'); oval(x + 3, y - 4, 2, 2, '#5ab84a'); if (flor) for (const [dx, dy] of [[-2, -4], [2, -6], [4, -2]]) disc(x + 4 + dx, y + dy, 1.6, flor); }
-  function gable(w, base, top, over, col, snow, roofFn = shingleRoof) {
+  function larGable(w, base, top, over, col, snow, roofFn = shingleRoof) {
     poly([[-over, base + 2], [w / 2, top], [w + over, base + 2]], shade(col, -0.45));
     clipPts([[-over + 2, base], [w / 2, top + 2], [w + over - 2, base]], () => roofFn(-over, top, w + over * 2, base - top + 2, snow ? '#e8eef4' : col));
     R(-over, base, w + over * 2, 3, shade(col, -0.5));
@@ -9115,7 +9143,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       for (let i = 0; i < 40; i++) R(4 + (i * 37) % (w - 8), 16 + (i * 23) % (h - 22), 1, 1, wd);
       R(2, h - 6, w - 4, 6, '#b8a088'); for (let x = 4; x < w - 4; x += 8) R(x, h - 4, 6, 3, '#a08870');
       R(12, -12, 9, 20, '#c8603a'); R(11, -14, 11, 3, '#8a3a20');
-      gable(w, 16, -22, 6, '#c8603a', snow, telhaRoof);
+      larGable(w, 16, -22, 6, '#c8603a', snow, telhaRoof);
       winRound(w / 2, 0, 5, night, '#ffffff');
       venez(6, 28, 17, '#4a8a4a'); winPx(13, 28, 16, 17, night, '#ffffff'); venez(31, 28, 17, '#4a8a4a');
       doorPx(49, h - 22, '#4a8a4a');
@@ -9171,7 +9199,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       R(2, 16, w - 4, h - 16, az); for (let yy = 18; yy < h; yy += 4) { R(2, yy, w - 4, 1, '#6aa4c4'); R(2, yy + 1, w - 4, 1, '#a8d8f0'); }
       R(2, 16, 3, h - 16, '#ffffff'); R(w - 5, 16, 3, h - 16, '#ffffff');
       R(w - 20, -10, 9, 16, '#c8c0b8'); R(w - 21, -12, 11, 3, '#8a8278');
-      gable(w, 18, -20, 6, '#d8a03a', snow);
+      larGable(w, 18, -20, 6, '#d8a03a', snow);
       poly([[w / 2 - 7, 10], [w / 2, 2], [w / 2 + 7, 10]], '#ffffff'); poly([[w / 2 - 5, 9], [w / 2, 4], [w / 2 + 5, 9]], night ? '#ffd870' : '#6ab4e8');
       // cata-vento com envelope
       R(w / 2, -32, 1, 12, '#3a3a3a'); R(w / 2 - 7, -30, 15, 1, '#3a3a3a'); R(w / 2 - 4, -28, 9, 6, '#ffffff'); R(w / 2 - 4, -28, 1, 6, '#c8c8c8'); poly([[w / 2 - 4, -28], [w / 2, -25], [w / 2 + 5, -28]], '#c8c8c8');
@@ -9193,7 +9221,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       R(-2, h - 4, w + 4, 4, '#8a8278'); for (let x = 0; x < w; x += 7) R(x, h - 3, 5, 2, '#a8a096');
       // chaminé de pedra
       R(8, -18, 14, 30, '#8a8278'); for (let yy = -16; yy < 10; yy += 4) for (let x = 8 + ((yy / 4) & 1 ? 0 : 3); x < 21; x += 6) R(x, yy, 5, 3, '#a8a096'); R(6, -20, 18, 3, '#5a524a');
-      gable(w, 16, -24, 9, '#4a7a3a', snow);
+      larGable(w, 16, -24, 9, '#4a7a3a', snow);
       R(w / 2 - 2, -6, 4, 10, '#6a3a1a'); disc(w / 2, -8, 3, '#d8a870');
       venez(5, 26, 16, '#6a3a1a'); winPx(12, 26, 16, 16, night, '#d8a870'); venez(30, 26, 16, '#6a3a1a');
       doorPx(49, h - 22, '#7a4a2a'); R(51, h - 18, 10, 1, '#5a3418'); R(51, h - 12, 10, 1, '#5a3418');
@@ -9232,7 +9260,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       for (const x of [2, 24, 44, 68, w - 5]) R(x, 14, 3, h - 14, vig);
       R(2, 14, w - 4, 3, vig); R(2, 36, w - 4, 3, vig); R(2, h - 4, w - 4, 4, vig);
       R(w - 24, -20, 9, 14, '#a84a30'); for (let yy = -18; yy < -6; yy += 3) R(w - 24, yy, 9, 1, '#7a3020'); R(w - 25, -22, 11, 3, '#5a2a18');
-      gable(w, 16, -28, 8, '#8a4a2a', snow);
+      larGable(w, 16, -28, 8, '#8a4a2a', snow);
       // lambrequim de madeira recortada
       for (let x = -6; x < w + 6; x += 6) poly([[x, 19], [x + 3, 24], [x + 6, 19]], '#d8a870');
       R(w / 2 - 1, -34, 2, 8, '#5a3418'); poly([[w / 2 - 5, -34], [w / 2, -40], [w / 2 + 5, -34]], '#d8a870');
@@ -9274,6 +9302,391 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     shadowAt(x + w / 2, y + h, w / 2 + 4, 4);
     blit(larCanvas(s.lar, w, h, night), x - 12, y - 40);
     return true;
+  }
+
+  // ================= moda da estação (Ateliê da Bia) =================
+  // Para ela: uma coleção nova a cada estação (vestidos, saias, chapéus e sapatos), vendida só naquela estação.
+  // Os bônus da coleção valem na estação dela. Para ele: dois conjuntos (aventureiro e rancheiro) o ano todo.
+  const EST_NOME = { spring: 'primavera', summer: 'verão', fall: 'outono', winter: 'inverno' };
+  const MODA = {
+    // primavera
+    vestidoflorido: { name: 'Vestido florido', slot: 'cp', price: 4800, est: 'spring', bonus: { foraging: 1 }, desc: 'Na primavera, Coleta +1.', vest: true, d: { top: '#f8a8c8', skirt: '#f48ab8', trim: '#ffffff', manga: 'bufante', pad: 'flor' } },
+    jardineira: { name: 'Jardineira com blusinha', slot: 'cp', price: 4500, est: 'spring', bonus: { farming: 1 }, desc: 'Na primavera, Lavoura +1.', vest: true, d: { top: '#f8e070', skirt: '#6a9ad8', trim: '#4a7ab8', manga: 'curta', pad: 'jardineira' } },
+    chapeuprimavera: { name: 'Chapéu de aba com laço', slot: 'hd', price: 3200, est: 'spring', bonus: { luck: 1 }, desc: 'Na primavera, Sorte +1.' },
+    sapatilhas: { name: 'Sapatilhas rosa', slot: 'bt', price: 2800, est: 'spring', bonus: { speed: 1 }, desc: 'Na primavera, anda 10% mais rápido.', bota: '#f48ab8' },
+    // verão
+    vestidoverao: { name: 'Vestido de alcinha', slot: 'cp', price: 4800, est: 'summer', bonus: { fishing: 1 }, desc: 'No verão, Pesca +1.', vest: true, d: { top: '#8ad0f0', skirt: '#8ad0f0', trim: '#ffffff', manga: 'alca', pad: 'bolinha' } },
+    shortblusa: { name: 'Short e blusinha', slot: 'cp', price: 3800, est: 'summer', bonus: { speed: 1 }, desc: 'No verão, anda 10% mais rápido.', vest: true, short: '#4a7ab8', d: { top: '#ffffff', trim: '#f4a020', manga: 'alca', pad: 'listra' } },
+    chapeupraia: { name: 'Chapéu de praia', slot: 'hd', price: 3200, est: 'summer', bonus: { luck: 1 }, desc: 'No verão, Sorte +1.' },
+    sandalias: { name: 'Sandálias', slot: 'bt', price: 2600, est: 'summer', bonus: { foraging: 1 }, desc: 'No verão, Coleta +1.', bota: '#d8a060' },
+    // outono
+    vestidoxadrez: { name: 'Vestido xadrez de outono', slot: 'cp', price: 5000, est: 'fall', bonus: { farming: 1 }, desc: 'No outono, Lavoura +1.', vest: true, meia: '#5a3a2a', d: { top: '#c8642a', skirt: '#c8642a', trim: '#7a2a1a', manga: 'longa', pad: 'xadrez' } },
+    cardiga: { name: 'Cardigã e saia', slot: 'cp', price: 4600, est: 'fall', bonus: { foraging: 1 }, desc: 'No outono, Coleta +1.', vest: true, meia: '#4a2a2a', d: { top: '#e0a830', skirt: '#7a4a2a', trim: '#f4f0e8', manga: 'longa', pad: 'cardiga' } },
+    boina: { name: 'Boina', slot: 'hd', price: 3000, est: 'fall', bonus: { luck: 1 }, desc: 'No outono, Sorte +1.' },
+    botinhas: { name: 'Botinhas de outono', slot: 'bt', price: 3400, est: 'fall', bonus: { defense: 1 }, desc: 'No outono, +1 de defesa.', bota: '#7a4a2a' },
+    // inverno
+    vestidola: { name: 'Vestido de lã', slot: 'cp', price: 5200, est: 'winter', bonus: { defense: 1 }, energia: 0.95, desc: 'No inverno, +1 de defesa e tudo gasta 5% menos energia.', vest: true, meia: '#3a2a3a', d: { top: '#c8323a', skirt: '#c8323a', trim: '#ffffff', manga: 'longa', pad: 'trico' } },
+    casacopelucia: { name: 'Casaco de pelúcia', slot: 'cp', price: 5600, est: 'winter', bonus: { mining: 1 }, desc: 'No inverno, Mineração +1.', vest: true, meia: '#4a3a5a', d: { top: '#f0e4d0', skirt: '#f0e4d0', trim: '#c8a880', manga: 'longa', pad: 'pelucia' } },
+    toucapompom: { name: 'Touca de pompom', slot: 'hd', price: 3000, est: 'winter', bonus: { luck: 1 }, desc: 'No inverno, Sorte +1.' },
+    botasneve: { name: 'Botas de neve', slot: 'bt', price: 3600, est: 'winter', bonus: { speed: 1 }, desc: 'No inverno, anda 10% mais rápido.', bota: '#f4f0ec' },
+    // para ele: aventureiro
+    chapeuexplorador: { name: 'Chapéu de explorador', slot: 'hd', price: 4200, ele: true, bonus: { mining: 1 }, desc: 'Mineração +1.' },
+    jaquetacouro: { name: 'Jaqueta de couro', slot: 'cp', price: 6500, ele: true, bonus: { attack: 1, defense: 1 }, desc: '+1 de ataque e +1 de defesa.' },
+    botasaventura: { name: 'Botas de aventureiro', slot: 'bt', price: 4800, ele: true, bonus: { foraging: 1, speed: () => (curMap().mata || curMap().cave ? 1 : 0) }, desc: 'Coleta +1 e anda 10% mais rápido na mata e na mina.', bota: '#5a3a1a' },
+    // para ele: rancheiro
+    chapeuvaqueiro: { name: 'Chapéu de rancheiro', slot: 'hd', price: 4200, ele: true, bonus: { luck: 1 }, desc: 'Sorte +1.' },
+    camisarancheiro: { name: 'Camisa de rancheiro', slot: 'cp', price: 6000, ele: true, bonus: { farming: 1, fishing: 1 }, desc: 'Lavoura +1 e Pesca +1.' },
+    botasrancheiro: { name: 'Botas de rancheiro', slot: 'bt', price: 4600, ele: true, bonus: { defense: 1, speed: 1 }, desc: '+1 de defesa e anda 10% mais rápido.', bota: '#8a4a1a' },
+  };
+  for (const [k, r] of Object.entries(MODA)) { ROUPAS[k] = r; ITEMS[k] = { name: r.name, cat: 'roupa', slot: r.slot, sell: Math.round(r.price / 4), desc: r.desc }; if (r.bota) BOOT_COL[k] = r.bota; }
+
+  // bônus das roupas vestidas (somados aos das comidas em buffLv)
+  function roupaBuff(k) {
+    const e = P && P.eq; if (!e) return 0;
+    let n = 0;
+    for (const id of Object.values(e)) { const r = MODA[id]; if (!r || !r.bonus || r.bonus[k] == null || (r.est && r.est !== season())) continue; const v = r.bonus[k]; n += typeof v === 'function' ? v() : v; }
+    return n;
+  }
+  function modaEnergia() { const e = P && P.eq; let f = 1; for (const id of Object.values(e || {})) { const r = MODA[id]; if (r && r.energia && (!r.est || r.est === season())) f *= r.energia; } return f; }
+
+  // ---------- loja: coleção da estação e "para ele" ----------
+  const modaList = tab => tab === 'moda' ? Object.keys(MODA).filter(k => MODA[k].est === season()).map(id => ({ id, price: MODA[id].price, one: true }))
+    : tab === 'ele' ? Object.keys(MODA).filter(k => MODA[k].ele).map(id => ({ id, price: MODA[id].price, one: true })) : null;
+  for (const k of ['roupas', 'bia']) Object.defineProperty(SHOP_INFO[k], 'tabs', { get: () => [['moda', 'Coleção de ' + EST_NOME[season()]], ['ele', 'Para ele'], ['buy', 'Trabalho'], ['sell', 'Vender']], configurable: true });
+  for (const k of ['roupas', 'bia']) SHOP_INFO[k].greet = () => `“Chegou a coleção de ${EST_NOME[season()]}! Cada estação eu costuro coisas novas.”`;
+
+  // ---------- desenho no personagem ----------
+  function drawModa(look, dir, step, side) {
+    const r = MODA[look.eqc]; if (!r) return false;
+    const skin = SKINS[look.skin || 0], sD = shade(skin, -0.16), a = step, back = dir === 0;
+    if (look.eqc === 'jaquetacouro') {
+      const B = '#6a3a1a', D = '#4a2810', L = '#8a5a2a', tee = '#f4f0e8';
+      if (!side) {
+        R(3, 15, 10, 8, B); R(3, 15, 10, 1, L); R(11, 16, 2, 7, D);
+        if (!back) { R(6, 15, 4, 7, tee); R(5, 15, 1, 4, L); R(10, 15, 1, 4, L); R(5, 20, 1, 2, D); } else R(7, 16, 2, 6, D);
+        R(1, 16 + a, 2, 6, B); R(13, 16 - a, 2, 6, D); R(1, 21 + a, 2, 1, D); R(1, 22 + a, 2, 2, skin); R(13, 22 - a, 2, 2, sD);
+      } else { const f = step * 2; R(3, 15, 10, 8, B); R(3, 15, 10, 1, L); R(10, 15, 2, 5, tee); R(7 + f, 16, 3, 6, D); R(8 + f, 16, 1, 5, B); R(7 + f, 22, 3, 2, skin); }
+      return true;
+    }
+    if (look.eqc === 'camisarancheiro') {
+      const J = '#5a8ac8', JD = '#3a6aa8', V = '#8a5a2a', VD = '#6a3a1a', Rd = '#c83a3a';
+      if (!side) {
+        R(3, 15, 10, 8, J); R(11, 16, 2, 7, JD);
+        if (!back) { R(3, 15, 3, 8, V); R(10, 15, 3, 8, V); R(4, 17, 1, 1, '#f4c83a'); R(11, 17, 1, 1, '#f4c83a'); R(5, 14, 6, 2, Rd); R(7, 16, 2, 2, Rd); }
+        else { R(3, 15, 10, 8, V); R(3, 15, 10, 1, VD); R(5, 14, 6, 2, Rd); }
+        R(1, 16 + a, 2, 6, J); R(13, 16 - a, 2, 6, JD); R(1, 22 + a, 2, 2, skin); R(13, 22 - a, 2, 2, sD);
+      } else { const f = step * 2; R(3, 15, 10, 8, V); R(9, 15, 3, 8, J); R(5, 14, 6, 2, Rd); R(7 + f, 16, 3, 6, JD); R(8 + f, 16, 1, 5, J); R(7 + f, 22, 3, 2, skin); }
+      return true;
+    }
+    const d = r.d; if (!d) return false;
+    const top = d.top, tD = shade(top, -0.25), tL = shade(top, 0.25), sk = d.skirt, kD = sk && shade(sk, -0.25);
+    const longa = d.manga === 'longa', alca = d.manga === 'alca', curta = d.manga === 'curta' || d.manga === 'bufante';
+    if (!side) {
+      R(3, 15, 10, 7, top); R(3, 15, 10, 1, tL); R(11, 16, 2, 6, tD);
+      if (alca) { R(3, 15, 10, 2, skin); R(4, 15, 1, 2, top); R(11, 15, 1, 2, top); }
+      if (sk) { R(3, 21, 10, 1, d.trim); R(2, 22, 12, 2, sk); R(1, 24, 14, 3, sk); R(1, 26, 14, 1, kD); R(5, 23, 1, 3, kD); R(10, 23, 1, 3, kD); R(2, 22, 1, 2, shade(sk, 0.2)); }
+      else if (r.short) { const s = r.short; R(3, 21, 10, 1, d.trim); R(4, 22, 8, 3, s); R(4, 24, 3, 1, shade(s, -0.25)); R(9, 24, 3, 1, shade(s, -0.25)); R(7, 22, 2, 1, shade(s, -0.25)); }
+      R(1, 16 + a, 2, 6, longa ? top : skin); R(13, 16 - a, 2, 6, longa ? tD : sD);
+      if (curta) { R(1, 16 + a, 2, 2, top); R(13, 16 - a, 2, 2, tD); if (d.manga === 'bufante') { R(0, 16 + a, 1, 2, top); R(15, 16 - a, 1, 2, tD); } }
+      if (longa) { R(1, 21 + a, 2, 1, d.trim); R(13, 21 - a, 2, 1, d.trim); }
+      R(1, 22 + a, 2, 2, skin); R(13, 22 - a, 2, 2, sD);
+    } else {
+      const f = step * 2;
+      R(3, 15, 10, 7, top); R(3, 15, 10, 1, tL);
+      if (alca) { R(3, 15, 10, 2, skin); R(7, 15, 1, 2, top); }
+      if (sk) { R(3, 21, 10, 1, d.trim); R(3, 22, 10, 2, sk); R(2, 24, 12, 3, sk); R(2, 26, 12, 1, kD); R(6, 23, 1, 3, kD); R(11, 22, 1, 4, kD); }
+      else if (r.short) { R(3, 21, 10, 1, d.trim); R(5, 22, 7, 3, r.short); R(5, 24, 7, 1, shade(r.short, -0.25)); }
+      R(7 + f, 16, 3, 6, longa ? tD : sD); R(8 + f, 16, 1, 5, longa ? top : skin);
+      if (curta) R(7 + f, 16, 3, 2, top);
+      if (longa) R(7 + f, 21, 3, 1, d.trim);
+      R(7 + f, 22, 3, 2, skin);
+    }
+    modaPadrao(d, back, side, step);
+    return true;
+  }
+  function modaPadrao(d, back, side, step) {
+    const sk = d.skirt, f = step * 2;
+    switch (d.pad) {
+      case 'flor':
+        for (const [x, y] of side ? [[5, 17], [9, 19], [4, 24], [8, 25], [11, 23]] : [[5, 17], [9, 19], [4, 24], [8, 25], [12, 24], [6, 22], [10, 17]]) { R(x, y, 1, 1, '#ffffff'); R(x + 1, y, 1, 1, '#f4e060'); }
+        break;
+      case 'jardineira':
+        if (!side) { if (!back) { R(5, 17, 6, 5, sk); R(5, 15, 1, 2, sk); R(10, 15, 1, 2, sk); R(7, 18, 2, 2, shade(sk, -0.25)); R(5, 17, 1, 1, '#f4c83a'); R(10, 17, 1, 1, '#f4c83a'); } else { R(4, 18, 8, 4, sk); R(5, 15, 1, 3, sk); R(10, 15, 1, 3, sk); } }
+        else { R(4, 17, 8, 5, sk); R(8, 15, 1, 2, sk); }
+        break;
+      case 'bolinha':
+        for (let y = 18; y < 27; y += 3) for (let x = (y % 2 ? 3 : 4); x < 13; x += 3) if (!side || (x > 3 && x < 12)) R(x, y, 1, 1, '#ffffff');
+        break;
+      case 'listra': for (const y of [17, 19]) R(3, y, 10, 1, d.trim); break;
+      case 'xadrez': {
+        const L = d.trim;
+        for (const x of side ? [5, 9] : [5, 10]) R(x, 15, 1, 12, L);
+        for (const y of [18, 24]) R(side ? 2 : 1, y, side ? 12 : 14, 1, L);
+        R(side ? 3 : 3, 21, 10, 1, '#3a1a10');
+        break;
+      }
+      case 'cardiga':
+        if (!side) { if (!back) { R(6, 15, 4, 6, d.trim); R(5, 17, 1, 1, '#7a4a2a'); R(5, 19, 1, 1, '#7a4a2a'); } }
+        else R(10, 15, 2, 6, d.trim);
+        break;
+      case 'trico':
+        R(side ? 5 : 4, 14, side ? 6 : 8, 2, '#ffffff'); R(side ? 2 : 1, 26, side ? 12 : 14, 1, '#ffffff');
+        for (let x = side ? 3 : 2; x < 13; x += 3) R(x, 24, 1, 1, shade(d.top, -0.3));
+        break;
+      case 'pelucia':
+        R(side ? 5 : 4, 14, side ? 6 : 8, 2, shade(d.top, 0.3));
+        if (!side && !back) { R(8, 15, 1, 12, shade(d.top, -0.2)); for (const y of [17, 20, 23]) R(9, y, 2, 1, '#8a5a3a'); }
+        for (let k = 0; k < 10; k++) R(2 + (k * 7) % 11, 16 + (k * 5) % 10, 1, 1, shade(d.top, -0.12));
+        break;
+    }
+  }
+  function drawModaHat(look, dir, hx, side) {
+    const back = dir === 0;
+    switch (look.eqh) {
+      case 'chapeuprimavera': {
+        const S = '#f4e0a0', D = '#d8c070', Rb = '#f48ab8';
+        R(hx - 3, 2, 18, 2, S); R(hx - 3, 3, 18, 1, D); R(hx + 1, -3, 10, 5, S); R(hx + 2, -4, 8, 1, S); R(hx + 1, 0, 10, 2, Rb);
+        const bx = side ? hx : back ? hx + 6 : hx + 10; R(bx - 1, -1, 4, 3, Rb); R(bx, 0, 2, 1, shade(Rb, -0.3)); R(bx, 2, 1, 3, Rb); R(bx + 2, 2, 1, 2, Rb);
+        return true;
+      }
+      case 'chapeupraia': {
+        const W = '#f8f4ec', D = '#d8d0c0';
+        R(hx - 4, 2, 20, 2, W); R(hx - 5, 3, 2, 2, W); R(hx + 15, 3, 2, 2, W); R(hx - 4, 4, 20, 1, D); R(hx + 1, -3, 10, 5, W); R(hx + 2, -4, 8, 1, W); R(hx + 1, 0, 10, 2, '#2a2a2a');
+        if (!back) disc(hx + (side ? 2 : 10), 0, 1.8, '#f4c83a');
+        return true;
+      }
+      case 'boina': {
+        const C = '#8a2a3a', L = '#b04a5a';
+        R(hx - 1, 0, 14, 3, C); R(hx, -1, 12, 1, C); R(side ? hx + 1 : hx - 2, 1, 4, 2, C); R(hx + 1, 0, 5, 1, L); R(hx + 6, -2, 1, 1, '#5a1a2a'); R(hx, 3, 12, 1, shade(C, -0.3));
+        return true;
+      }
+      case 'toucapompom': {
+        const P2 = '#f48ab8', D = '#d8689a';
+        R(hx, -1, 12, 4, P2); R(hx + 1, -2, 10, 1, P2); for (let x = hx + 1; x < hx + 12; x += 2) R(x, -1, 1, 3, D);
+        R(hx - 1, 2, 14, 2, '#ffffff'); disc(hx + 6, -4, 3, '#ffffff'); R(hx + 5, -5, 1, 1, '#f8d8e8');
+        return true;
+      }
+      case 'chapeuexplorador': {
+        const K = '#c8b080', D = '#a89060';
+        R(hx - 2, 2, 16, 2, D); R(hx + 1, -3, 10, 5, K); R(hx + 2, -4, 8, 1, K); R(hx + 1, 0, 10, 1, '#6a5030'); R(hx + 4, -4, 4, 1, shade(K, 0.2));
+        return true;
+      }
+      case 'chapeuvaqueiro': {
+        const C = '#8a5a2a', D = '#6a3a1a';
+        R(hx - 3, 2, 18, 2, C); R(hx - 4, 0, 2, 3, C); R(hx + 14, 0, 2, 3, C); R(hx - 3, 3, 18, 1, D);
+        R(hx + 1, -4, 10, 6, C); R(hx + 5, -4, 2, 1, D); R(hx + 1, 0, 10, 1, '#2a1a10'); R(hx + 2, -3, 2, 3, shade(C, 0.2));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ---------- ícones ----------
+  function paintIcon11(id) {
+    const r = MODA[id]; if (!r) return false;
+    if (r.slot === 'bt') { const c = r.bota; for (const ox of [0, 6]) { R(2 + ox, 5, 4, 6, c); R(3 + ox, 5, 2, 5, shade(c, 0.3)); R(2 + ox, 11, 6, 3, c); R(2 + ox, 13, 6, 1, shade(c, -0.5)); } return true; }
+    if (r.slot === 'hd') {
+      const c = { chapeuprimavera: '#f4e0a0', chapeupraia: '#f8f4ec', boina: '#8a2a3a', toucapompom: '#f48ab8', chapeuexplorador: '#c8b080', chapeuvaqueiro: '#8a5a2a' }[id];
+      if (id === 'boina') { oval(8, 9, 7, 3.5, c); R(7, 4, 2, 2, shade(c, -0.3)); R(4, 8, 4, 1, shade(c, 0.3)); return true; }
+      if (id === 'toucapompom') { R(3, 7, 10, 6, c); R(3, 11, 10, 3, '#ffffff'); disc(8, 5, 3, '#ffffff'); return true; }
+      oval(8, 11, 7.5, 2.5, shade(c, -0.15)); oval(8, 8, 4.5, 4, c); R(4, 9, 8, 1, id === 'chapeuprimavera' ? '#f48ab8' : id === 'chapeupraia' ? '#2a2a2a' : '#5a3a1a');
+      if (id === 'chapeuprimavera') { R(11, 7, 3, 3, '#f48ab8'); }
+      return true;
+    }
+    if (id === 'jaquetacouro' || id === 'camisarancheiro') {
+      const c = id === 'jaquetacouro' ? '#6a3a1a' : '#5a8ac8';
+      poly([[4, 3], [12, 3], [14, 7], [12, 8], [12, 15], [4, 15], [4, 8], [2, 7]], c);
+      if (id === 'jaquetacouro') R(6, 3, 4, 11, '#f4f0e8'); else { R(4, 4, 2, 11, '#8a5a2a'); R(10, 4, 2, 11, '#8a5a2a'); R(6, 3, 4, 2, '#c83a3a'); }
+      return true;
+    }
+    const d = r.d, sk = d.skirt || r.short;
+    poly([[5, 2], [11, 2], [12, 7], [4, 7]], d.top);
+    if (d.manga !== 'alca') { R(2, 3, 3, d.manga === 'longa' ? 7 : 3, d.top); R(11, 3, 3, d.manga === 'longa' ? 7 : 3, d.top); }
+    R(4, 7, 8, 1, d.trim);
+    if (d.skirt) poly([[4, 8], [12, 8], [14, 15], [2, 15]], sk); else { R(4, 8, 8, 4, sk); R(7, 10, 2, 2, '#ffffff00'); }
+    if (d.pad === 'flor' || d.pad === 'bolinha') for (const [x, y] of [[5, 10], [9, 12], [11, 10], [6, 13], [8, 4]]) R(x, y, 1, 1, '#ffffff');
+    if (d.pad === 'xadrez') { R(6, 2, 1, 13, d.trim); R(10, 2, 1, 13, d.trim); R(3, 11, 10, 1, d.trim); }
+    if (d.pad === 'jardineira') { R(5, 4, 6, 4, sk); R(5, 2, 1, 2, sk); R(10, 2, 1, 2, sk); }
+    if (d.pad === 'trico' || d.pad === 'pelucia') { R(5, 2, 6, 1, '#ffffff'); R(2, 14, 12, 1, d.pad === 'trico' ? '#ffffff' : shade(d.top, -0.2)); }
+    if (d.pad === 'cardiga') R(7, 2, 2, 5, d.trim);
+    return true;
+  }
+
+  // ================= mais variedade na mina e na mata =================
+  // Mina (andares que não são de 5 em 5): veio rico, andar infestado (a escada só aparece depois de vencer todos),
+  // andar de cogumelos, buraco que desce até 3 andares (sem pular o elevador) e baú perdido.
+  // Mata (clareiras sem guardião): frutas silvestres, colmeia selvagem, círculo das fadas, bando de javalis e acampamento abandonado.
+  const AV_NOME = { rico: 'Veio rico! Este andar está cheio de minério.', infestado: 'Andar infestado! Vença todos os bichos para a escada aparecer.', cogumelos: 'Andar dos cogumelos! Dá para colher com o botão Usar.', buraco: 'Tem um buraco no chão... dá para pular e descer mais rápido.', bau: 'Tem um baú perdido em algum lugar deste andar!',
+    frutas: 'Clareira de frutas silvestres!', colmeia: 'Uma colmeia selvagem zumbe numa árvore...', fadas: 'Um círculo de cogumelos das fadas! Fique no meio e toque em Usar.', estouro: 'Estouro de javalis! Vença o bando para ganhar um prêmio.', acampamento: 'Um acampamento abandonado. Será que deixaram algo?' };
+  // o que já foi usado hoje (colher, abrir, prêmio): P.flags.av = { d: dia, k: { chave: 1 } }
+  const avUsado = key => { const f = P.flags.av; return !!(f && f.d === W.meta.day && f.k[key]); };
+  const avMarca = key => { let f = P.flags.av; if (!f || f.d !== W.meta.day) f = P.flags.av = { d: W.meta.day, k: {} }; f.k[key] = 1; dirty(); };
+  function avLivres(m, ok, r, longe = 3) {
+    const l = [];
+    for (let y = 2; y < m.h - 2; y++) for (let x = 2; x < m.w - 2; x++) if (ok(x, y) && !m.spots[x + ',' + y] && Math.abs(x - m.start[0]) + Math.abs(y - m.start[1]) >= longe) l.push([x, y]);
+    return { tira: () => (l.length ? l.splice(Math.floor(r() * l.length), 1)[0] : null) };
+  }
+
+  // ---------- mina ----------
+  function minaTipo(m, n, r) {
+    if (n % 5 === 0 || n < 3) return;
+    const q = r(), livre = (x, y) => m.at(x, y) === G.CAVE && !m.rocks[x + ',' + y] && m.at(x, y + 1) !== G.ROCKWALL;
+    if (q < 0.1) {
+      m.tipo = 'rico';
+      for (const o of Object.values(m.rocks)) if (o.kind === 'stone' && r() < 0.4) { const z = r(); o.kind = m.tier === 0 ? (z < 0.5 ? 'cobre' : z < 0.8 ? 'coal' : n >= 20 ? 'ferro' : 'gem:quartzo') : m.tier === 1 ? (z < 0.5 ? 'ferro' : z < 0.8 ? 'cobre' : 'gem:ametista') : (z < 0.45 ? 'ouro' : z < 0.75 ? 'ferro' : 'gem:esmeralda'); o.hp = 3; }
+    } else if (q < 0.19 && n >= 6) { m.tipo = 'infestado'; m.infest = true; }
+    else if (q < 0.27) {
+      m.tipo = 'cogumelos'; const L = avLivres(m, livre, r), cnt = 7 + Math.floor(r() * 5);
+      for (let k = 0; k < cnt; k++) { const p = L.tira(); if (!p) break; const z = r(); spot(m, p[0], p[1], { kind: 'avpega', id: z < 0.15 ? 'cogumelorei' : z < 0.5 ? 'morchela' : 'cogumelo' }); }
+    } else if (q < 0.33 && 5 - (n % 5) >= 2) {
+      const p = avLivres(m, livre, r, 5).tira(); if (!p) return;
+      m.tipo = 'buraco'; spot(m, p[0], p[1], { kind: 'avburaco', to: Math.min(n + 3, Math.ceil(n / 5) * 5) });
+    } else if (q < 0.4) {
+      const p = avLivres(m, livre, r, 5).tira(); if (!p) return;
+      m.tipo = 'bau'; spot(m, p[0], p[1], { kind: 'avbau' }); m.solid[p[1] * m.w + p[0]] = 1;
+    }
+  }
+  function minaEntrar(m, n, list, r) {
+    if (!m.tipo) return;
+    if (m.infest) for (const mo of list.slice()) { let x, y, k = 0; do { x = 1 + Math.floor(r() * (m.w - 2)); y = 1 + Math.floor(r() * (m.h - 2)); k++; } while ((solidAt(m, x, y) || Math.hypot(x - m.start[0], y - m.start[1]) < 5) && k < 40); list.push({ ...mo, x: x * T + 8, y: y * T + 12, ph: r() * 10, hopT: r() * 2 }); }
+    toast(AV_NOME[m.tipo], m.tipo === 'infestado' ? 'big' : '');
+  }
+  function minaBauLoot(m) {
+    const t = m.tier || 0, l = [[['cobre', rint(5, 9)], ['carvao', rint(2, 4)], ['geodo', rint(1, 2)], ['quartzo', 1]], [['ferro', rint(4, 7)], ['carvao', rint(3, 5)], ['geodogelo', 2], [pick(['ametista', 'topazio']), 1]], [['ouro', rint(3, 6)], ['ferro', rint(3, 5)], ['geodomagma', 2], [pick(['esmeralda', 'rubi', 'diamante']), 1]]][t];
+    if (Math.random() < 0.2) l.push([pick(['anelsorte', 'anelbrilho', 'anelpedra']), 1]);
+    return l.filter(([id]) => ITEMS[id]);
+  }
+  function darLoot(l) { const got = []; for (const [id, n] of l) if (addItem(id, n, true)) got.push(`${n} ${item(id).name.toLowerCase()}`); return got.join(', '); }
+
+  // ---------- mata ----------
+  function mataTipo(m, n, r, boss) {
+    if (boss || n < 2) return;
+    const q = r(), livre = (x, y) => [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !m.wood[x + ',' + y] && Math.abs(x - m.start[0]) + Math.abs(y - m.start[1]) >= 4;
+    const livre3 = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!livre(x + dx, y + dy)) return false; return true; };
+    if (q < 0.1) {
+      m.tipo = 'frutas'; const L = avLivres(m, livre, r, 4), s = season(), fr = { spring: ['morchela', 'alhoporo', 'narciso'], summer: ['framboesa', 'baga', 'framboesa'], fall: ['amora', 'avela', 'amora'], winter: ['frutacristal', 'pinha', 'frutacristal'] }[s].filter(id => ITEMS[id]);
+      for (let k = 0; k < 8; k++) { const p = L.tira(); if (!p) break; m.wood[p[0] + ',' + p[1]] = { kind: 'forage', hp: 1, v: 0, id: fr[Math.floor(r() * fr.length)] }; }
+    } else if (q < 0.19) {
+      const p = avLivres(m, livre3, r, 6).tira(); if (!p) return;
+      m.tipo = 'colmeia'; m.colmeia = p.join(','); spot(m, p[0], p[1], { kind: 'avcolmeia' }); m.solid[p[1] * m.w + p[0]] = 1;
+    } else if (q < 0.27) {
+      const p = avLivres(m, livre3, r, 6).tira(); if (!p) return;
+      m.tipo = 'fadas'; m.fadas = p.join(','); spot(m, p[0], p[1], { kind: 'avfadas' });
+    } else if (q < 0.35 && n >= 4) { m.tipo = 'estouro'; m.estouro = true; }
+    else if (q < 0.41) {
+      const p = avLivres(m, (x, y) => livre3(x, y) && livre3(x + 2, y), r, 6).tira(); if (!p) return;
+      m.tipo = 'acampamento'; const [x, y] = p; m.acamp = [x, y];
+      m.solid[y * m.w + x] = 1; m.solid[(y - 1) * m.w + x] = 1; m.solid[y * m.w + x - 1] = 1; m.solid[(y - 1) * m.w + x - 1] = 1;
+      spot(m, x + 2, y, { kind: 'avfogo' }); m.solid[y * m.w + x + 2] = 1;
+      m.wood[(x + 1) + ',' + (y + 1)] = { kind: 'bau', hp: 1, v: 0 };
+    }
+  }
+  function mataEntrar(m, n, list, r) {
+    if (!m.tipo) return;
+    if (m.estouro) for (let i = 0; i < 4 + m.area; i++) { let x, y, k = 0; do { x = 2 + Math.floor(r() * (m.w - 4)); y = 2 + Math.floor(r() * (m.h - 4)); k++; } while ((solidAt(m, x, y) || Math.hypot(x - m.start[0], y - m.start[1]) < 7) && k < 50); list.push({ ...mataMon('javali', x * T + 8, y * T + 12, n, r()), estouro: true }); }
+    toast(AV_NOME[m.tipo], m.tipo === 'estouro' ? 'big' : '');
+  }
+
+  // ---------- quando um bicho cai ----------
+  function aventuraKill(mo) {
+    const m = curMap();
+    if (m.infest && !m.ladder && m.floor < MINE_BOTTOM && monsters.every(x => x.dead)) {
+      let x = Math.floor(mo.x / T), y = Math.floor((mo.y - 4) / T);
+      if (solidAt(m, x, y)) [x, y] = [m.start[0], m.start[1] + 1];
+      m.ladder = x + ',' + y;
+      const got = darLoot(minaBauLoot(m));
+      sfx.level(); toast(`Andar limpo! A escada apareceu, e os bichos guardavam: ${got}.`, 'big');
+      if (room) room.emit('mine', { d: W.meta.day, f: m.floor, k: 'limpo', ladder: m.ladder }).catch(() => {});
+    }
+    if (m.estouro && mo.estouro && monsters.filter(x => x.estouro).every(x => x.dead)) {
+      const key = m.id + '|estouro|' + m.per; if (avUsado(key)) return;
+      avMarca(key); sfx.level();
+      toast(`Você venceu o bando de javalis! Prêmio: ${darLoot([['couro', 4], ['carnesuina', 2], ['madeiralei', 1 + m.area]])}.`, 'big');
+    }
+  }
+
+  // ---------- tocar em Usar ----------
+  function aventuraSpot(sp) {
+    const m = curMap(), k = Object.keys(m.spots).find(kk => m.spots[kk] === sp), key = m.id + '|' + k;
+    switch (sp.kind) {
+      case 'avpega':
+        if (avUsado(key)) return false;
+        if (!addItem(sp.id, 1)) return true;
+        avMarca(key); gainXP('foraging', 3); sfx.pop(); return true;
+      case 'avburaco': sfx.pop(); toast(`Você pulou no buraco e caiu no andar ${sp.to}!`); goMap('mine' + sp.to, 0, 0, 1); return true;
+      case 'avbau':
+        if (avUsado(key)) { toast('O baú está vazio.'); return true; }
+        avMarca(key); sfx.coin(); toast(`Baú perdido na mina! ${darLoot(minaBauLoot(m))}.`, 'big'); return true;
+      case 'avcolmeia': {
+        const kk = key + '|' + m.per;
+        if (avUsado(kk)) { toast('A colmeia já foi colhida. As abelhas estão fazendo mais mel.'); return true; }
+        avMarca(kk); const api = eqHas('chapeuapicultor'), n = rint(2, 3) + (api ? 1 : 0);
+        addItem('melsilvestre', n, true); sfx.pop();
+        if (api) toast(`Com o chapéu de apicultor, as vespas nem ligaram. Você pegou ${n} mel silvestre!`, 'big');
+        else {
+          const [x, y] = k.split(',').map(Number);
+          for (let i = 0; i < 3; i++) monsters.push(mataMon('vespa', x * T + 8 + rnd(-20, 20), y * T + rnd(-10, 10), m.mataN, Math.random()));
+          toast(`Você pegou ${n} mel silvestre... e as vespas acordaram!`, 'big');
+        }
+        return true;
+      }
+      case 'avfadas': {
+        const kk = 'fadas|' + m.per;
+        if (avUsado(kk)) { toast('As fadas já te abençoaram hoje.'); return true; }
+        avMarca(kk); addItem('cogumelorei', 1, true);
+        const b = pick([{ luck: 2 }, { foraging: 2 }, { speed: 1, luck: 1 }]);
+        P.buff = { b, until: 26 * 60, day: W.meta.day, name: 'Bênção das fadas' };
+        for (const [f, d] of [[784, 0], [988, 0.1], [1175, 0.2], [1568, 0.3]]) tone(f, f, 0.18, 'sine', 0.05, d);
+        toast(`As fadas te abençoaram: ${Object.entries(b).map(([kk2, v]) => `${BUFF_NAMES[kk2]} +${v}`).join(', ')} até o fim do dia! E deixaram um cogumelo-rei.`, 'big');
+        return true;
+      }
+      case 'avfogo': { const [x, y] = k.split(',').map(Number); useFire(x * T + 8, y * T + 8); return true; }
+    }
+    return false;
+  }
+
+  // ---------- desenho ----------
+  function cogumeloPx(x, y, id) {
+    if (id === 'morchela') { oval(x, y - 3, 3, 4, '#c8a060'); for (const [dx, dy] of [[-1, -5], [1, -3], [-1, -1]]) R(x + dx, y + dy, 1, 1, '#7a5a30'); R(x - 1, y, 2, 2, '#f4e8d0'); return; }
+    const cap = id === 'cogumelorei' ? '#d83a2a' : '#a8703a';
+    R(x - 1, y - 2, 2, 4, '#f4e8d0'); oval(x, y - 3, 4, 2.6, cap); R(x - 2, y - 4, 2, 1, shade(cap, 0.3));
+    if (id === 'cogumelorei') { R(x - 2, y - 3, 1, 1, '#ffffff'); R(x + 1, y - 4, 1, 1, '#ffffff'); }
+  }
+  function aventuraEnts(m, ents, t) {
+    if (!m.tipo) return;
+    for (const [k, sp] of Object.entries(m.spots)) {
+      if (!sp.kind || !sp.kind.startsWith('av')) continue;
+      const [x, y] = k.split(',').map(Number), px = x * T, py = y * T, key = m.id + '|' + k;
+      if (sp.kind === 'avpega' && !avUsado(key)) ents.push({ y: py + 12, f: () => { shadowAt(px + 8, py + 13, 4, 1.5); cogumeloPx(px + 8, py + 13, sp.id); } });
+      if (sp.kind === 'avburaco') ents.push({ y: -900, f: () => { oval(px + 8, py + 9, 9, 5, '#4a3a2a'); oval(px + 8, py + 9, 7, 4, '#0a0604'); R(px + 2, py + 5, 3, 1, '#7a6a5a'); } });
+      if (sp.kind === 'avbau') ents.push({ y: py + 15, f: () => { shadowAt(px + 8, py + 15, 7, 2); if (!avUsado(key)) { blit(objCanvas('bau'), px - 1, py - 4); if (Math.sin(t * 3 + x) > 0.6) R(px + 12, py - 4, 1, 1, '#ffffff'); } else { R(px + 1, py + 4, 14, 10, '#6a3a1a'); R(px + 2, py + 5, 12, 4, '#1a0e08'); R(px + 1, py - 2, 14, 5, '#8a5a2a'); } } });
+      if (sp.kind === 'avcolmeia') ents.push({ y: py + 15, f: () => {
+        // tronco seco com galhos e a colmeia pendurada
+        shadowAt(px + 8, py + 15, 9, 3);
+        R(px + 4, py - 26, 8, 41, '#6a4424'); R(px + 5, py - 26, 2, 41, '#8a5a32'); R(px + 10, py - 26, 2, 41, '#4a2c14');
+        R(px - 6, py - 22, 11, 3, '#6a4424'); R(px - 8, py - 25, 3, 4, '#6a4424'); R(px + 11, py - 16, 10, 3, '#6a4424'); R(px + 19, py - 20, 3, 5, '#6a4424');
+        for (const [dx, dy] of [[-7, -27], [20, -22], [2, -30]]) { disc(px + dx, py + dy, 3.5, '#3a8a2a'); disc(px + dx - 1, py + dy - 1, 2, '#5ab84a'); }
+        const cheia = !avUsado(m.id + '|' + k + '|' + m.per), hx = px + 17, hy = py - 6;
+        R(hx - 1, py - 14, 2, 3, '#4a2c14');
+        oval(hx, hy, 7, 9, cheia ? '#e8b030' : '#a8783a'); oval(hx - 2, hy - 3, 3, 4, cheia ? '#f8d060' : '#c89858');
+        for (const yy of [-6, -2, 2, 6]) R(hx - 6 + Math.abs(yy) / 3, hy + yy, 12 - Math.abs(yy) / 1.5, 1, '#a86a18');
+        R(hx - 1, hy + 3, 3, 3, '#2a1a0a');
+        if (cheia) for (let i = 0; i < 5; i++) { const a = t * 3 + i * 1.3; R(hx + Math.cos(a) * 11, hy + Math.sin(a * 1.3) * 8, 2, 1, '#f4d020'); R(hx + Math.cos(a) * 11, hy + Math.sin(a * 1.3) * 8 - 1, 1, 1, '#ffffff'); }
+      } });
+      if (sp.kind === 'avfadas') ents.push({ y: -900, f: () => {
+        ctx.globalAlpha = 0.35 + Math.sin(t * 2) * 0.1; oval(px + 8, py + 10, 20, 13, '#b8f0a0'); oval(px + 8, py + 10, 15, 9, '#d8ffc8'); ctx.globalAlpha = 1;
+        for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; cogumeloPx(px + 8 + Math.cos(a) * 17, py + 10 + Math.sin(a) * 11, i % 3 ? 'cogumelo' : 'cogumelorei'); }
+        if (!avUsado('fadas|' + m.per)) for (let i = 0; i < 5; i++) { const a = t * 1.5 + i * 1.3; R(px + 8 + Math.cos(a) * 10, py + 4 + Math.sin(a * 1.7) * 8 - Math.abs(Math.sin(t * 2 + i)) * 6, 1, 1, ['#fff8c0', '#c8f0ff', '#ffc8f0'][i % 3]); }
+      } });
+      if (sp.kind === 'avfogo') ents.push({ y: py + 12, f: () => { for (const [dx, dy] of [[-6, 4], [6, 4], [0, 7]]) R(px + 8 + dx - 3, py + 8 + dy, 6, 3, '#8a8278'); drawFire(px + 8, py + 8, t); } });
+    }
+    if (m.acamp) { const [x, y] = m.acamp; ents.push({ y: y * T + 15, f: () => {
+      const bx = (x - 1) * T, by = y * T + 16;
+      shadowAt(bx + 16, by - 1, 18, 3);
+      poly([[bx - 2, by], [bx + 16, by - 30], [bx + 34, by]], '#c8783a'); poly([[bx + 16, by - 30], [bx + 34, by], [bx + 26, by]], '#a85a2a');
+      poly([[bx + 10, by], [bx + 16, by - 16], [bx + 22, by]], '#2a1a0e'); R(bx + 15, by - 33, 2, 5, '#6a4424');
+      for (let k2 = 0; k2 < 4; k2++) R(bx + 3 + k2 * 4, by - 4 - k2 * 6, 2, 1, '#e8a860');
+    } }); }
   }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado

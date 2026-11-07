@@ -10,6 +10,7 @@
     if (m && GLOVE_COL[m]) o.eqm = m;
     if (b && BOOT_COL[b]) o.boot = BOOT_COL[b];
     if (c === 'macacao') o.pants = '#3a5aa8';
+    const rv = c && ROUPAS[c]; if (rv && rv.vest) o.pants = rv.meia || SKINS[look.skin || 0];
     return o;
   }
   // corpo e mãos (desenhado depois da roupa normal e antes da cabeça)
@@ -58,6 +59,7 @@
         break;
       }
       case 'capachuva': if (!look.rc) drawRaincoat(look, dir, step, true); break;
+      default: if (c) drawModa(look, dir, step, side);
     }
     // luvas
     if (look.eqm) {
@@ -122,5 +124,6 @@
         for (let x = hx - 1; x < hx + 13; x += 2) R(x, 3, 1, 9, '#1a1a1a55');
         break;
       }
+      default: drawModaHat(look, dir, hx, side);
     }
   }

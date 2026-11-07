@@ -96,6 +96,23 @@
         const g2 = m.at(Math.floor((px + jx) / T), Math.floor((py + jy) / T));
         if (SOFT.has(g2)) gt = g2;
       }
+      // ruas mais suaves: beirada levemente ondulada e esquinas arredondadas entre o calçamento e a grama
+      if (m.outdoor && (gt === G.COBBLE || SOFT.has(gt))) {
+        const base = m.at(tx, ty), lx = px - tx * T, ly = py - ty * T;
+        if ((base === G.COBBLE || SOFT.has(base)) && (lx < 3 || ly < 3 || lx > T - 4 || ly > T - 4)) {
+          const g3 = m.at(Math.floor((px + Math.round((noise2(px * 0.2, py * 0.2, 53) - 0.5) * 6)) / T), Math.floor((py + Math.round((noise2(px * 0.2 + 30, py * 0.2 + 60, 57) - 0.5) * 6)) / T));
+          if ((base === G.COBBLE && SOFT.has(g3)) || (SOFT.has(base) && g3 === G.COBBLE)) gt = g3;
+        }
+        const qx = lx < T / 2 ? -1 : 1, qy = ly < T / 2 ? -1 : 1, ex = qx < 0 ? lx : T - 1 - lx, ey = qy < 0 ? ly : T - 1 - ly, RR = 7;
+        if (ex < RR && ey < RR) {
+          const dx = RR - ex - 0.5, dy = RR - ey - 0.5;
+          if (dx * dx + dy * dy > RR * RR) {
+            const hN = m.at(tx + qx, ty), vN = m.at(tx, ty + qy);
+            if (base === G.COBBLE && SOFT.has(hN) && SOFT.has(vN)) gt = hN;
+            else if (SOFT.has(base) && hN === G.COBBLE && vN === G.COBBLE && m.at(tx + qx, ty + qy) === G.COBBLE) gt = G.COBBLE;
+          }
+        }
+      }
       const n = fbm(px / 26, py / 26), dith = hash(px, py, 5);
       switch (gt) {
         case G.GRASS: case G.FLOWERS: case G.FOREST: {

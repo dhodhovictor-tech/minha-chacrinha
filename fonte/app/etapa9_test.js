@@ -18,7 +18,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await p.waitForTimeout(800); await ev(() => document.querySelectorAll('#toasts > *').forEach(e => e.remove()));
   await p.screenshot({ path: SHOTS + 'e9_praca.png' });
   await ev(() => __sv.openShop('bia')); await p.waitForTimeout(300);
-  const shop = await ev(() => (document.querySelector('.win') || {}).innerText || '');
+  const shop = await ev(() => { { const t = document.querySelector('[data-a="stab"][data-t="buy"]'); if (t) t.click(); } return 0; }) || await ev(() => (document.querySelector('.win') || {}).innerText || '');
   ok(/Ateliê da Bia/.test(shop) && /Galochas/.test(shop) && /Luvas de jardinagem/.test(shop) && /Capacete de minerador/.test(shop), 'Ateliê da Bia vende roupas');
   await p.screenshot({ path: SHOTS + 'e9_loja.png' });
   await closeAll();

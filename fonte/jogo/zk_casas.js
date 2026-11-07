@@ -26,7 +26,7 @@
     for (let k = 0; x + 2 + k * 4 < x + w; k++) { disc(x + 2 + k * 4, y - 1, 2.2, '#3a8a2a'); disc(x + 2 + k * 4, y - 2, 1.6, cols[k % cols.length]); }
   }
   function vaso(x, y, c, flor) { R(x, y, 8, 7, c); R(x, y, 8, 1, shade(c, 0.3)); R(x + 1, y + 6, 6, 1, shade(c, -0.3)); oval(x + 4, y - 3, 5, 4, '#3a8a2a'); oval(x + 3, y - 4, 2, 2, '#5ab84a'); if (flor) for (const [dx, dy] of [[-2, -4], [2, -6], [4, -2]]) disc(x + 4 + dx, y + dy, 1.6, flor); }
-  function gable(w, base, top, over, col, snow, roofFn = shingleRoof) {
+  function larGable(w, base, top, over, col, snow, roofFn = shingleRoof) {
     poly([[-over, base + 2], [w / 2, top], [w + over, base + 2]], shade(col, -0.45));
     clipPts([[-over + 2, base], [w / 2, top + 2], [w + over - 2, base]], () => roofFn(-over, top, w + over * 2, base - top + 2, snow ? '#e8eef4' : col));
     R(-over, base, w + over * 2, 3, shade(col, -0.5));
@@ -40,7 +40,7 @@
       for (let i = 0; i < 40; i++) R(4 + (i * 37) % (w - 8), 16 + (i * 23) % (h - 22), 1, 1, wd);
       R(2, h - 6, w - 4, 6, '#b8a088'); for (let x = 4; x < w - 4; x += 8) R(x, h - 4, 6, 3, '#a08870');
       R(12, -12, 9, 20, '#c8603a'); R(11, -14, 11, 3, '#8a3a20');
-      gable(w, 16, -22, 6, '#c8603a', snow, telhaRoof);
+      larGable(w, 16, -22, 6, '#c8603a', snow, telhaRoof);
       winRound(w / 2, 0, 5, night, '#ffffff');
       venez(6, 28, 17, '#4a8a4a'); winPx(13, 28, 16, 17, night, '#ffffff'); venez(31, 28, 17, '#4a8a4a');
       doorPx(49, h - 22, '#4a8a4a');
@@ -96,7 +96,7 @@
       R(2, 16, w - 4, h - 16, az); for (let yy = 18; yy < h; yy += 4) { R(2, yy, w - 4, 1, '#6aa4c4'); R(2, yy + 1, w - 4, 1, '#a8d8f0'); }
       R(2, 16, 3, h - 16, '#ffffff'); R(w - 5, 16, 3, h - 16, '#ffffff');
       R(w - 20, -10, 9, 16, '#c8c0b8'); R(w - 21, -12, 11, 3, '#8a8278');
-      gable(w, 18, -20, 6, '#d8a03a', snow);
+      larGable(w, 18, -20, 6, '#d8a03a', snow);
       poly([[w / 2 - 7, 10], [w / 2, 2], [w / 2 + 7, 10]], '#ffffff'); poly([[w / 2 - 5, 9], [w / 2, 4], [w / 2 + 5, 9]], night ? '#ffd870' : '#6ab4e8');
       // cata-vento com envelope
       R(w / 2, -32, 1, 12, '#3a3a3a'); R(w / 2 - 7, -30, 15, 1, '#3a3a3a'); R(w / 2 - 4, -28, 9, 6, '#ffffff'); R(w / 2 - 4, -28, 1, 6, '#c8c8c8'); poly([[w / 2 - 4, -28], [w / 2, -25], [w / 2 + 5, -28]], '#c8c8c8');
@@ -118,7 +118,7 @@
       R(-2, h - 4, w + 4, 4, '#8a8278'); for (let x = 0; x < w; x += 7) R(x, h - 3, 5, 2, '#a8a096');
       // chaminé de pedra
       R(8, -18, 14, 30, '#8a8278'); for (let yy = -16; yy < 10; yy += 4) for (let x = 8 + ((yy / 4) & 1 ? 0 : 3); x < 21; x += 6) R(x, yy, 5, 3, '#a8a096'); R(6, -20, 18, 3, '#5a524a');
-      gable(w, 16, -24, 9, '#4a7a3a', snow);
+      larGable(w, 16, -24, 9, '#4a7a3a', snow);
       R(w / 2 - 2, -6, 4, 10, '#6a3a1a'); disc(w / 2, -8, 3, '#d8a870');
       venez(5, 26, 16, '#6a3a1a'); winPx(12, 26, 16, 16, night, '#d8a870'); venez(30, 26, 16, '#6a3a1a');
       doorPx(49, h - 22, '#7a4a2a'); R(51, h - 18, 10, 1, '#5a3418'); R(51, h - 12, 10, 1, '#5a3418');
@@ -157,7 +157,7 @@
       for (const x of [2, 24, 44, 68, w - 5]) R(x, 14, 3, h - 14, vig);
       R(2, 14, w - 4, 3, vig); R(2, 36, w - 4, 3, vig); R(2, h - 4, w - 4, 4, vig);
       R(w - 24, -20, 9, 14, '#a84a30'); for (let yy = -18; yy < -6; yy += 3) R(w - 24, yy, 9, 1, '#7a3020'); R(w - 25, -22, 11, 3, '#5a2a18');
-      gable(w, 16, -28, 8, '#8a4a2a', snow);
+      larGable(w, 16, -28, 8, '#8a4a2a', snow);
       // lambrequim de madeira recortada
       for (let x = -6; x < w + 6; x += 6) poly([[x, 19], [x + 3, 24], [x + 6, 19]], '#d8a870');
       R(w / 2 - 1, -34, 2, 8, '#5a3418'); poly([[w / 2 - 5, -34], [w / 2, -40], [w / 2 + 5, -34]], '#d8a870');

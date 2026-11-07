@@ -25,7 +25,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(await ev(() => (__sv.npcPos('bia') || {}).map) === 'atelie', 'a Bia está atrás do balcão às 10h');
   await clearToasts(); await p.waitForTimeout(400); await p.screenshot({ path: SHOTS + 'e12_atelie.png' });
   await ev(() => { const P = __sv.P; P.x = 6 * 16 + 8; P.y = 4 * 16 + 10; P.dir = 0; __sv.act(); }); await p.waitForTimeout(300);
-  const shop = await ev(() => (document.querySelector('.win') || {}).innerText || '');
+  const shop = await ev(() => { { const t = document.querySelector('[data-a="stab"][data-t="buy"]'); if (t) t.click(); } return 0; }) || await ev(() => (document.querySelector('.win') || {}).innerText || '');
   ok(/Ateliê da Bia/.test(shop) && /Galochas/.test(shop) && /Conversar com Bia/.test(shop), 'no balcão abre a loja de roupas');
   await p.screenshot({ path: SHOTS + 'e12_loja.png' }); await closeAll();
   await setTime(1100); await clearToasts();

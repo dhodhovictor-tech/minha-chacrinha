@@ -196,7 +196,7 @@
       case 'cida': return marketStock();
       case 'marta': return [{ id: 'feno', price: hayPrice() }, { id: 'petisco', price: 30 }, { id: 'balde', price: 1000, one: true }, { id: 'tesoura', price: 1000, one: true }];
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
-      case 'roupas': case 'bia': return CLOTHES_SHOP;
+      case 'roupas': case 'bia': return modaList(shopTab) || CLOTHES_SHOP;
       case 'festa': return festOn() ? FEST_SHOP[festOn().id].map(([id, price]) => ({ id, price })) : [];
       case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
@@ -220,7 +220,7 @@
     let body = '';
     const ext = extraShopTab(who, shopTab);
     if (ext != null) body = ext;
-    else if (shopTab === 'buy') {
+    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);

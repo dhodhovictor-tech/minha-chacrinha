@@ -50,7 +50,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(!(await ev(() => __sv.fishing)) && await ev(() => __sv.P.energy) < e0, 'rede no vazio gasta um pouquinho de energia');
   // capa de chuva e capinha do Darth no Ateliê
   await ev(() => __sv.openShop('roupas'));
-  const atl = await ev(() => document.querySelector('.win').innerText);
+  const atl = await ev(() => { { const t = document.querySelector('[data-a="stab"][data-t="buy"]'); if (t) t.click(); } return document.querySelector('.win').innerText; });
   ok(/Capa de chuva/.test(atl) && /Capinha de chuva do Darth/.test(atl), 'Ateliê vende capa de chuva e capinha do Darth');
   await closeAll();
   await ev(() => { __sv.addItem('capachuva', 1, true); __sv.addItem('capadarth', 1, true); });

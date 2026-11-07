@@ -35,7 +35,7 @@
   const nowMinF = () => { const c = W.clock; let m = c.min + (Date.now() - c.at) / MS_PER_TICK * MIN_PER_TICK; if (!host) m = Math.min(m, c.min + 20); return Math.min(m, DAY_END); };
 
   // ================= efeitos de comida =================
-  function buffLv(k) { const b = P && P.buff; return b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0; }
+  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k); }
   function afterEat(id) {
     const it = item(id);
     if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
@@ -745,7 +745,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
