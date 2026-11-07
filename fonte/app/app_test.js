@@ -103,6 +103,13 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   await A.waitForTimeout(1500);
   ok(await ev(B, () => (__sv.W.farm.casa || {})['4,5'] === 'tapete' && __sv.W.farm.cama === 'camaflorida'), 'B vê o tapete e a roupa de cama que A colocou');
   await ev(A, () => { document.querySelectorAll('[data-a="close"]').forEach(c => c.click()); __sv.goMap('farm', 10 * 16, 12 * 16, 1); }); await A.waitForTimeout(700);
+  // jardim: os dois no gazebo, A tira B para dançar
+  await ev(A, () => { const s = __sv; s.setFarm('jardim', 'gazebo', -1); s.goMap('farm', 37 * 16 + 8, 24 * 16 + 10, 0); }); await ev(B, () => __sv.goMap('farm', 39 * 16 + 8, 24 * 16 + 10, 0)); await A.waitForTimeout(1500);
+  await ev(A, () => { const s = __sv; s.P.x = 37 * 16 + 8; s.P.y = 24 * 16 + 10; s.P.sel = s.P.inv.findIndex(x => !x); s.act(); }); await A.waitForTimeout(200);
+  ok(/Precisa dos dois/.test(await ev(A, () => (document.querySelector('.win') || {}).innerText || '')) === false, 'A vê B no gazebo e pode chamar para dançar');
+  await ev(A, () => { const b = document.querySelector('[data-a="gzDancar"]'); if (b) b.click(); }); await A.waitForTimeout(1500);
+  ok(await ev(B, () => !!(__sv.P.buff && __sv.P.buff.name === 'Dança no gazebo')) && /dançar/.test(await ev(B, () => document.getElementById('toasts').innerText)), 'B recebe o convite da dança e ganha Sorte +1');
+  await ev(A, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click()));
   // diário: fica guardado no banco, mas só quem escreveu lê
   await ev(A, async () => { const s = __sv; s.diary = { e: { d1: { t: 'segredo da A', s: '', r: '' } } }; s.openInventory('diario'); await new Promise(r => setTimeout(r, 200)); });
   await ev(A, () => document.querySelector('[data-a="diarySave"]').click()); await A.waitForTimeout(1200);

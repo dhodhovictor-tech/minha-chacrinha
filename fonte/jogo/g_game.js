@@ -57,7 +57,7 @@
   function solidAt(m, x, y) {
     if (x < 0 || y < 0 || x >= m.w || y >= m.h) return true;
     if (m.solid[y * m.w + x]) return true;
-    if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && !(g.door && bReady(farmB()[g.id]))) return true; }
+    if (m.id === 'farm') { const g = bGrid().get(x + ',' + y); if (g && !(g.door && bReady(farmB()[g.id]))) return true; if (jardimSolid(x, y)) return true; }
     const o = objAt(m, x, y);
     return !!(o && (SOLID_OBJ.has(o.k) || o.k === 'mrock' || (o.k === 'fobj' && FOBJ[o.kind].solid) || (o.k === 'movel' && !MOVEIS[o.id].walk)));
   }
@@ -169,7 +169,7 @@
     if (m.id === 'farm' && interactBuilding(tx, ty)) return;
     if (m.ladder === k) { goMap('mine' + (m.floor + 1), 0, 0, 1); return; }
     if (farmable(m) && interactFarm(tx, ty, m)) return;
-    if (casaAct(m, tx, ty) || mataAct(m, tx, ty) || bancoAct(m, tx, ty)) return;
+    if (casaAct(m, tx, ty) || mataAct(m, tx, ty) || bancoAct(m, tx, ty) || jardimAct(m, tx, ty)) return;
     useItem(m, tx, ty);
   }
   function interactSpot(sp) {
@@ -197,7 +197,7 @@
       case 'up': goMap('minetop', 8 * T + 8, 5 * T + 4, 1); return true;
       case 'elevator': openElevator(); return true;
     }
-    return eventoSpot(sp);
+    return eventoSpot(sp) || jardimSpot(sp);
   }
   function interactFarm(tx, ty, m) {
     const k = KP(m) + tx + ',' + ty, tl = tile(k);
@@ -639,7 +639,7 @@
       const night = nightEvents(t, day, nd, newS);
       // mato e coletáveis novos
       const r = srand(nd * 977);
-      const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19; };
+      const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19 && !inJardim(x, y); };
       for (let i = 0; i < 6; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'weed', hp: 1, v: Math.floor(r() * 3) } }; }
       const fl = FORAGE[newS];
       for (let i = 0; i < (anyProf('rastreador') ? 5 : 2); i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
@@ -649,7 +649,7 @@
       const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
-      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null });
+      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null, jardim: W.farm.jardim || null });
       deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};
