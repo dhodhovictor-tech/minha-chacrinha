@@ -119,9 +119,8 @@
     if (id === 'nena') ents.push({ y: 6 * T, f: () => { disc(8 * T + 8, 6 * T + 10, 4, '#e8402a'); R(8 * T + 6, 6 * T + 7, 4, 1, '#ffffff'); } });
   }
 
-  // ---------- placas com nome e horário ----------
+  // ---------- placas com o nome de cada lugar ----------
   const PLACAS = [['store', 'Armazém', 'pedro'], ['atelie', 'Ateliê', 'bia'], ['moveis', 'Marcenaria', 'tonico'], ['smith', 'Ferraria', 'claudio'], ['carpentry', 'Carpintaria', 'rosa'], ['bar', 'Bar da Lia', 'lia'], ['ranch', 'Rancho', 'marta'], ['cc', 'Centro Comunitário'], ['museum', 'Museu']];
-  const hh = m => `${Math.floor(m / 60) % 24}h`;
   function placa(txt, x, y) {
     ctx.font = '700 7px "Pixelify Sans", monospace';
     const w = Math.ceil(ctx.measureText(txt).width) + 8;
@@ -132,10 +131,10 @@
     if (m.id !== 'town') return;
     for (const [k, nome, who] of PLACAS) {
       const p = V[k]; if (!p) continue;
-      const n = who && NPCS[who], txt = n && n.hours ? `${nome} · ${hh(n.hours[0])}–${hh(n.hours[1])}` : nome;
-      ents.push({ y: (p[1] + p[3]) * T + 1, f: () => placa(txt, p[4] * T + 8, (p[1] + p[3]) * T - 30) });
+      ents.push({ y: (p[1] + p[3]) * T + 1, f: () => placa(nome, p[4] * T + 8, (p[1] + p[3]) * T - 30) });
     }
-    for (const [id, [x, y]] of Object.entries(V.casas)) ents.push({ y: (y + 4) * T + 1, f: () => placa(LAR_DONO[id].replace(/^(Doutor|Professora|Seu|Dona) /, '').split(' e ')[0], (x + 1.4) * T, (y + 4) * T - 12) });
+    // plaquinha com o nome do dono num poste no jardim da frente
+    for (const [id, [x, y]] of Object.entries(V.casas)) ents.push({ y: (y + 4) * T + 12, f: () => { const px = (x + 1.5) * T, py = (y + 4) * T + 2; R(px - 1, py + 3, 3, 9, '#5a3418'); placa(LAR_DONO[id].replace(/^(Doutor|Professora|Seu|Dona) /, '').split(' e ')[0], px, py); } });
   }
 
   // postes acesos e janelas das lojas à noite

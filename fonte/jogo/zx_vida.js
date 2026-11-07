@@ -105,11 +105,10 @@
       for (let k = 0; k < 3; k++) { const sw = Math.sin(t * 2 + k) * 1, c = ['#e8402a', '#3a8ad8', '#f4f0e8', '#f4c83a', '#5ab83a'][(k + vx) % 5]; R(x + 4 + k * 9 + sw, y - 17, 7, k % 2 ? 9 : 7, c); R(x + 4 + k * 9 + sw, y - 17, 7, 1, shade(c, -0.3)); }
     } });
     // chaminés com fumaça nas casinhas
-    for (const [hx, hy] of Object.values(VILA.casas)) ents.push({ y: (hy + 4) * T + 2, f: () => {
-      const cx = (hx + 4) * T + 2, cy = hy * T - 10;
-      R(cx - 3, cy - 6, 7, 12, '#8a6a5a'); R(cx - 4, cy - 7, 9, 2, '#6a4a3a');
+    for (const [id, [hx, hy]] of Object.entries(VILA.casas)) { const ch = LAR_FUMACA[id]; if (ch) ents.push({ y: (hy + 4) * T + 2, f: () => {
+      const cx = hx * T + ch[0], cy = hy * T + ch[1] + 8;
       for (let k = 0; k < 3; k++) { const pr = (t * 0.35 + k / 3) % 1; ctx.fillStyle = `rgba(230,230,235,${0.5 * (1 - pr)})`; ctx.beginPath(); ctx.arc(cx + Math.sin(pr * 6 + k) * 3, cy - 8 - pr * 22, 2 + pr * 4, 0, TAU); ctx.fill(); }
-    } });
+    } }); }
     // a bola do Caio quando ele está brincando na vila
     const caio = npcPos('caio');
     if (caio && caio.map === 'town' && !caio.walk) ents.push({ y: caio.y + 1, f: () => { const b = Math.abs(Math.sin(t * 4)) * 10; shadowAt(caio.x + 12, caio.y + 1, 3, 1); disc(caio.x + 12, caio.y - 3 - b, 3, '#e8402a'); R(caio.x + 11, caio.y - 5 - b, 2, 1, '#ffffff'); } });

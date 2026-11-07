@@ -786,6 +786,7 @@
       blit(building2Canvas(s.type, w, h, night, extra), x - 8, y - 36);
       return;
     }
+    if (s.type === 'cottage' && s.lar && drawLarSprite(s, x, y, w, h, night)) return;
     if (['house', 'store', 'smith', 'cottage', 'fountain'].includes(s.type)) shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
     if (s.type === 'bed' && curMap().id === 'house') s.col = (W.farm && W.farm.cama) || '';
     blit(buildingCanvas(s.type, w, h, night && ['house', 'cottage', 'tv'].includes(s.type), s.col), x - 8, y - 36);
