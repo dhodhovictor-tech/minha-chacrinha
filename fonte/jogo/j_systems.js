@@ -215,7 +215,7 @@
     const B = BUILDS[b.type], x = b.x * T, y = b.y * T, w = B.w * T, h = B.h * T;
     shadowAt(x + w / 2, y + h, w / 2 + 2, 4);
     if (!bReady(b)) blit(building2Canvas('scaffold', w, h, false), x - 8, y - 36);
-    else blit(building2Canvas(b.type, w, h, nf > 0.35, b.lv), x - 8, y - 36);
+    else { blit(building2Canvas(b.type, w, h, nf > 0.35, b.lv), x - 8, y - 36); if (b.type === 'moinho') drawPas(x, y, w, performance.now() / 1000); }
   }
 
   // ================= animais =================
@@ -365,6 +365,7 @@
       case 'silo': if (s && s.id === 'feno') { const n = Math.min(s.n, siloCap() - (W.farm.hay || 0)); if (n > 0) { useHeld(n); setFarmVal('hay', (W.farm.hay || 0) + n); toast(`Guardou ${n} de feno no silo.`); } else toast('O silo está cheio.'); } else toast(`Silo: ${W.farm.hay || 0}/${siloCap()} de feno.`); return true;
       case 'well': if (s && s.id === 'can') { swing('can', s.lv || 0); P.water = canCap(s.lv || 0); toast('Regador cheio!'); sfx.water(); dirty(); } else toast('Um poço fresquinho. Use o regador aqui.'); return true;
       case 'stable': mount(); return true;
+      case 'moinho': return moinhoBuilding(g.id, b);
       case 'greenhouse': toast('A estufa! Entre pela porta: lá dentro tudo cresce em qualquer estação.'); return true;
       default: { const n = Object.values(farmA()).filter(a => a.b === g.id).length; toast(`${BUILDS[b.type].names[b.lv - 1]}: ${n}/${bCap(b)} animais. Entre pela porta.`); return true; }
     }

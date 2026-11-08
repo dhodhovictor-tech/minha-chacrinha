@@ -25,6 +25,7 @@
         case 'moveis': drawMoveisB(w, h, night, snow); break;
         case 'coreto': drawCoreto(w, h, night, snow); break;
         case 'gazebo': drawGazebo(w, h, night, snow); break;
+        case 'moinho': drawMoinho(w, h, night, snow); break;
         case 'padaria': case 'flores': case 'petshop': case 'clinica': case 'biblioteca': lojaFrente(type, w, h, night, snow); break;
         case 'atelie': {
           R(2, 18, w - 4, h - 18, '#f4dce4');
