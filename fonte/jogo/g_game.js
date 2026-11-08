@@ -148,6 +148,7 @@
     if (panelOpen || lockT > 0.05) return;
     if (placing) { confirmPlacing(); return; }
     if (fishing) { fishAction(); return; }
+    if (pedidoAct()) return;
     if (nearBooth()) { openFest(); return; }
     const m = curMap();
     let [tx, ty] = target || facing();
@@ -649,9 +650,10 @@
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
       const meta = { day: nd, rain: !!W.meta.rainTomorrow, snow: s2 === 'winter' && !!W.meta.rainTomorrow, rainTomorrow: nd > 2 && Math.random() < rainP, storm: !!W.meta.rainTomorrow && s2 !== 'winter' && Math.random() < (s2 === 'summer' ? 0.45 : 0.15), crows, quest: newQuest(nd), luck: Math.round((Math.random() - 0.5) * 20) / 100, sold: decaySold(), late };
+      climaNovo(meta, s2);
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
-      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null, jardim: W.farm.jardim || null });
+      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null, jardim: W.farm.jardim || null, aquario: W.farm.aquario || null, estilo: W.farm.estilo || null, reforma: W.farm.reforma || null, casaIni: W.farm.casaIni || 0, lareiraIni: W.farm.lareiraIni || 0 });
       deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};
@@ -693,7 +695,7 @@
       ${festLine()}
       ${catGiftLine}
       ${W.meta.crows ? `<p>Os corvos comeram ${W.meta.crows} planta${W.meta.crows > 1 ? 's' : ''}. Um espantalho ajuda.</p>` : ''}
-      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}</p>
+      <p>Previsão: ${W.meta.rain ? (W.meta.snow ? 'neve hoje' : W.meta.storm ? 'tempestade hoje (os para-raios vão pegar raios à noite), as plantas já estão regadas' : 'chuva hoje, as plantas já estão regadas') : 'sol hoje'}${W.meta.rainTomorrow ? ', e amanhã vai chover.' : '.'}${climaTxt()}</p>
       ${pendingProf() ? '<p class="big" style="text-align:center">Você tem uma profissão nova para escolher!</p><div class="row"><button class="btn" data-a="profOpen" type="button">Escolher profissão</button></div>' : ''}
       <div class="row"><button class="btn g" data-a="close" type="button">Bom dia!</button></div>`);
   }

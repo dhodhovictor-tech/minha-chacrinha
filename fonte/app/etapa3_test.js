@@ -37,7 +37,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   ok(after.has === 1 && after.lend && after.lend.lenda, 'pegou A Lenda e ficou registrado');
   ok(/Baú do tesouro/.test(after.toasts), 'baú do tesouro aberto: ' + (after.toasts.match(/Baú do tesouro[^\n]*/) || [''])[0]);
   ok(after.tkn === 19, 'a boia gastou 1 uso: ' + after.tkn);
-  ok(await ev(() => { const R0 = Math.random; Math.random = () => 0.01; const a = __sv.legendFor('pond'); Math.random = R0; return a === null; }), 'a Lenda não aparece de novo para quem já pegou');
+  ok(await ev(() => { const R0 = Math.random; Math.random = () => 0.1; const a = __sv.legendFor('pond'); Math.random = () => 0.01; const b = __sv.legendFor('pond'); Math.random = R0; return a === null && b === 'lenda'; }), 'a Lenda volta a aparecer para quem já pegou, só que mais rara');
   // 5) anéis e botas
   await ev(() => { const s = __sv; s.addItem('anelguerreiro', 1, true); s.addItem('botasdragao', 1, true); s.addItem('anelbrilho', 1, true); });
   await p.click('#bMenu'); await p.waitForTimeout(200); await p.click('[data-t="items"]'); await p.waitForTimeout(200);

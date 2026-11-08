@@ -113,6 +113,7 @@
           }
         }
       }
+      if (m.id === 'house' && (gt === G.WALL || gt === G.WOOD)) { const cc = casaPx(m, gt, px, py, tx, ty); if (cc) { put(i, cc); continue; } }
       const n = fbm(px / 26, py / 26), dith = hash(px, py, 5);
       switch (gt) {
         case G.GRASS: case G.FLOWERS: case G.FOREST: {

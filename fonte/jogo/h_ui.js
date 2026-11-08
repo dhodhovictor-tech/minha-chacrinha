@@ -65,7 +65,7 @@
     const min = nowMin(), h = Math.floor(min / 60) % 24, mm = String(min % 60).padStart(2, '0');
     const s = season();
     $('cDay').textContent = `${weekday()} ${dom()} · Ano ${year()}`;
-    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${W.meta.rain ? (W.meta.snow ? 'neve' : W.meta.storm ? 'tempestade' : 'chuva') : 'sol'}`;
+    $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${climaNome()}`;
     $('cTime').textContent = `${h}:${mm}`;
     $('cGold').textContent = `${fmt(gold())} ₲`;
     $('enFill').style.height = clamp(P.energy / P.maxEnergy, 0, 1) * 100 + '%';

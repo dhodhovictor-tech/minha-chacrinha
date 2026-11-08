@@ -67,6 +67,7 @@
   }
   // abas extras das lojas (Encantar no ferreiro, Móveis e Roupa de cama na marcenaria)
   function extraShopTab(who, tab) {
+    const c2 = casa2Tab(who, tab); if (c2 != null) return c2;
     if (who === 'claudio' && tab === 'enc') return encHTML();
     if (who === 'tonico' && tab === 'moveis') return moveisHTML();
     if (who === 'tonico' && tab === 'cama') return camasHTML();
@@ -86,11 +87,12 @@
     return casaGrid;
   }
   const movelAt = (x, y) => { const k = casaCells().get(x + ',' + y); return k ? { k, id: casa()[k] } : null; };
-  function canPlaceMovel(m, x, y, f) {
+  function canPlaceMovel(m, x, y, f, skip) {
     for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) {
       const xx = x + dx, yy = y + dy, k = xx + ',' + yy;
       if (xx < 1 || yy < 2 || xx > m.w - 2 || yy > m.h - 2) return false;
-      if (m.solid[yy * m.w + xx] || m.spots[k] || movelAt(xx, yy)) return false;
+      const mv = movelAt(xx, yy);
+      if (m.solid[yy * m.w + xx] || m.spots[k] || (mv && mv.k !== skip)) return false;
       if (xx === 7 && yy >= 8) return false; // caminho da porta
       if (Math.floor(P.x / T) === xx && Math.floor((P.y - 3) / T) === yy) return false;
     }
@@ -109,7 +111,8 @@
   }
   function openMovel(k) {
     const id = casa()[k], f = MOVEIS[id]; if (!f) return;
-    openPanel(`<h2>${f.name}</h2><p style="text-align:center">${f.desc}</p><div class="row"><button class="btn" data-a="movelPick" data-k="${k}" type="button">Guardar na mochila</button></div>`, 'movel', k);
+    if (openMovel2(k, id)) return;
+    openPanel(`<h2>${f.name}</h2><p style="text-align:center">${f.desc}</p><div class="row">${id === 'tvcasa' ? '<button class="btn g" data-a="movelTV" type="button">Ligar a TV</button>' : ''}<button class="btn" data-a="movelMove" data-k="${k}" type="button">Mover</button><button class="btn" data-a="movelPick" data-k="${k}" type="button">Guardar na mochila</button></div>`, 'movel', k);
   }
   // tocar em Usar dentro de casa: roupa de cama na cama e móveis
   function casaAct(m, tx, ty) {
@@ -141,6 +144,7 @@
       case 'camaBuy': { const c = CAMAS[b.dataset.id]; if (c && spend(c.gold)) { addItem(b.dataset.id, 1, true); sfx.coin(); toast(`Comprou: ${c.name}.`, '', b.dataset.id, 'cama'); } renderShop(panelArg); return true; }
       case 'movelPick': {
         const k = b.dataset.k, id = casa()[k];
+        if (id === 'aquario' && !aqGuardar(k)) return true;
         if (id && addItem(id, 1, true)) { setFarm('casa', k, null); sfx.pop(); toast(`${MOVEIS[id].name} guardado na mochila.`, '', null, 'movel'); }
         closePanel(); return true;
       }
@@ -149,8 +153,8 @@
   }
 
   // ---------- desenho dos móveis ----------
-  function drawMovel(id, px, py, t, night) {
-    if (drawMovelPet(id, px, py)) return;
+  function drawMovel(id, px, py, t, night, k) {
+    if (drawMovelPet(id, px, py) || drawMovel2(id, px, py, t, night, k)) return;
     switch (id) {
       case 'cadeirapinho': shadowAt(px + 8, py + 14, 6, 2); R(px + 4, py - 6, 8, 12, '#b88a4a'); R(px + 5, py - 5, 6, 2, '#d8b070'); R(px + 5, py - 1, 6, 1, '#d8b070'); R(px + 3, py + 5, 10, 4, '#d8b070'); R(px + 3, py + 5, 10, 1, '#f0d098'); R(px + 4, py + 9, 2, 5, '#9a6a3a'); R(px + 10, py + 9, 2, 5, '#9a6a3a'); break;
       case 'mesapinho': shadowAt(px + 8, py + 14, 6, 2); oval(px + 8, py + 5, 7, 3.5, '#b88a4a'); oval(px + 8, py + 4, 7, 3, '#d8b070'); R(px + 7, py + 7, 2, 7, '#9a6a3a'); R(px + 4, py + 13, 8, 1, '#9a6a3a'); R(px + 7, py, 3, 3, '#f4f0e8'); R(px + 8, py - 1, 1, 1, '#ffffff99'); break;
@@ -174,9 +178,9 @@
     const night = nightF() > 0.2;
     if (m.id === 'house') {
       for (const [k, id] of Object.entries(casa())) {
-        const f = MOVEIS[id]; if (!f) continue;
+        const f = MOVEIS[id]; if (!f || (placing && placing.casa === k)) continue;
         const [x, y] = k.split(',').map(Number);
-        ents.push({ y: f.walk ? -500 : (y + f.h - 1) * T + 14, f: () => drawMovel(id, x * T, y * T, t, night) });
+        ents.push({ y: f.walk ? -500 : (y + f.h - 1) * T + 14, f: () => drawMovel(id, x * T, y * T, t, night, k) });
       }
     }
     if (m.id === 'moveis') {

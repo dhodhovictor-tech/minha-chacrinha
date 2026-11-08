@@ -74,7 +74,7 @@
   }
   const rain = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: rnd(0.8, 1.2) }));
   function render(dt) {
-    const m = placing ? MAPS.farm : curMap(), t = performance.now() / 1000;
+    const m = placing && !placing.casa ? MAPS.farm : curMap(), t = performance.now() / 1000;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, VW, VH);
     const PB = placing && placeSize();
@@ -180,6 +180,7 @@
       ctx.fillStyle = 'rgba(40,60,90,0.12)'; ctx.fillRect(0, 0, VW, VH);
       drawStorm(dt);
     }
+    climaDraw(dt, m, t);
   }
 
   // ================= laço =================
@@ -190,6 +191,7 @@
       if (panelOpen) pauseClock(dt * 1000);
       lockT = Math.max(0, lockT - dt);
       if (toolAnim) { toolAnim.t += dt; if (toolAnim.t >= toolAnim.dur) toolAnim = null; }
+      casaSync();
       if (placing) updatePlacing(dt); else movePlayer(dt);
       updateAnimals(dt);
       updatePet(dt);
@@ -235,7 +237,7 @@
     if (!P || panelOpen) return;
     const r = cv.getBoundingClientRect(), wx = (e.clientX - r.left) / r.width * VW + camX, wy = (e.clientY - r.top) / r.height * VH + camY;
     const tx = Math.floor(wx / T), ty = Math.floor(wy / T), [px, py] = ptile();
-    if (placing) { const B = placeSize(); placing.x = clamp(tx - Math.floor(B.w / 2), 1, MAPS.farm.w - B.w - 1); placing.y = clamp(placing.type ? ty - B.h + 1 : ty, 1, MAPS.farm.h - B.h - 2); return; }
+    if (placing) { const B = placeSize(), PM = placeMap(); placing.x = clamp(tx - Math.floor(B.w / 2), 1, PM.w - B.w - 1); placing.y = clamp(placing.type ? ty - B.h + 1 : ty, 1, PM.h - B.h - 2); return; }
     if (Math.abs(tx - px) <= 1 && Math.abs(ty - py) <= 1 && !(tx === px && ty === py)) {
       const dx = tx - px, dy = ty - py;
       P.dir = Math.abs(dx) >= Math.abs(dy) && dx ? (dx > 0 ? 3 : 2) : dy > 0 ? 1 : 0;
@@ -338,6 +340,7 @@
       W.farm.t = t;
       for (const sec of ['b', 'a', 'pots', 'casa']) W.farm[sec] = stripNull(clone(d[sec] || {}));
       W.farm.cama = d.cama || null; W.farm.jardim = d.jardim ? clone(d.jardim) : null;
+      W.farm.aquario = stripNull(clone(d.aquario || {})); W.farm.estilo = d.estilo ? clone(d.estilo) : null; W.farm.reforma = d.reforma ? clone(d.reforma) : null; W.farm.casaIni = d.casaIni || 0; W.farm.lareiraIni = d.lareiraIni || 0;
       W.farm.hay = d.hay || 0; W.farm.fridge = d.fridge ? clone(d.fridge) : null;
       const q = pend['world/farm'];
       if (q && q.patch) {

@@ -116,21 +116,20 @@
     return finalize(m);
   }
 
-  function buildHouse() {
-    const m = newMap('house', 16, 11, G.WOOD, { name: 'Casa', outdoor: false });
-    m.rect(0, 0, 15, 1, G.WALL); m.rect(0, 0, 0, 10, G.WALL); m.rect(15, 0, 15, 10, G.WALL); m.rect(0, 10, 15, 10, G.WALL);
+  // a casa cresce para a direita com a reforma (lv 1 e 2: mais um cômodo de 8 quadrados cada)
+  function buildHouse(lv = 0) {
+    const Wd = 16 + lv * 8, m = newMap('house', Wd, 11, G.WOOD, { name: 'Casa', outdoor: false, lv });
+    m.rect(0, 0, Wd - 1, 1, G.WALL); m.rect(0, 0, 0, 10, G.WALL); m.rect(Wd - 1, 0, Wd - 1, 10, G.WALL); m.rect(0, 10, Wd - 1, 10, G.WALL);
+    for (let k = 1; k <= lv; k++) { const x = 7 + k * 8; m.rect(x, 0, x, 10, G.WALL); m.rect(x, 4, x, 6, G.WOOD); }
     m.rect(4, 5, 8, 8, G.CARPET);
     m.rect(10, 2, 14, 9, G.TILE);
     m.set(7, 10, G.WOOD);
     sprite(m, 'bed', 1, 2, 3, 3);
     for (let x = 1; x <= 3; x++) for (let y = 2; y <= 4; y++) spot(m, x, y, { kind: 'bed' });
-    sprite(m, 'tv', 5, 2, 2, 1); spot(m, 5, 2, { kind: 'tv' }); spot(m, 6, 2, { kind: 'tv' });
-    sprite(m, 'plant', 8, 2, 1, 1);
+    // TV, plantas e a mesa da cozinha viraram móveis (dá para mudar de lugar): ver zo_casa2.js
     sprite(m, 'fridge', 10, 2, 1, 1); spot(m, 10, 2, { kind: 'fridge' });
     sprite(m, 'stove', 11, 2, 2, 1); spot(m, 11, 2, { kind: 'stove' }); spot(m, 12, 2, { kind: 'stove' });
     sprite(m, 'sink', 13, 2, 2, 1); spot(m, 13, 2, { kind: 'stove' }); spot(m, 14, 2, { kind: 'stove' });
-    sprite(m, 'table', 11, 5, 2, 2);
-    sprite(m, 'plant', 1, 8, 1, 1);
     m.warps.push({ x: 7, y: 10, to: 'farm', tx: 9, ty: 7, dir: 1 });
     return finalize(m);
   }

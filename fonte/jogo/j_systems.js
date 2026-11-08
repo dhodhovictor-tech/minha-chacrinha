@@ -35,7 +35,7 @@
   const nowMinF = () => { const c = W.clock; let m = c.min + (Date.now() - c.at) / MS_PER_TICK * MIN_PER_TICK; if (!host) m = Math.min(m, c.min + 20); return Math.min(m, DAY_END); };
 
   // ================= efeitos de comida =================
-  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k); }
+  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k) + climaBuff(k); }
   function afterEat(id) {
     const it = item(id);
     if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
@@ -66,7 +66,8 @@
     return out;
   }
   // tamanho do que está sendo posicionado: construção (nova ou mudando de lugar); árvore e cursor ocupam um quadrado
-  const placeSize = () => (placing && placing.type ? BUILDS[placing.type] : { w: 1, h: 1 });
+  const placeSize = () => (placing && placing.casa ? MOVEIS[placing.id] : placing && placing.type ? BUILDS[placing.type] : { w: 1, h: 1 });
+  const placeMap = () => (placing && placing.casa ? curMap() : MAPS.farm);
   function startPlacing(type) {
     const B = BUILDS[type], lv = buildLv(type);
     if (Object.values(farmB()).some(b => !bReady(b))) { toast('A Rosa já está ocupada com outra obra. Espere ficar pronta.'); return; }
@@ -88,10 +89,11 @@
     if (placeStep > 0) return;
     placeStep = 0.11;
     const B = placeSize();
-    if (Math.abs(dx) > 0.3) placing.x = clamp(placing.x + Math.sign(dx), 1, MAPS.farm.w - B.w - 1);
-    if (Math.abs(dy) > 0.3) placing.y = clamp(placing.y + Math.sign(dy), 1, MAPS.farm.h - B.h - 2);
+    if (Math.abs(dx) > 0.3) placing.x = clamp(placing.x + Math.sign(dx), 1, placeMap().w - B.w - 1);
+    if (Math.abs(dy) > 0.3) placing.y = clamp(placing.y + Math.sign(dy), 1, placeMap().h - B.h - 2);
   }
   function drawPlacing() {
+    if (placing.casa) { drawMovPlacing(); return; }
     if (placing.pick) {
       const tg = pickTarget(), box = (x, y, w, h, c) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(x * T + 1, y * T + 1, w * T - 2, h * T - 2); };
       if (tg && tg.b) { const b = farmB()[tg.b], B = BUILDS[b.type]; ctx.fillStyle = 'rgba(255,220,80,0.3)'; ctx.fillRect(b.x * T, b.y * T, B.w * T, B.h * T); box(b.x, b.y, B.w, B.h, '#ffd84a'); }
@@ -186,6 +188,7 @@
     toast(`${BUILDS[b.type].names[(b.lv || 1) - 1]} mudou de lugar!`, 'big');
   }
   function confirmPlacing() {
+    if (placing.casa) { confirmMovMovel(); return; }
     if (placing.pick || placing.tree || placing.move || placing.obj) { confirmMoving(); return; }
     const p = placing, B = BUILDS[p.type], lv = buildLv(p.type), tiles = placeTiles(p.type, p.x, p.y);
     if (tiles.some(t => !t[2])) { toast('Não dá para construir aí: precisa de chão livre (vermelho está ocupado).'); sfx.no(); return; }

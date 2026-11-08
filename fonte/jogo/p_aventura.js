@@ -11,7 +11,7 @@
   };
   for (const [k, f] of Object.entries(LEGENDS)) {
     FISH[k] = { ...f, legend: true };
-    ITEMS[k] = { name: f.name, cat: 'fish', sell: f.sell, energy: 150, col: f.col, legend: true, desc: 'Peixe lendário! Só se pega uma vez.' };
+    ITEMS[k] = { name: f.name, cat: 'fish', sell: f.sell, energy: 150, col: f.col, legend: true, desc: 'Peixe lendário! Fica lindo no aquário de casa.' };
   }
   Object.assign(FISH_ART, {
     lenda: { xs: 1, xt: 10, cy: 8.5, H: 4.4, Hl: 4, p: 0.4, s0: 0.5, pe: 0.28, tail: 'fork', tl: 4, c: ['#1e5a3e', '#3a9a6a', '#7ac89a', '#e8f4d0'], fin: '#e0b030', dorsal: [0.2, 0.8, 3, 'round'], anal: [0.55, 0.8, 2], mark: 'legend' },
@@ -24,8 +24,9 @@
   function legendFor(water) {
     const s = season(), lv = skillLv(P.skills.fishing), got = (P.flags && P.flags.lend) || {};
     for (const [k, f] of Object.entries(LEGENDS)) {
-      if (got[k] || !f.where.includes(water) || !f.seasons.includes(s) || lv < f.need || (f.rain && !W.meta.rain)) continue;
-      if (Math.random() < 0.15) return k;
+      if (!f.where.includes(water) || !f.seasons.includes(s) || lv < f.need || (f.rain && !W.meta.rain)) continue;
+      // depois da primeira vez ele volta a aparecer, um pouco mais raro
+      if (Math.random() < (got[k] ? 0.08 : 0.15)) return k;
     }
     return null;
   }
