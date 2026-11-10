@@ -321,6 +321,11 @@
         if (o && o.k === 'twig') { setTile(k, null); addItem('madeira', 1); return; }
         if (o && PLACED.includes(o.k)) { pickUpPlaced(k, tl, o); return; }
         if (tl && tl.s && !tl.c) { setTile(k, tl.f ? { f: 1 } : null); sfx.hoe(); return; }
+        // arrancar uma planta (viva) com a picareta: o primeiro golpe avisa, o segundo arranca
+        if (tl && tl.c) {
+          if (arrancar.k === k && performance.now() - arrancar.t < 4000) { const nome = (CROPS[tl.c.id] || {}).name || 'planta'; setTile(k, { ...tl, c: undefined }); arrancar.k = ''; sfx.hoe(); toast(`${nome} arrancado. A terra continua preparada para plantar outra coisa.`); return; }
+          arrancar.k = k; arrancar.t = performance.now(); sfx.no(); toast('Quer arrancar essa planta? Bata de novo com a picareta (a semente se perde).'); return;
+        }
         if (tl && tl.f && !o && !tl.s) { setTile(k, null); addItem('caminho', 1); return; }
         sfx.no(); return;
       }
@@ -382,6 +387,7 @@
     if (o.in) addItem(o.out, 1);
     addItem(o.k, 1); setTile(k, tl.s ? { s: 1, w: tl.w, ...(tl.fe ? { fe: tl.fe } : {}) } : null); sfx.pick();
   }
+  const arrancar = { k: '', t: 0 };
   function scythe(m, tx, ty) {
     let hit = false;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {

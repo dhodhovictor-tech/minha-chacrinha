@@ -48,6 +48,13 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   // sementes de beterraba no outono
   ok(await ev(() => { const s = __sv, d0 = s.W.meta.day; s.W.meta.day = 61; s.openShop('pedro'); const t = (document.querySelector('.win') || {}).innerText; s.W.meta.day = d0; return /Sementes de beterraba/.test(t); }), 'Seu Pedro vende semente de beterraba no outono');
   await closeAll();
+  // arrancar uma planta com a picareta (dois golpes)
+  await ev(() => { const s = __sv, k = '20,30'; s.setTile(k, { s: 1, c: { id: 'trigo', g: 1 } }); s.goMap('farm', 20 * 16 + 8, 31 * 16 + 10, 0); }); await p.waitForTimeout(900);
+  await ev(() => { const s = __sv; s.P.x = 20 * 16 + 8; s.P.y = 31 * 16 + 10; s.P.dir = 0; s.P.sel = s.P.inv.findIndex(i => i && i.id === 'pick'); s.act(); }); await p.waitForTimeout(700);
+  const r1a = await ev(() => !!(__sv.tile('20,30') || {}).c);
+  await ev(() => __sv.act()); await p.waitForTimeout(700);
+  const r1b = await ev(() => { const t = __sv.tile('20,30'); return { c: !!(t && t.c), s: !!(t && t.s) }; });
+  ok(r1a && !r1b.c && r1b.s, 'picareta: o 1º golpe avisa, o 2º arranca a planta e a terra continua preparada');
   console.log('erros', errs);
   await b.close();
 })();
