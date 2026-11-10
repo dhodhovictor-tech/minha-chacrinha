@@ -48,6 +48,18 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   // sementes de beterraba no outono
   ok(await ev(() => { const s = __sv, d0 = s.W.meta.day; s.W.meta.day = 61; s.openShop('pedro'); const t = (document.querySelector('.win') || {}).innerText; s.W.meta.day = d0; return /Sementes de beterraba/.test(t); }), 'Seu Pedro vende semente de beterraba no outono');
   await closeAll();
+  // escolher quanto colocar
+  await ev(() => { __sv.addItem('trigo', 8, true); __sv.openMoinho('moinho1'); }); await p.waitForTimeout(200);
+  const q0 = await ev(() => document.querySelector('.mq[data-mk="trigo"]').value);
+  await ev(() => { const m = document.querySelector('[data-a="moQty"][data-k="trigo"][data-d="-1"]'); for (let i = 0; i < 5; i++) m.click(); }); await p.waitForTimeout(100);
+  const q1 = await ev(() => document.querySelector('.mq[data-mk="trigo"]').value);
+  await p.screenshot({ path: SHOTS + 'e21_quantia.png' });
+  await ev(() => document.querySelector('[data-a="moPoe"][data-k="trigo"]').click()); await p.waitForTimeout(200);
+  const r3 = await ev(() => ({ i: __sv.W.farm.b.moinho1.mo.i.trigo, sobra: __sv.count('trigo') }));
+  ok(q0 === '8' && q1 === '3' && r3.i === 3 && r3.sobra === 5, `escolhe a quantia: começa em tudo (${q0}), baixa para ${q1}, põe ${r3.i} e sobram ${r3.sobra}`);
+  await ev(() => { const i = document.querySelector('.mq[data-mk="trigo"]'); i.value = 99; document.querySelector('[data-a="moPoe"][data-k="trigo"]').click(); }); await p.waitForTimeout(200);
+  ok(await ev(() => __sv.W.farm.b.moinho1.mo.i.trigo === 8 && __sv.count('trigo') === 0), 'digitar mais do que tem coloca só o que tem');
+  await closeAll();
   // arrancar uma planta com a picareta (dois golpes)
   await ev(() => { const s = __sv, k = '20,30'; s.setTile(k, { s: 1, c: { id: 'trigo', g: 1 } }); s.goMap('farm', 20 * 16 + 8, 31 * 16 + 10, 0); }); await p.waitForTimeout(900);
   await ev(() => { const s = __sv; s.P.x = 20 * 16 + 8; s.P.y = 31 * 16 + 10; s.P.dir = 0; s.P.sel = s.P.inv.findIndex(i => i && i.id === 'pick'); s.act(); }); await p.waitForTimeout(700);

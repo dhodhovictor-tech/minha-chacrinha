@@ -24,9 +24,13 @@
     const b = farmB()[id]; if (!b) return;
     const mo = moPronto(b); if (mo !== b.mo) moSalva(id, mo);
     const moendo = Object.entries(mo.i || {}).filter(([, n]) => n > 0), pronto = Object.entries(mo.o || {}).filter(([, n]) => n > 0);
-    const linha = (k) => { const [out, x] = MOAGEM[k], n = count(k); return `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${item(k).name} → ${item(out).name}</b><small>${x > 1 ? `cada uma vira ${x}` : 'uma por uma'} · na mochila: ${n}</small></span><button class="btn g" data-a="moPoe" data-id="${id}" data-k="${k}" type="button" ${n ? '' : 'disabled'}>Colocar ${n || ''}</button></div>`; };
+    const linha = (k) => {
+      const [out, x] = MOAGEM[k], n = count(k), q = Math.max(1, Math.min(n, moQtd[k] || n)), off = n ? '' : 'disabled';
+      return `<div class="item" data-max="${n}"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${item(k).name} → ${item(out).name}</b><small>${x > 1 ? `cada uma vira ${x}` : 'uma por uma'} · na mochila: ${n}</small></span>
+        <span class="qty"><button class="btn q" data-a="moQty" data-k="${k}" data-d="-1" type="button" aria-label="Menos" ${off}>−</button><input class="mq" data-mk="${k}" type="number" inputmode="numeric" min="1" max="${n}" value="${n ? q : 0}" aria-label="Quantidade" style="width:52px;text-align:center" ${off}><button class="btn q" data-a="moQty" data-k="${k}" data-d="1" type="button" aria-label="Mais" ${off}>+</button><button class="btn q" data-a="moQty" data-k="${k}" data-d="max" type="button" ${off}>Máx</button><button class="btn g" data-a="moPoe" data-id="${id}" data-k="${k}" type="button" ${off}>Colocar</button></span></div>`;
+    };
     openPanel(`<h2>Moinho</h2><canvas id="mocv" width="80" height="104" style="width:120px;height:156px;image-rendering:pixelated;display:block;margin:0 auto"></canvas>
-      <p style="text-align:center;font-size:13px">Coloque hoje e pegue amanhã de manhã. Também dá para segurar o trigo, a beterraba ou o girassol e tocar no moinho.</p>
+      <p style="text-align:center;font-size:13px">Escolha quanto colocar e pegue amanhã de manhã. Atalho: segurando o trigo, a beterraba ou o girassol e tocando no moinho, vai tudo de uma vez.</p>
       ${pronto.length ? `<h3>Pronto</h3><div class="list">${pronto.map(([k, n]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm"><b>${n} ${item(k).name.toLowerCase()}</b></span></div>`).join('')}</div><div class="row"><button class="btn g" data-a="moPega" data-id="${id}" type="button">Pegar tudo</button></div>` : ''}
       ${moendo.length ? `<h3>Moendo (pronto amanhã)</h3><div class="list">${moendo.map(([k, n]) => `<div class="item"><img src="${iconURL(k)}" alt=""><span class="nm">${n} ${item(k).name.toLowerCase()} → ${n * MOAGEM[k][1]} ${item(MOAGEM[k][0]).name.toLowerCase()}</span></div>`).join('')}</div>` : ''}
       <h3>Moer</h3><div class="list">${Object.keys(MOAGEM).map(linha).join('')}</div>`, 'moinho', id);
@@ -54,8 +58,20 @@
     for (const [k, n] of Object.entries(o)) { if (n > 0 && addItem(k, n, true)) { got.push(`${n} ${item(k).name.toLowerCase()}`); delete o[k]; } }
     moSalva(id, { d: mo.d || 0, i: mo.i || {}, o }); if (got.length) { sfx.coin(); toast(`Do moinho: ${got.join(', ')}!`, 'big', null, 'moinho'); }
   }
+  // quanto colocar de cada um (lembra a última escolha; começa em "tudo")
+  const moQtd = {};
   function moinhoAction(a, b) {
-    if (a === 'moPoe') { moPoe(b.dataset.id, b.dataset.k, count(b.dataset.k)); renderHotbar(); openMoinho(b.dataset.id); return true; }
+    if (a === 'moQty') {
+      const row = b.closest('.item'), k = b.dataset.k, inp = row && row.querySelector('.mq'), max = count(k); if (!inp || !max) return true;
+      const cur = +inp.value || 1, d = b.dataset.d, n = clamp(d === 'max' ? max : cur + +d, 1, max);
+      inp.value = n; moQtd[k] = n; return true;
+    }
+    if (a === 'moPoe') {
+      const k = b.dataset.k, row = b.closest('.item'), inp = row && row.querySelector('.mq'), max = count(k);
+      const n = clamp(Math.round(inp ? +inp.value : max) || 1, 1, max); if (!max) return true;
+      moQtd[k] = n; moPoe(b.dataset.id, k, n); if (n >= max) delete moQtd[k];
+      renderHotbar(); openMoinho(b.dataset.id); return true;
+    }
     if (a === 'moPega') { moPega(b.dataset.id); openMoinho(b.dataset.id); return true; }
     return false;
   }
