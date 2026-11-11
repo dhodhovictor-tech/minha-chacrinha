@@ -35,9 +35,10 @@
   const nowMinF = () => { const c = W.clock; let m = c.min + (Date.now() - c.at) / MS_PER_TICK * MIN_PER_TICK; if (!host) m = Math.min(m, c.min + 20); return Math.min(m, DAY_END); };
 
   // ================= efeitos de comida =================
-  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k) + climaBuff(k); }
+  function buffLv(k) { const b = P && P.buff; return (b && b.day === W.meta.day && b.until > nowMin() ? (b.b[k] || 0) : 0) + roupaBuff(k) + climaBuff(k) + doencaBuff(k); }
   function afterEat(id) {
     const it = item(id);
+    if (it.cura) curarCom(id);
     if (it.hp) P.hp = Math.min(100, P.hp + it.hp);
     if (id === 'frutaestelar') { P.maxEnergy += 34; P.energy = P.maxEnergy; P.flags.stars = (P.flags.stars || 0) + 1; dirty(); sfx.level(); toast('Você sente uma energia nova! Energia máxima +34.', 'big'); return; }
     if (it.buff) {
@@ -66,7 +67,7 @@
     return out;
   }
   // tamanho do que está sendo posicionado: construção (nova ou mudando de lugar); árvore e cursor ocupam um quadrado
-  const placeSize = () => (placing && placing.casa ? MOVEIS[placing.id] : placing && placing.type ? BUILDS[placing.type] : { w: 1, h: 1 });
+  const placeSize = () => (placing && placing.casa ? movelDims(placing.casa, placing.id) : placing && placing.type ? BUILDS[placing.type] : { w: 1, h: 1 });
   const placeMap = () => (placing && placing.casa ? curMap() : MAPS.farm);
   function startPlacing(type) {
     const B = BUILDS[type], lv = buildLv(type);
@@ -532,7 +533,7 @@
   }
 
   // ================= cozinha e geladeira =================
-  const fridge = () => W.farm.fridge || Array(36).fill(null);
+  const FR_N = 51, fridge = () => { const f = W.farm.fridge || []; return Array.from({ length: FR_N }, (_, i) => f[i] || null); };
   const fridgeCount = id => fridge().reduce((a, s) => a + (s && s.id === id ? s.n : 0), 0);
   const haveAny = key => anyList(key).reduce((a, id) => a + count(id) + fridgeCount(id), 0);
   function consumeAny(key, n) {
@@ -623,11 +624,7 @@
       if (P.spouse) { toast('Vocês já são casados! 💕'); return; }
       emitP2P({ type: 'propose', to: p.uid }); toast(`Pedido feito! Esperando ${p.name} responder... 💍`, 'big'); return;
     }
-    if (P.spouse === p.uid && !giftable(s)) {
-      emitP2P({ type: 'kiss', to: p.uid }); loveFx = 2; sfx.level();
-      if (P.flags.kiss !== W.meta.day) { P.flags.kiss = W.meta.day; P.energy = Math.min(P.maxEnergy, P.energy + 30); toast('Um beijinho deu +30 de energia. 💕'); dirty(); }
-      return;
-    }
+    if (!giftable(s)) { menuPessoa(p); return; }
     if (giftable(s)) { emitP2P({ type: 'give', to: p.uid, id: s.id, n: 1 }); useHeld(1); sfx.pop(); toast(`Você deu ${item(s.id).name} para ${p.name}.`); return; }
     toast(`Segure um item para dar de presente para ${p.name}.`);
   }
@@ -640,6 +637,7 @@
       case 'petfeed': petFedByPartner(d.from); break;
       case 'petlove': if (P.pet) { P.pet.love = Math.min(100, (P.pet.love || 0) + 1); dirty(); toast(`${d.from} fez carinho no Darth!`, '', null, 'darth'); } break;
       case 'jardim': jardimP2P(d); break;
+      case 'casa3': casa3P2P(d); break;
       case 'kiss': loveFx = 2; toast(`${d.from} te deu um beijo! 💕`); break;
       case 'propose': openPanel(`<h2>💍 Um pedido especial</h2><p style="text-align:center" class="big">${esc(d.from)} está pedindo você em casamento!</p><div class="row"><button class="btn g" data-a="wedYes" data-uid="${esc(d.fromUid)}" data-name="${esc(d.from)}" type="button">Aceito!</button><button class="btn" data-a="wedNo" data-uid="${esc(d.fromUid)}" type="button">Ainda não</button></div>`, 'propose'); break;
       case 'wed': if (d.yes) { if (count('alianca')) removeItem('alianca', 1); marry(d.fromUid, d.from); } else toast(`${d.from} pediu um pouco mais de tempo.`); break;
@@ -702,10 +700,12 @@
     }
     // capim alto cresce e se espalha (menos no inverno)
     const isFree = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19 && x !== 9 && !bGrid().has(k); };
+    // capim demais: o que passar de 175 some aos poucos (metade do volume de antes)
+    if (grassKeys.length > 175) for (const k of grassKeys.slice(175)) if (r() < 0.5) delete t[k];
     if (newS !== 'winter') {
-      let total = grassKeys.length;
-      for (const k of [...grassKeys]) { if (total > 350 || r() > 0.25) continue; const [x, y] = k.split(',').map(Number), [dx, dy] = DIRS[Math.floor(r() * 4)]; if (isFree(x + dx, y + dy)) { t[(x + dx) + ',' + (y + dy)] = { o: { k: 'grass' } }; total++; } }
-      for (let i = 0; i < 4; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (isFree(x, y)) t[x + ',' + y] = { o: { k: 'grass' } }; }
+      let total = Math.min(grassKeys.length, 175);
+      for (const k of [...grassKeys]) { if (total > 175 || r() > 0.0625) continue; const [x, y] = k.split(',').map(Number), [dx, dy] = DIRS[Math.floor(r() * 4)]; if (isFree(x + dx, y + dy)) { t[(x + dx) + ',' + (y + dy)] = { o: { k: 'grass' } }; total++; } }
+      if (r() < 0.25) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (isFree(x, y)) t[x + ',' + y] = { o: { k: 'grass' } }; }
     }
     // árvores frutíferas
     for (const [k, v] of Object.entries(t)) {
@@ -749,7 +749,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t); casa3Ents(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -778,7 +778,7 @@
     const opts = { tool: toolAnim && toolAnim.tool, toolT: toolAnim ? toolAnim.t / toolAnim.dur : 0, toolLv: toolAnim && toolAnim.lv, toolEnc: toolAnim && toolAnim.enc, item: !toolAnim && held() && item(held().id).cat !== 'tool' && !fishing ? held().id : null, rc: comCapa() };
     const lk = withEq(P.look, P.eq);
     if (P.ride) { drawHorse(P.x, P.y, P.dir === 2 ? 2 : 3, walkT > 0); drawFarmer(P.x, P.y - 12, lk, P.dir, 0, opts); }
-    else drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);
+    else if (!drawPose(poseNet(), P.x, P.y, lk, P.dir, P.pose && P.pose.t0)) drawFarmer(P.x, P.y, lk, P.dir, walkT, opts);
     if (loveFx > 0) for (let k = 0; k < 3; k++) drawHeart(P.x - 8 + k * 8, P.y - 40 - ((t * 20 + k * 7) % 14));
   }
 

@@ -81,6 +81,7 @@
     if (input.keys.ArrowDown || input.keys.KeyS) dy += 1;
     const len = Math.hypot(dx, dy);
     if (len < 0.2 || lockT > 0) { walkT = 0; return; }
+    if (P.pose) levantar();
     if (fishing) { fishing = null; toast('Você recolheu a linha.'); }
     dx /= Math.max(1, len); dy /= Math.max(1, len);
     if (Math.abs(dx) > Math.abs(dy)) P.dir = dx > 0 ? 3 : 2; else P.dir = dy > 0 ? 1 : 0;
@@ -208,6 +209,7 @@
     if (o) {
       if (o.k === 'forage') { if (addItem(o.id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) { setTile(k, null); gainXP('foraging', 7); sfx.pop(); } return true; }
       if (o.k === 'bau') { openChest(k); return true; }
+      if (maquinaMenu(k, tl, o)) return true;
       if (MACHINES.includes(o.k)) return machine(k, tl, o);
       if (o.k === 'ftree' && o.fr > 0) { if (addItem(o.id, o.fr)) { setTile(k, { ...tl, o: { ...o, fr: 0 } }); gainXP('foraging', 3 * o.fr); sfx.pop(); } return true; }
       if (o.k === 'ftree') { toast(o.age < FTREE_DAYS ? `${FTREES[o.id].name}: cresce mais ${FTREE_DAYS - o.age} dia${FTREE_DAYS - o.age === 1 ? '' : 's'}.` : `${FTREES[o.id].name}: dá frutas no ${SEASONS[SEASON_ID.indexOf(FTREES[o.id].season)].toLowerCase()}.`); return true; }
@@ -439,7 +441,7 @@
     }
     minaEntrar(m, n, list, r);
     spawnBoss(m, n, list);
-    monsters = list;
+    monsters = list; mobIds(monsters);
     if (n === 1 && !P.stats.mineIntro) { P.stats.mineIntro = 1; toast('Quebre pedras com a picareta. Uma delas esconde a escada para descer.'); }
   }
   function mineHit(m, tx, ty, tool, power) {
@@ -490,7 +492,7 @@
     if (P.map === 'farm') { const [tx, ty] = facing(), k = tx + ',' + ty, tl = tile(k); if (tl && tl.o && tl.o.k === 'weed') { setTile(k, null); if (Math.random() < 0.5) addItem('fibra', 1, true); } }
   }
   function killMonster(mo) {
-    mo.dead = true;
+    mo.dead = true; mobMatou(mo);
     aventuraKill(mo);
     if (mo.mata) { mataKill(mo); return; }
     if (mo.kind === 'boss') { bossDefeated(mo); return; }
@@ -504,20 +506,24 @@
     for (const mo of monsters) {
       mo.hitT -= dt;
       const dx = P.x - mo.x, dy = P.y - mo.y, dist = Math.hypot(dx, dy) || 1;
-      if (mo.kind === 'boss') updateBoss(mo, dt, dx, dy, dist);
-      else if (mo.mata) mataMove(mo, dt, dx, dy, dist);
-      else if (mo.kind === 'slime' || mo.kind === 'duster') {
-        mo.hopT -= dt;
-        const fast = mo.kind === 'duster';
-        if (mo.hopT <= 0 && dist < 120) { mo.hopT = fast ? rnd(0.35, 0.7) : rnd(0.7, 1.4); mo.vx = dx / dist * (fast ? 110 : 70); mo.vy = dy / dist * (fast ? 110 : 70); }
-      } else if (mo.kind === 'ghost') { mo.vx += (dx / dist * 38 + Math.sin(performance.now() / 300 + mo.ph) * 30 - mo.vx) * dt * 1.5; mo.vy += (dy / dist * 38 - mo.vy) * dt * 1.5; } else { mo.vx += (dx / dist * 60 + rnd(-40, 40) - mo.vx) * dt * 2; mo.vy += (dy / dist * 60 + rnd(-40, 40) - mo.vy) * dt * 2; }
-      const nx = mo.x + mo.vx * dt, ny = mo.y + mo.vy * dt;
-      const flies = mo.kind === 'bat' || mo.kind === 'ghost' || mo.fly;
-      if (flies || !solidAt(m, Math.floor(nx / T), Math.floor((mo.y - 3) / T))) mo.x = clamp(nx, T, (m.w - 1) * T);
-      if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
-      mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
+      // quem está jogando junto: o "dono" do mapa move os bichos atrás da pessoa mais perto; os outros seguem as posições dele
+      if (!mobSeguir(mo, dt)) {
+        const [ax, ay] = alvoMob(mo), adx = ax - mo.x, ady = ay - mo.y, adist = Math.hypot(adx, ady) || 1;
+        if (mo.kind === 'boss') updateBoss(mo, dt, adx, ady, adist);
+        else if (mo.mata) mataMove(mo, dt, adx, ady, adist);
+        else if (mo.kind === 'slime' || mo.kind === 'duster') {
+          mo.hopT -= dt;
+          const fast = mo.kind === 'duster';
+          if (mo.hopT <= 0 && adist < 120) { mo.hopT = fast ? rnd(0.35, 0.7) : rnd(0.7, 1.4); mo.vx = adx / adist * (fast ? 110 : 70); mo.vy = ady / adist * (fast ? 110 : 70); }
+        } else if (mo.kind === 'ghost') { mo.vx += (adx / adist * 38 + Math.sin(performance.now() / 300 + mo.ph) * 30 - mo.vx) * dt * 1.5; mo.vy += (ady / adist * 38 - mo.vy) * dt * 1.5; } else { mo.vx += (adx / adist * 60 + rnd(-40, 40) - mo.vx) * dt * 2; mo.vy += (ady / adist * 60 + rnd(-40, 40) - mo.vy) * dt * 2; }
+        const nx = mo.x + mo.vx * dt, ny = mo.y + mo.vy * dt;
+        const flies = mo.kind === 'bat' || mo.kind === 'ghost' || mo.fly;
+        if (flies || !solidAt(m, Math.floor(nx / T), Math.floor((mo.y - 3) / T))) mo.x = clamp(nx, T, (m.w - 1) * T);
+        if (flies || !solidAt(m, Math.floor(mo.x / T), Math.floor((ny - 3) / T))) mo.y = clamp(ny, T, (m.h - 1) * T);
+        mo.vx *= Math.pow(0.05, dt); mo.vy *= Math.pow(0.05, dt);
+      }
       if (dist < (mo.r || 12) && hurtT <= 0) {
-        hurtT = 0.9; P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
+        hurtT = 0.9; doencaDano(mo); P.hp -= Math.max(1, Math.round(mo.dmg * MON_DMG) - defTotal()); sfx.hurt(); P.x += dx / dist * 10; P.y += dy / dist * 10;
         if (blocked(m, P.x, P.y)) { P.x -= dx / dist * 10; P.y -= dy / dist * 10; }
         if (P.hp <= 0 && m.mata) mataFaint();
         else if (P.hp <= 0) { P.hp = 40; P.energy = Math.max(10, P.energy - 40); toast('Você desmaiou e acordou na entrada da mina.'); goMap('minetop', 8 * T + 8, 5 * T + 4, 1); }
@@ -649,9 +655,12 @@
       // mato e coletáveis novos
       const r = srand(nd * 977);
       const free = (x, y) => { const k = x + ',' + y; return !t[k] && !m.solid[y * m.w + x] && [G.GRASS, G.FLOWERS].includes(m.at(x, y)) && !(x >= 5 && x <= 16 && y <= 12) && y !== 19 && !inJardim(x, y); };
-      for (let i = 0; i < 6; i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'weed', hp: 1, v: Math.floor(r() * 3) } }; }
+      // mato novo: 75% menos vezes e no máximo metade do que já chegou a ter (até 25 moitas)
+      const weeds = Object.values(t).filter(v => v && v.o && v.o.k === 'weed').length;
+      for (let i = 0; i < 6; i++) { if (r() > 0.25 || weeds + i >= 25) continue; const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'weed', hp: 1, v: Math.floor(r() * 3) } }; }
       const fl = FORAGE[newS];
-      for (let i = 0; i < (anyProf('rastreador') ? 5 : 2); i++) { const x = 3 + Math.floor(r() * 42), y = 3 + Math.floor(r() * 34); if (free(x, y)) t[x + ',' + y] = { o: { k: 'forage', id: fl[Math.floor(r() * fl.length)] } }; }
+      // coletáveis (narciso, fruta de cristal...) não nascem mais na chacrinha: só na vila, praia, mina e mata
+      void fl;
       if (newS === 'winter' && oldS !== 'winter') for (const [k, v] of Object.entries(t)) if (v && v.c && !k.startsWith('g:') && !CROPS[v.c.id].mix) v.c.dead = true;
       const s2 = season(nd), rainP = s2 === 'summer' ? 0.12 : s2 === 'winter' ? 0.15 : 0.2;
       const ex = endDayFarm(t, day, nd, oldS, newS);
@@ -659,7 +668,7 @@
       climaNovo(meta, s2);
       W.farm.t = t; W.farm.b = ex.b; W.farm.a = ex.a; W.farm.pots = ex.pots; W.farm.hay = ex.hay; bVer++;
       if (pend['world/farm']) pend['world/farm'].patch = null;
-      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null, jardim: W.farm.jardim || null, aquario: W.farm.aquario || null, estilo: W.farm.estilo || null, reforma: W.farm.reforma || null, casaIni: W.farm.casaIni || 0, lareiraIni: W.farm.lareiraIni || 0 });
+      await store.doc('world/farm').set({ t, b: ex.b, a: ex.a, pots: ex.pots, hay: ex.hay, fridge: W.farm.fridge || null, casa: W.farm.casa || null, cama: W.farm.cama || null, jardim: W.farm.jardim || null, aquario: W.farm.aquario || null, estilo: W.farm.estilo || null, reforma: W.farm.reforma || null, casaIni: W.farm.casaIni || 0, lareiraIni: W.farm.lareiraIni || 0, rot: W.farm.rot || null, mesa: W.farm.mesa || null, armario: W.farm.armario || null, livro: W.farm.livro || null, livroIni: W.farm.livroIni || 0 });
       deepMerge(W.meta, meta); W.meta.night = night;
       // regrava o documento inteiro de vez em quando, limpando o que só vale para dias passados (o banco aceita até 256 KB por documento)
       const taken = {};

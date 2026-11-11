@@ -104,8 +104,8 @@
 
   // ================= pontos de escavação (minhoquinhas) =================
   function artifactSpots(mapId) {
-    if (!W.meta || !['farm', 'town', 'beach'].includes(mapId)) return [];
-    const m = MAPS[mapId], d = W.meta.day, out = [], max = mapId === 'town' ? 3 : 2, salt = mapId.length * 7;
+    if (!W.meta || !['town', 'beach'].includes(mapId)) return [];
+    const m = MAPS[mapId], d = W.meta.day, out = [], max = mapId === 'town' ? 4 : 3, salt = mapId.length * 7;
     for (let i = 0; i < 10 && out.length < max; i++) {
       const x = 2 + Math.floor(hash(d, i, 61 + salt) * (m.w - 4)), y = 3 + Math.floor(hash(d, i, 67 + salt) * (m.h - 6)), g = m.at(x, y);
       if (m.solid[y * m.w + x] || m.spots[x + ',' + y]) continue;
@@ -152,7 +152,7 @@
   }
 
   function panelAction3(a, b) {
-    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b) || loja3Action(a) || vidaAction(a, b) || jardimAction(a, b) || casa2Action(a, b) || moinhoAction(a, b)) return true;
+    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b) || loja3Action(a) || vidaAction(a, b) || jardimAction(a, b) || casa2Action(a, b) || moinhoAction(a, b) || casa3Action(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;

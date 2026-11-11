@@ -46,8 +46,8 @@
 
   // ---------- loja: coleção da estação e "para ele" ----------
   const modaList = tab => tab === 'moda' ? Object.keys(MODA).filter(k => MODA[k].est === season()).map(id => ({ id, price: MODA[id].price, one: true }))
-    : tab === 'ele' ? Object.keys(MODA).filter(k => MODA[k].ele).map(id => ({ id, price: MODA[id].price, one: true })) : null;
-  for (const k of ['roupas', 'bia']) Object.defineProperty(SHOP_INFO[k], 'tabs', { get: () => [['moda', 'Coleção de ' + EST_NOME[season()]], ['ele', 'Para ele'], ['buy', 'Trabalho'], ['sell', 'Vender']], configurable: true });
+    : tab === 'ele' ? Object.keys(MODA).filter(k => MODA[k].ele).map(id => ({ id, price: MODA[id].price, one: true })) : tab === 'ela' ? modaListEla() : null;
+  for (const k of ['roupas', 'bia']) Object.defineProperty(SHOP_INFO[k], 'tabs', { get: () => [['moda', 'Coleção de ' + EST_NOME[season()]], ['ela', 'Para ela'], ['ele', 'Para ele'], ['buy', 'Trabalho'], ['sell', 'Vender']], configurable: true });
   for (const k of ['roupas', 'bia']) SHOP_INFO[k].greet = () => `“Chegou a coleção de ${EST_NOME[season()]}! Cada estação eu costuro coisas novas.”`;
 
   // ---------- desenho no personagem ----------
@@ -113,6 +113,7 @@
         for (let y = 18; y < 27; y += 3) for (let x = (y % 2 ? 3 : 4); x < 13; x += 3) if (!side || (x > 3 && x < 12)) R(x, y, 1, 1, '#ffffff');
         break;
       case 'listra': for (const y of [17, 19]) R(3, y, 10, 1, d.trim); break;
+      case 'brilho': { const t = performance.now() / 300; for (const [x, y] of [[5, 17], [10, 19], [4, 24], [9, 25], [12, 23], [7, 21]]) if (Math.sin(t + x * y) > 0) R(x, y, 1, 1, d.trim); break; }
       case 'xadrez': {
         const L = d.trim;
         for (const x of side ? [5, 9] : [5, 10]) R(x, 15, 1, 12, L);
@@ -173,7 +174,7 @@
         return true;
       }
     }
-    return false;
+    return drawModaHat2(look, dir, hx, side);
   }
 
   // ---------- ícones ----------
@@ -181,7 +182,8 @@
     const r = MODA[id]; if (!r) return false;
     if (r.slot === 'bt') { const c = r.bota; for (const ox of [0, 6]) { R(2 + ox, 5, 4, 6, c); R(3 + ox, 5, 2, 5, shade(c, 0.3)); R(2 + ox, 11, 6, 3, c); R(2 + ox, 13, 6, 1, shade(c, -0.5)); } return true; }
     if (r.slot === 'hd') {
-      const c = { chapeuprimavera: '#f4e0a0', chapeupraia: '#f8f4ec', boina: '#8a2a3a', toucapompom: '#f48ab8', chapeuexplorador: '#c8b080', chapeuvaqueiro: '#8a5a2a' }[id];
+      const c = { chapeuprimavera: '#f4e0a0', chapeupraia: '#f8f4ec', boina: '#8a2a3a', toucapompom: '#f48ab8', chapeuexplorador: '#c8b080', chapeuvaqueiro: '#8a5a2a', lacocabelo: '#e84a8a', chapeusol: '#f0d890' }[id];
+      if (id === 'lacocabelo') { R(2, 5, 5, 6, c); R(9, 5, 5, 6, c); R(7, 6, 2, 4, shade(c, -0.3)); R(6, 11, 2, 3, c); R(9, 11, 2, 3, c); return true; }
       if (id === 'boina') { oval(8, 9, 7, 3.5, c); R(7, 4, 2, 2, shade(c, -0.3)); R(4, 8, 4, 1, shade(c, 0.3)); return true; }
       if (id === 'toucapompom') { R(3, 7, 10, 6, c); R(3, 11, 10, 3, '#ffffff'); disc(8, 5, 3, '#ffffff'); return true; }
       oval(8, 11, 7.5, 2.5, shade(c, -0.15)); oval(8, 8, 4.5, 4, c); R(4, 9, 8, 1, id === 'chapeuprimavera' ? '#f48ab8' : id === 'chapeupraia' ? '#2a2a2a' : '#5a3a1a');

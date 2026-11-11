@@ -233,17 +233,19 @@
     toast(`Mova com o círculo ou toque no chão. Usar coloca aqui, Mochila cancela.`, 'big');
   }
   function drawMovPlacing() {
-    const p = placing, f = MOVEIS[p.id], ok = canPlaceMovel(curMap(), p.x, p.y, f, p.casa);
+    const p = placing, f = movelDims(p.casa, p.id), ok = canPlaceMovel(curMap(), p.x, p.y, f, p.casa);
     ctx.globalAlpha = 0.65; drawMovel(p.id, p.x * T, p.y * T, performance.now() / 1000, false, p.casa); ctx.globalAlpha = 1;
     ctx.fillStyle = ok ? 'rgba(80,220,80,0.35)' : 'rgba(230,50,40,0.45)';
     for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) ctx.fillRect((p.x + dx) * T + 1, (p.y + dy) * T + 1, T - 2, T - 2);
   }
   function confirmMovMovel() {
-    const p = placing, m = curMap(), f = MOVEIS[p.id], nk = p.x + ',' + p.y;
+    const p = placing, m = curMap(), f = movelDims(p.casa, p.id), nk = p.x + ',' + p.y, rot = rotOf(p.casa), prato = W.farm.mesa && W.farm.mesa[p.casa];
     if (m.id !== 'house' || casa()[p.casa] !== p.id) { placing = null; return; }
     if (nk === p.casa) { placing = null; toast('Ficou no mesmo lugar.'); return; }
     if (!canPlaceMovel(m, p.x, p.y, f, p.casa)) { toast('Não cabe aí. O vermelho está ocupado.'); sfx.no(); return; }
     setFarm('casa', p.casa, null); setFarm('casa', nk, p.id);
+    if (rot) { setFarm('rot', p.casa, null); setFarm('rot', nk, rot); }
+    if (prato) { setFarm('mesa', p.casa, null); setFarm('mesa', nk, prato); }
     if (p.id === 'aquario' && W.farm.aquario && W.farm.aquario[p.casa]) { const aq = aqOf(p.casa); setFarm('aquario', p.casa, null); aqSave(nk, aq); }
     placing = null; sfx.hoe(); toast(`${f.name} mudou de lugar!`, '', null, 'movel');
   }

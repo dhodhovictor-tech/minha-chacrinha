@@ -27,7 +27,7 @@
       5: [['lenhador', 'Lenhador', 'Árvores derrubadas dão 25% mais madeira.'], ['coletor', 'Coletor', '20% de chance de pegar coletáveis em dobro.']],
       10: {
         lenhador: [['seiveiro', 'Seiveiro', 'Extratores nas árvores ficam prontos na metade do tempo.'], ['mestrelenhador', 'Mestre lenhador', 'O machado derruba árvores com metade dos golpes.']],
-        coletor: [['botanico', 'Botânico', 'Coletáveis saem sempre de ouro.'], ['rastreador', 'Rastreador', 'Aparecem mais coletáveis na chacrinha.']],
+        coletor: [['botanico', 'Botânico', 'Coletáveis saem sempre de ouro.'], ['rastreador', 'Rastreador', 'Coletáveis da mata e da vila saem em dobro de vez em quando.']],
       },
     },
     combat: {

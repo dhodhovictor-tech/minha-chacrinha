@@ -24,7 +24,7 @@
       switch (type) {
         case 'moveis': drawMoveisB(w, h, night, snow); break;
         case 'coreto': drawCoreto(w, h, night, snow); break;
-        case 'gazebo': drawGazebo(w, h, night, snow); break;
+        case 'gazebo': drawGazebo2(w, h, night, snow); break;
         case 'moinho': drawMoinho(w, h, night, snow); break;
         case 'padaria': case 'flores': case 'petshop': case 'clinica': case 'biblioteca': lojaFrente(type, w, h, night, snow); break;
         case 'atelie': {
@@ -181,7 +181,8 @@
           const lv = +extra || 1;
           planks(2, 4, w - 4, h - 4, '#c8884a', 6);
           gable(0, -30, w, 36, '#c8884a', lv === 3 ? '#4a6a9a' : '#a83a2a', snow);
-          if (lv >= 2) { R(w - 22, -34, 8, 16, '#8a7a6a'); R(w - 23, -36, 10, 3, '#5a4a3a'); }
+          // chaminé de pedra encostada no telhado (desce até a telha, não fica flutuando)
+          if (lv >= 2) { R(w - 22, -34, 8, 27, '#8a7a6a'); for (let yy = -32; yy < -8; yy += 4) R(w - 22 + ((yy / 4) & 1 ? 0 : 3), yy, 4, 3, '#a8988a'); R(w - 23, -36, 10, 3, '#5a4a3a'); R(w - 24, -8, 12, 2, shade(lv === 3 ? '#4a6a9a' : '#a83a2a', -0.4)); }
           if (lv === 3) { R(w / 2 - 1, -40, 2, 10, '#5a5a5a'); poly([[w / 2, -42], [w / 2 + 8, -38], [w / 2, -36]], '#e8c040'); }
           winPx(w - 34, 14, 14, 10, night); winPx(w - 58, 14, 14, 10, night);
           R(T + 2, h - 18, 12, 18, '#3a2412'); R(T + 3, h - 17, 10, 16, '#5a3418');

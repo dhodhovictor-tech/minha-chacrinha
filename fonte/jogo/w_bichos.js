@@ -63,6 +63,7 @@
     const m = curMap();
     if (!m || bugMap !== m.id) { bugs = []; bugMap = m && m.id; bugSpawnT = 1.5; }
     if (!m || !m.outdoor || m.cave) return;
+    if (bugsSeguir(dt)) return;
     const t = performance.now() / 1000;
     for (const b of bugs) {
       b.life -= dt;
@@ -94,7 +95,7 @@
         let r = Math.random() * tot, id = pool[0][0];
         for (const [k, v] of w) { r -= v; if (r <= 0) { id = k; break; } }
         const sp = bugSpot(m, BUGS[id]);
-        if (sp) bugs.push({ id, x: sp[0], y: sp[1], hx: sp[0], hy: sp[1], tx: sp[0], ty: sp[1], a: rnd(0, TAU), ph: rnd(0, TAU), wait: 0, h: 10, life: rnd(50, 90) });
+        if (sp) bugs.push({ uid: Math.random().toString(36).slice(2, 8), id, x: sp[0], y: sp[1], hx: sp[0], hy: sp[1], tx: sp[0], ty: sp[1], a: rnd(0, TAU), ph: rnd(0, TAU), wait: 0, h: 10, life: rnd(50, 90) });
       }
     }
   }
@@ -134,7 +135,7 @@
       if (!bugHint) { bugHint = true; toast(bugs.length ? 'Chegue mais pertinho e vire para ela.' : 'Nenhum bichinho por perto. Procure perto das flores e da água.', '', null, 'rede'); }
       return;
     }
-    bugs = bugs.filter(b => b !== best);
+    bugs = bugs.filter(b => b !== best); bugPego(best);
     const bd2 = BUGS[best.id], lv = skillLv(P.skills.foraging);
     fishing = { phase: 'game', bug: true, id: best.id, diff: bd2.diff, barH: 30 + lv * 2.5 + buffLv('foraging') * 4, bv: 0, fy: 80, fv: 0, target: 60, prog: 0.3, hold: false, tt: 0, chestAt: -1 };
     fishing.bar = 120 - fishing.barH - 2;

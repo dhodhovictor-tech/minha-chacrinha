@@ -159,7 +159,7 @@
     }
     mataEntrar(m, n, list, r);
     if (boss) spawnFBoss(m, n, list);
-    monsters = list;
+    monsters = list; mobIds(monsters);
     if (n === 1 && !st.mataIntro) { st.mataIntro = 1; toast('Corte árvores com o machado. Uma delas esconde a trilha para a próxima clareira.', 'big'); }
   }
   function mataMon(kind, x, y, n, ph) {
@@ -269,7 +269,7 @@
     if (!o) return false;
     if (o.kind === 'forage') {
       const id = forageId(m, kk, o);
-      if (!addItem(id, hasProf('coletor') && Math.random() < 0.2 ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) return true;
+      if (!addItem(id, (hasProf('coletor') && Math.random() < 0.2) || (hasProf('rastreador') && Math.random() < 0.3) ? 2 : 1, false, hasProf('botanico') ? 2 : 0)) return true;
       mBroken(m).add(kk); gainXP('foraging', 7); sfx.pop();
       if (room) room.emit('mata', { p: m.per, n: m.mataN, k: kk }).catch(() => {});
       return true;

@@ -117,6 +117,22 @@ const rest = async (method, path, body) => { const r = await fetch(`${DB}/${path
   ok(!/segredo da A/.test(diaB) && /Diário de/.test(diaB), 'o diário de A não aparece no aparelho de B');
   const diaA = await ev(A, async () => { const s = __sv; s.diary = null; s.renderInventory(); await new Promise(r => setTimeout(r, 1200)); return document.querySelector('.win').innerText + ' ' + ((document.getElementById('diarytxt') || {}).value || ''); });
   ok(/segredo da A/.test(diaA), 'A abre o diário de novo e lê o que escreveu (veio do banco)');
+  // livro rosa de memórias: B lê as páginas de A
+  await ev(A, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click()));
+  const memB = await ev(B, async () => { const s = __sv; document.querySelectorAll('[data-a="close"]').forEach(c => c.click()); s.abrirMemorias(true); await new Promise(r => setTimeout(r, 1800)); return (document.querySelector('.win') || {}).innerText || ''; });
+  ok(/segredo da A/.test(memB) && /Memórias da chacrinha/.test(memB), 'no livro rosa de memórias, B lê a página que A escreveu');
+  await ev(B, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click()));
+  // bichos iguais para os dois: os dois no mesmo andar da mina, A derrota um e some para B também
+  await ev(A, () => { const s = __sv; s.W.meta.mineMax = 120; s.goMap('mine4', 0, 0, 1); }); await ev(B, () => { const s = __sv; s.W.meta.mineMax = 120; s.goMap('mine4', 0, 0, 1); }); await A.waitForTimeout(2500);
+  const m0 = await ev(B, () => __sv.monsters().map(m => m.sid).sort((a, b) => a - b).join());
+  const morto = await ev(A, () => { const s = __sv, mo = s.monsters()[0]; s.killMonster(mo); s.monstersArr = s.monsters().filter(m => !m.dead); return mo.sid; }); await A.waitForTimeout(2000);
+  const m1 = await ev(B, () => __sv.monsters().map(m => m.sid));
+  ok(m0.split(',').map(Number).includes(morto) && !m1.includes(morto), `bicho derrotado por A some na mina de B (${m0} → ${m1.join()})`);
+  const pos = await ev(A, () => __sv.monsters().map(m => [m.sid, Math.round(m.x), Math.round(m.y)]));
+  await A.waitForTimeout(400);
+  const posB = await ev(B, () => __sv.monsters().map(m => [m.sid, Math.round(m.x), Math.round(m.y)]));
+  const perto = pos.every(([sid, x, y]) => { const q = posB.find(z => z[0] === sid); return q && Math.hypot(q[1] - x, q[2] - y) < 48; });
+  ok(perto, 'os bichos da mina andam no mesmo lugar nos dois aparelhos');
   await ev(A, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click())); await ev(B, () => document.querySelectorAll('[data-a="close"]').forEach(c => c.click()));
   const ta = await ev(A, () => __sv.nowMin()), tb = await ev(B, () => __sv.nowMin());
   ok(Math.abs(ta - tb) <= 10, `relógio igual nos dois (${ta} / ${tb})`);

@@ -27,6 +27,7 @@
     if (!P || !P.pet) return;
     const p = P.pet, s = petSt;
     s.heart = Math.max(0, s.heart - dt);
+    if (darthBrinca(dt)) return;
     if (p.mode === 'roam') {
       if (s.map !== P.map) return;
       const m = getMap(s.map);
@@ -58,7 +59,7 @@
     else { s.mv = 0; s.idle += dt; }
     if (p.mode === 'come' && d < 22) { p.mode = 'follow'; meow(); toast('Darth chegou! 💚'); dirty(); updatePetButton(); }
   }
-  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0, P.pet.coleira || 0] : null);
+  const petPresence = () => (P && P.pet && petSt.map ? [Math.round(petSt.x), Math.round(petSt.y), petSt.dir, petSt.mv ? 1 : 0, petSt.map, petSt.idle > 4 ? (petSt.idle > 12 ? 2 : 1) : 0, darthDeCapa(petSt.map) ? 1 : 0, P.pet.coleira || 0, petSt.pose2 || 0, petSt.alt || 0] : null);
   // desenho: de lado, andando, sentado ou dormindo enroladinho
   function catCanvas(pose, f, coat, col) {
     return bake(`cat|${pose}|${f}|${coat ? 1 : 0}|${col || ''}`, 20, 16, () => {
@@ -103,14 +104,14 @@
     if (P && P.pet && petSt.map === m.id) {
       const s = petSt, pose = s.idle > 12 ? 'sleep' : s.idle > 2.5 ? 'sit' : 'walk';
       s.coat = darthDeCapa(m.id); s.collar = coleiraCol(P.pet.coleira);
-      ents.push({ y: s.y, f: () => { if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat, coleiraCol(P.pet.coleira)); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: s.y, f: () => { if (drawDarthBrinca(s)) return; if (!drawCatReact(s, s.x, s.y, s.dir, s.mv, pose)) drawCat(s.x, s.y, s.dir, s.mv, pose, s.coat, coleiraCol(P.pet.coleira)); if (s.heart > 0) drawHeart(s.x, s.y - 20 - (1.6 - s.heart) * 6, '#5ae05a'); } });
     }
     for (const p of peerPlayers()) {
       if (p.me || !p.pt || p.pt[4] !== m.id) continue;
       const key = 'pet:' + p.peer;
       let r = remote.get(key); if (!r) { r = { x: p.pt[0], y: p.pt[1], heart: 0 }; remote.set(key, r); }
       r.x += (p.pt[0] - r.x) * 0.25; r.y += (p.pt[1] - r.y) * 0.25; r.coat = !!p.pt[6]; r.collar = coleiraCol(p.pt[7]);
-      ents.push({ y: r.y, f: () => { if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat, r.collar); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
+      ents.push({ y: r.y, f: () => { if (p.pt[8] && drawDarthBrinca({ ...r, pose2: p.pt[8], alt: p.pt[9] || 0, dir: p.pt[2] })) return; if (!drawCatReact(r, r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk')) drawCat(r.x, r.y, p.pt[2], p.pt[3], POSES[p.pt[5]] || 'walk', r.coat, r.collar); r.heart = Math.max(0, (r.heart || 0) - 1 / 60); if (r.heart > 0) drawHeart(r.x, r.y - 20 - (1.6 - r.heart) * 6, '#5ae05a'); } });
     }
   }
   // fazer carinho no Darth (o seu ou o da outra pessoa)

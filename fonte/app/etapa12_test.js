@@ -55,7 +55,7 @@ const SHOTS = __dirname + '/../.tmp/shots/';
   await ev(() => { const st = __sv.P.stats; st.fish = (st.fish || 0) + 2; st.trees = (st.trees || 0) + 1; });
   await p.click('#bMenu'); await p.waitForTimeout(150); await p.click('[data-t="diario"]'); await p.waitForTimeout(600);
   let di = await ev(() => document.querySelector('.win').innerText);
-  ok(/Diário de Ela/.test(di) && /Só você lê/.test(di) && /pesquei 2 peixes, derrubei 1 árvore/i.test(di), 'diário abre com as lembranças do dia');
+  ok(/Diário de Ela/.test(di) && /os dois podem ler/.test(di) && /pesquei 2 peixes, derrubei 1 árvore/i.test(di), 'diário abre com as lembranças do dia');
   await p.fill('#diarytxt', 'Hoje pesquei com o Victor e o Darth dormiu no meu colo.');
   await p.click('[data-a="diaryStk"][data-s="morango"]'); await p.waitForTimeout(150);
   ok(await ev(() => document.getElementById('diarytxt').value) === 'Hoje pesquei com o Victor e o Darth dormiu no meu colo.', 'escolher o carimbo não apaga o texto');

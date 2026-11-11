@@ -106,7 +106,7 @@
   const LOJA3_ITENS = {
     gloria: [['pao', 120], ['paoqueijo', 80], ['cafecoado', 90], ['broa', 140], ['sonho', 200], ['bolocenoura', 280], ['cestacafe', 650]],
     nena: () => [...Object.entries(CROPS).filter(([k, c]) => c.cat === 'flower' && c.seasons.includes(season())).map(([k, c]) => ['s_' + k, Math.round(c.seed * 1.1)]), ['buque', 600], ['vasoflores', 900], ['bancojardim', 1800], ['arcoflores', 3500]],
-    tati: [['petisco', 30], ['racaopremium', 120], ['coleiravermelha', 600], ['coleiraazul', 600], ['coleiralaco', 900], ['caminhagato', 800], ['arranhador', 1200]],
+    tati: [['petisco', 30], ['racaopremium', 120], ['coleiravermelha', 600], ['coleiraazul', 600], ['coleiralaco', 900], ['caminhagato', 800], ['arranhador', 1200], ['torregato', 1800], ['tunelgato', 900], ['novelo', 300], ['comedouro', 400]],
     davi: [['curativo', 150], ['xaropeenergia', 300], ['vitamina', 450]],
     helena: [['livroreceitas', 2500], ['livroinsetos', 2000], ['livropesca', 3000], ['livrohorta', 3000], ['livromina', 3000], ['livrolenha', 3000]],
   };
@@ -122,13 +122,13 @@
   }
   function loja3Action(a) {
     if (a !== 'consulta') return false;
-    if (spend(200)) { P.hp = 100; P.energy = Math.min(P.maxEnergy, P.energy + 30); dirty(); sfx.level(); toast('“Pronto! Novinho em folha.” Vida cheia.', 'big', null, 'clinica'); }
+    if (spend(200)) { P.flags.doenca = null; P.hp = 100; P.energy = Math.min(P.maxEnergy, P.energy + 30); dirty(); sfx.level(); toast('“Pronto! Novinho em folha.” Vida cheia.', 'big', null, 'clinica'); }
     renderShop(panelArg); return true;
   }
 
   // ---------- coleira do Darth ----------
   function coleiraDarth() {
-    const s = held(); if (!s || !ITEMS[s.id] || !ITEMS[s.id].col || !P.pet) return false;
+    const s = held(); if (!s || !ITEMS[s.id] || ITEMS[s.id].cat !== 'acessorio' || !ITEMS[s.id].col || !P.pet) return false;
     P.pet.coleira = P.pet.coleira === s.id ? null : s.id; dirty(); meow(); catReact(petSt);
     toast(P.pet.coleira ? `Darth está de ${item(s.id).name.toLowerCase()}! Que charme.` : 'Você tirou a coleira do Darth.', 'big', null, 'darth');
     return true;

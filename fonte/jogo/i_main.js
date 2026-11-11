@@ -13,7 +13,7 @@
   let lastPres = '';
   function pushPresence(force) {
     if (!room || !P) return;
-    const pr = { uid: P.uid, name: P.name, look: withEq(P.look, P.eq), map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
+    const pr = { uid: P.uid, name: P.name, look: withEq(P.look, P.eq), map: P.map, x: Math.round(P.x), y: Math.round(P.y), dir: P.dir, mv: walkT > 0 ? 1 : 0, sleep: P.sleep ? 1 : 0, tool: toolAnim ? toolAnim.tool : null, fish: fishing ? 1 : 0, rc: comCapa() ? 1 : 0, ride: P.ride ? 1 : 0, ps: poseNet(), pt: petPresence(), hb: Math.floor(Date.now() / 5000) % 1000 };
     const s = JSON.stringify(pr);
     if (s === lastPres && !force) return;
     lastPres = s;
@@ -124,9 +124,10 @@
       if (p.me || p.map !== P.map || p.x == null) continue;
       let r = remote.get(p.peer); if (!r) { r = { x: p.x, y: p.y, t: 0 }; remote.set(p.peer, r); }
       const k = Math.min(1, dt * 10); r.x += (p.x - r.x) * k; r.y += (p.y - r.y) * k; if (p.mv) r.t += dt; else r.t = 0;
-      ents.push({ y: r.y, f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1, rc: p.rc }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
+      if (p.ps && p.ps[0] === 'd') { if (!r.dT0) r.dT0 = performance.now() - (p.ps[1] || 0); } else r.dT0 = 0;
+      ents.push({ y: r.y + (p.ps && p.ps[0] === 's' ? (p.dir === 1 ? 4 : -4) : 0), f: () => { const up = p.ride ? 12 : 0; if (p.ride) drawHorse(r.x, r.y, p.dir === 2 ? 2 : 3, p.mv); if (drawPose(p.ps, r.x, r.y - up, p.look || {}, p.dir || 1, r.dT0)) { nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); return; } drawFarmer(r.x, r.y - up, p.look || {}, p.dir || 1, p.mv && !p.ride ? r.t : 0, { tool: p.tool, toolT: (t * 4) % 1, rc: p.rc }); nameTag(p.name || '', r.x, r.y - 44 - up, P.spouse && p.uid === P.spouse); } });
     }
-    if (P.map === m.id) ents.push({ y: P.y, f: () => drawPlayerEnt(t) });
+    if (P.map === m.id) ents.push({ y: P.y + (P.pose && P.pose.k === 's' ? (P.dir === 1 ? 4 : -4) : 0), f: () => drawPlayerEnt(t) });
     ents.sort((a, b) => a.y - b.y);
     for (const e of ents) e.f();
     if (placing) drawPlacing();
@@ -191,7 +192,7 @@
       if (panelOpen) pauseClock(dt * 1000);
       lockT = Math.max(0, lockT - dt);
       if (toolAnim) { toolAnim.t += dt; if (toolAnim.t >= toolAnim.dur) toolAnim = null; }
-      casaSync();
+      casaSync(); casa3Sync(); poseTick(dt); doencaTick(dt); syncBichos(dt);
       if (placing) updatePlacing(dt); else movePlayer(dt);
       updateAnimals(dt);
       updatePet(dt);
@@ -340,7 +341,7 @@
       W.farm.t = t;
       for (const sec of ['b', 'a', 'pots', 'casa']) W.farm[sec] = stripNull(clone(d[sec] || {}));
       W.farm.cama = d.cama || null; W.farm.jardim = d.jardim ? clone(d.jardim) : null;
-      W.farm.aquario = stripNull(clone(d.aquario || {})); W.farm.estilo = d.estilo ? clone(d.estilo) : null; W.farm.reforma = d.reforma ? clone(d.reforma) : null; W.farm.casaIni = d.casaIni || 0; W.farm.lareiraIni = d.lareiraIni || 0;
+      W.farm.aquario = stripNull(clone(d.aquario || {})); W.farm.estilo = d.estilo ? clone(d.estilo) : null; W.farm.reforma = d.reforma ? clone(d.reforma) : null; W.farm.casaIni = d.casaIni || 0; W.farm.lareiraIni = d.lareiraIni || 0; W.farm.rot = stripNull(clone(d.rot || {})); W.farm.mesa = stripNull(clone(d.mesa || {})); W.farm.armario = d.armario ? clone(d.armario) : null; W.farm.livro = d.livro || null; W.farm.livroIni = d.livroIni || 0;
       W.farm.hay = d.hay || 0; W.farm.fridge = d.fridge ? clone(d.fridge) : null;
       const q = pend['world/farm'];
       if (q && q.patch) {
@@ -380,6 +381,7 @@
         for (const k of [...remote.keys()]) if (!list.some(p => p.peer === k)) remote.delete(k);
       }, () => { room = null; host = true; });
       room.on('p2p', onP2P);
+      room.on('bichos', onBichos);
       room.on('mata', onMataMsg);
       room.on('mine', msg => {
         if (msg.sameTab) return;

@@ -71,7 +71,7 @@
     if (who === 'claudio' && tab === 'enc') return encHTML();
     if (who === 'tonico' && tab === 'moveis') return moveisHTML();
     if (who === 'tonico' && tab === 'cama') return camasHTML();
-    if (who === 'davi' && tab === 'consulta') return consultaHTML();
+    if (who === 'davi' && tab === 'consulta') return consulta2HTML();
     return null;
   }
 
@@ -83,7 +83,7 @@
     const ver = JSON.stringify(casa());
     if (ver === casaVer) return casaGrid;
     casaVer = ver; casaGrid = new Map();
-    for (const [k, id] of Object.entries(casa())) { const f = MOVEIS[id]; if (!f) continue; const [x, y] = k.split(',').map(Number); for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) casaGrid.set((x + dx) + ',' + (y + dy), k); }
+    for (const [k, id] of Object.entries(casa())) { if (!MOVEIS[id]) continue; const f = movelDims(k, id); const [x, y] = k.split(',').map(Number); for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) casaGrid.set((x + dx) + ',' + (y + dy), k); }
     return casaGrid;
   }
   const movelAt = (x, y) => { const k = casaCells().get(x + ',' + y); return k ? { k, id: casa()[k] } : null; };
@@ -112,11 +112,13 @@
   function openMovel(k) {
     const id = casa()[k], f = MOVEIS[id]; if (!f) return;
     if (openMovel2(k, id)) return;
+    openMovelMenu(k); return;
     openPanel(`<h2>${f.name}</h2><p style="text-align:center">${f.desc}</p><div class="row">${id === 'tvcasa' ? '<button class="btn g" data-a="movelTV" type="button">Ligar a TV</button>' : ''}<button class="btn" data-a="movelMove" data-k="${k}" type="button">Mover</button><button class="btn" data-a="movelPick" data-k="${k}" type="button">Guardar na mochila</button></div>`, 'movel', k);
   }
   // tocar em Usar dentro de casa: roupa de cama na cama e móveis
   function casaAct(m, tx, ty) {
     if (m.id !== 'house') return false;
+    if (casa3Act(m, tx, ty)) return true;
     const s = held();
     const mv = movelAt(tx, ty);
     if (mv && !(s && item(s.id).cat === 'movel')) { openMovel(mv.k); return true; }
@@ -145,7 +147,7 @@
       case 'movelPick': {
         const k = b.dataset.k, id = casa()[k];
         if (id === 'aquario' && !aqGuardar(k)) return true;
-        if (id && addItem(id, 1, true)) { setFarm('casa', k, null); sfx.pop(); toast(`${MOVEIS[id].name} guardado na mochila.`, '', null, 'movel'); }
+        if (id && addItem(id, 1, true)) { setFarm('casa', k, null); if (rotOf(k)) setFarm('rot', k, null); if (W.farm.mesa && W.farm.mesa[k]) { addItem(W.farm.mesa[k].id, 1, true); setFarm('mesa', k, null); } sfx.pop(); toast(`${MOVEIS[id].name} guardado na mochila.`, '', null, 'movel'); }
         closePanel(); return true;
       }
     }
@@ -154,7 +156,8 @@
 
   // ---------- desenho dos móveis ----------
   function drawMovel(id, px, py, t, night, k) {
-    if (drawMovelPet(id, px, py) || drawMovel2(id, px, py, t, night, k)) return;
+    if (k && rotOf(k) && drawMovelRot(id, px, py, t, night, k, rotOf(k))) return;
+    if (drawMovelPet(id, px, py) || drawToy(id, px, py, t) || drawMovel2(id, px, py, t, night, k)) return;
     switch (id) {
       case 'cadeirapinho': shadowAt(px + 8, py + 14, 6, 2); R(px + 4, py - 6, 8, 12, '#b88a4a'); R(px + 5, py - 5, 6, 2, '#d8b070'); R(px + 5, py - 1, 6, 1, '#d8b070'); R(px + 3, py + 5, 10, 4, '#d8b070'); R(px + 3, py + 5, 10, 1, '#f0d098'); R(px + 4, py + 9, 2, 5, '#9a6a3a'); R(px + 10, py + 9, 2, 5, '#9a6a3a'); break;
       case 'mesapinho': shadowAt(px + 8, py + 14, 6, 2); oval(px + 8, py + 5, 7, 3.5, '#b88a4a'); oval(px + 8, py + 4, 7, 3, '#d8b070'); R(px + 7, py + 7, 2, 7, '#9a6a3a'); R(px + 4, py + 13, 8, 1, '#9a6a3a'); R(px + 7, py, 3, 3, '#f4f0e8'); R(px + 8, py - 1, 1, 1, '#ffffff99'); break;
@@ -178,7 +181,7 @@
     const night = nightF() > 0.2;
     if (m.id === 'house') {
       for (const [k, id] of Object.entries(casa())) {
-        const f = MOVEIS[id]; if (!f || (placing && placing.casa === k)) continue;
+        if (!MOVEIS[id] || (placing && placing.casa === k)) continue; const f = movelDims(k, id);
         const [x, y] = k.split(',').map(Number);
         ents.push({ y: f.walk ? -500 : (y + f.h - 1) * T + 14, f: () => drawMovel(id, x * T, y * T, t, night, k) });
       }

@@ -133,17 +133,14 @@
       for (let k = 0; k < 4; k++) { ctx.strokeStyle = ['#e8402a', '#f4c83a', '#5ab84a', '#3a8ad8'][k]; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(20, 55, 14 - k * 2.5, Math.PI, 0); ctx.stroke(); }
       for (let a = 0; a < 6; a++) disc(64 + Math.cos(a) * 5, 24 + Math.sin(a) * 5, 3, '#ffffff'); disc(64, 24, 3, '#f4c83a');
       for (let i = 0; i < 16; i++) disc(6 + (i * 31) % (w - 12), 16 + (i * 19) % (h - 24), 1, ['#3ab8b0', '#f4c83a', '#b05ae0', '#e8402a'][i % 4]);
-      // telhado arredondado de escamas
-      const tq = snow ? '#e8eef4' : '#3ab8b0', tqd = snow ? '#c8d4e0' : '#2a8a84';
-      ctx.fillStyle = shade(tq, -0.45); ctx.beginPath(); ctx.ellipse(w / 2, 16, w / 2 + 7, 34, 0, Math.PI, 0); ctx.fill();
-      ctx.save(); ctx.beginPath(); ctx.ellipse(w / 2, 15, w / 2 + 5, 32, 0, Math.PI, 0); ctx.clip();
-      R(-8, -20, w + 16, 40, tq);
-      for (let yy = -18, r = 0; yy < 18; yy += 5, r++) for (let x = -8 + (r % 2 ? 3 : 0); x < w + 8; x += 6) { disc(x, yy + 3, 3.2, tqd); disc(x, yy + 2, 2.6, tq); R(x - 1, yy, 2, 1, shade(tq, 0.3)); }
-      ctx.restore();
-      R(-6, 14, w + 12, 3, shade(tq, -0.5));
-      // estrela no alto
-      R(w / 2, -26, 1, 8, '#8a8a92'); poly([[w / 2, -34], [w / 2 + 2, -29], [w / 2 + 6, -29], [w / 2 + 3, -26], [w / 2 + 4, -21], [w / 2, -24], [w / 2 - 4, -21], [w / 2 - 3, -26], [w / 2 - 6, -29], [w / 2 - 2, -29]], '#f4c83a');
-      winRound(w / 2, 2, 5, night, '#ffffff');
+      // telhado de mansarda (o mesmo formato da casa da Helena), em turquesa com escamas, duas águas-furtadas e a estrela
+      const tq = snow ? '#e8eef4' : '#3ab8b0', tqd = snow ? '#c8d4e0' : '#2a8a84', topo = snow ? '#ffffff' : '#2a8a84';
+      poly([[-4, 14], [3, -8], [w - 3, -8], [w + 4, 14]], shade(tq, -0.45));
+      clipPts([[-2, 12], [4, -6], [w - 4, -6], [w + 2, 12]], () => { R(-4, -8, w + 8, 22, tq); for (let yy = -8, r = 0; yy < 14; yy += 4, r++) for (let x = -4 + (r % 2 ? 3 : 0); x < w + 4; x += 6) { disc(x, yy + 3, 3, tqd); disc(x, yy + 2, 2.4, tq); R(x - 1, yy + 1, 2, 1, shade(tq, 0.3)); } });
+      poly([[3, -6], [12, -18], [w - 12, -18], [w - 3, -6]], topo);
+      R(-4, 12, w + 8, 3, shade(tq, -0.5));
+      for (const dx of [12, w - 30]) { R(dx, -6, 18, 14, '#fbe4ec'); poly([[dx - 3, -5], [dx + 9, -15], [dx + 21, -5]], snow ? '#ffffff' : '#e86a9a'); winRound(dx + 9, 1, 4, night, '#ffffff'); }
+      R(w / 2, -30, 1, 12, '#8a8a92'); poly([[w / 2, -38], [w / 2 + 2, -33], [w / 2 + 6, -33], [w / 2 + 3, -30], [w / 2 + 4, -25], [w / 2, -28], [w / 2 - 4, -25], [w / 2 - 3, -30], [w / 2 - 6, -33], [w / 2 - 2, -33]], '#f4c83a');
       winRound(14, 28, 7, night, '#ffffff'); winRound(32, 28, 7, night, '#ffffff');
       doorPx(49, h - 22, '#f4c83a'); disc(54, h - 15, 2, '#e84a6a'); disc(58, h - 15, 2, '#e84a6a'); poly([[52, h - 15], [56, h - 10], [60, h - 15]], '#e84a6a');
       vaso(66, h - 9, '#3ab8b0', '#ff8ac8'); vaso(36, h - 9, '#b05ae0', '#f4d040'); vaso(-2, h - 9, '#f4c83a', '#e8402a');

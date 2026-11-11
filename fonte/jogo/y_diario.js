@@ -59,7 +59,7 @@
     const pages = Object.entries(diary.e).map(([k, v]) => [+k.slice(1), v]).filter(([n]) => n !== d).sort((a, b) => b[0] - a[0]);
     const paper = 'background:#fffaf0;border:2px solid #c8a070;border-radius:8px;padding:10px;margin:8px 0';
     return `<h3 style="text-align:center">Diário de ${esc(P.name)}</h3>
-      <p style="text-align:center;font-size:13px">Só você lê o que escreve aqui.</p>
+      <p style="text-align:center;font-size:13px">Suas páginas vão para o livro rosa de memórias, em cima do criado-mudo: os dois podem ler.</p>
       <div style="${paper}">
         <b>${diaryDate(d)}${today ? ' · hoje' : ''}</b>
         ${sum ? `<p style="font-size:13px;margin:6px 0;color:#6a4a2a"><i>${esc(sum)}</i></p>` : ''}

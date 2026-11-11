@@ -30,7 +30,7 @@
     if (eqHas('galochas') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.75;
     if (eqHas('cachecol') && season() === 'winter') f *= 0.9;
     if (eqHas('capachuva') && W.meta && W.meta.rain && !W.meta.snow) f *= 0.9;
-    return f * modaEnergia();
+    return f * modaEnergia() * doencaEnergia();
   }
   // a loja da Bia é um prédio na praça; ela fica atrás do balcão das 9h às 17h
   SHOP_INFO.bia = { ...SHOP_INFO.roupas, npc: undefined };

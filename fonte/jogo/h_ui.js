@@ -73,8 +73,10 @@
     $('enFill').style.background = ef < 0.25 ? '#e8402a' : ef < 0.5 ? '#f0c030' : '#58c83a';
     drawDial(min);
     const bf = $('buff'), bon = P.buff && P.buff.day === W.meta.day && P.buff.until > min;
-    bf.hidden = !bon;
-    if (bon) { const left = P.buff.until - min; bf.textContent = `${P.buff.name}: ${Object.entries(P.buff.b).map(([k, v]) => `${BUFF_NAMES[k]} +${v}`).join(', ')} (${Math.floor(left / 60)}h${String(left % 60).padStart(2, '0')})`; }
+    const dz = doencaHUD();
+    bf.hidden = !bon && !dz;
+    if (!bon && dz) bf.textContent = dz;
+    if (bon) { const left = P.buff.until - min; bf.textContent = `${P.buff.name}: ${Object.entries(P.buff.b).map(([k, v]) => `${BUFF_NAMES[k]} +${v}`).join(', ')} (${Math.floor(left / 60)}h${String(left % 60).padStart(2, '0')})${dz ? ' · ' + dz : ''}`; }
     $('hpFill').style.height = clamp(P.hp / 100, 0, 1) * 100 + '%';
     const others = peerPlayers().filter(p => !p.me);
     const pe = $('peer');
@@ -198,7 +200,6 @@
       case 'ze': return [{ id: 'isca', price: 5 }, { id: 'covo', price: 1500 }, ...TACKLE_SHOP];
       case 'roupas': case 'bia': return modaList(shopTab) || CLOTHES_SHOP;
       case 'festa': return festOn() ? FEST_SHOP[festOn().id].map(([id, price]) => ({ id, price })) : [];
-      case 'lia': return [{ id: 'expresso', price: 250 }, { id: 'pizza', price: 600 }, { id: 'salada', price: 220 }, { id: 'pao', price: 120 }, { id: 'sopaabobora', price: 600 }, { id: 'biscoito', price: 280 }, { id: 'sorvete', price: 250 }];
     }
     return [];
   }
