@@ -46,14 +46,16 @@
         case 'estrelas': { const h = hsh(px, ly, 41); return rgb(h > 0.97 ? '#f4e8a0' : h > 0.94 ? '#8a9ad8' : ly < 5 ? '#24305e' : '#2a3a6a'); }
         case 'tijolo': { const row = Math.floor((ly - 2) / 3), lx = (px + (row % 2) * 4) % 8; return rgb((ly - 2) % 3 === 2 || lx === 0 ? '#c8c4bc' : hsh(px >> 3, row, 5) < 0.3 ? '#e8e4dc' : '#f4f0e8'); }
         case 'lambri': return rgb((px % 5) === 0 ? '#5a3418' : (px % 5) === 1 ? '#a8703a' : hsh(px / 5 | 0, 0, 3) < 0.5 ? '#8a5428' : '#94602e');
+        default: { const c = lojaParede(m.papel, px, ly); return c ? rgb(c) : null; }
       }
     }
-    if (gt === G.WOOD && m.piso && m.piso !== 'tabua') {
+    if (gt === (m.pisoG || G.WOOD) && m.piso && m.piso !== 'tabua') {
       switch (m.piso) {
         case 'escuro': { const row = Math.floor(py / 5), ly = py % 5, j = (px + hsh(row, 0, 9) * 48) % 48 | 0, h = hsh(row, Math.floor((px + hsh(row, 0, 9) * 48) / 48), 4); return rgb(ly === 4 || j === 0 ? '#2a160a' : ly === 0 ? '#6a4024' : h < 0.5 ? '#4a2a16' : '#55321a'); }
         case 'taco': { const bx = px >> 3, by = py >> 3, hor = (bx + by) % 2, lx = px % 8, ly = py % 8; const e = hor ? ly % 4 === 3 || lx === 7 : lx % 4 === 3 || ly === 7; return rgb(e ? '#7a4a24' : hor ? '#c8884a' : '#b8783e'); }
         case 'ladrilho': { const lx = px % 16, ly = py % 16, dx = Math.abs(lx - 7.5), dy = Math.abs(ly - 7.5); if (lx === 0 || ly === 0) return rgb('#b8ac98'); if (dx + dy < 3) return rgb('#c84a3a'); if (dx + dy < 6 && (dx < 1 || dy < 1)) return rgb('#3a7a9a'); if (dx > 5.5 && dy > 5.5) return rgb('#3a7a9a'); return rgb(Math.abs(dx - dy) < 0.6 && dx + dy < 11 ? '#e8b850' : '#f0e6d4'); }
         case 'xadrez': { const d = ((px >> 3) + (py >> 3)) % 2, e = px % 8 === 0 || py % 8 === 0; return rgb(e ? (d ? '#3a3a42' : '#d8d4cc') : d ? '#24242a' : '#f4f2ec'); }
+        default: { const c = lojaPiso(m.piso, px, py); return c ? rgb(c) : null; }
       }
     }
     return null;

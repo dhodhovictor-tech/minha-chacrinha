@@ -618,6 +618,14 @@
     return null;
   }
   function emitP2P(data) { if (room) room.emit('p2p', { ...data, fromUid: P.uid, from: P.name }).catch(() => toast('Não deu para enviar agora.')); }
+  // balãozinho com leite ou lã em cima do bicho que já dá para tirar
+  function avisoProduto(a, def, x, y) {
+    const b = Math.round(Math.sin(performance.now() / 260 + x) * 1.5), h = { vaca: 36, cabra: 30, ovelha: 30 }[a.kind] || 32, bx = Math.round(x - 7), by = Math.round(y - h + b);
+    R(bx, by, 14, 12, '#ffffff'); R(bx + 1, by - 1, 12, 1, '#ffffff'); R(bx + 1, by + 12, 12, 1, '#ffffff'); poly([[x - 2, by + 12], [x + 2, by + 12], [x, by + 15]], '#ffffff');
+    R(bx - 1, by, 1, 12, '#6a4a3a'); R(bx + 14, by, 1, 12, '#6a4a3a'); R(bx + 1, by - 2, 12, 1, '#6a4a3a'); R(bx + 1, by + 13, 12, 1, '#6a4a3a');
+    if (def.tool === 'balde') { R(bx + 4, by + 3, 6, 8, '#f4f8ff'); R(bx + 4, by + 3, 6, 8, '#e8eef8'); R(bx + 5, by + 1, 4, 2, '#3a8ad8'); R(bx + 4, by + 6, 6, 3, '#3a8ad8'); R(bx + 5, by + 4, 1, 6, '#ffffff'); }
+    else { disc(x - 2, by + 6, 3, '#f4f0e8'); disc(x + 2, by + 6, 3, '#f4f0e8'); disc(x, by + 4, 3, '#ffffff'); R(x - 3, by + 7, 6, 1, '#d8d0c0'); }
+  }
   function interactPeer(p) {
     const s = held();
     if (s && s.id === 'alianca') {
@@ -749,7 +757,7 @@
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t); casa3Ents(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t); casa3Ents(m, ents, t); interiorEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -757,7 +765,7 @@
     }
     for (const [id, a] of animalsOn(m.id)) {
       const s = animState(id, a, m.id), def = ANIMALS[a.kind];
-      ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
+      ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (def.tool && a.prod && (a.age || 0) >= def.mature) avisoProduto(a, def, s.x, s.y); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
     }
     if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(splitQ(id)[0], x * T, y * T - 1); } }); } }
     for (const id of Object.keys(NPCS)) {

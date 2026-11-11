@@ -98,10 +98,20 @@
   }
   // desenho sentado: corpo de cima e pernas dobradas
   function drawSentado(cx, fy, look, dir) {
-    const c = farmerCanvas(look || {}, dir, 0), pants = (look && look.pants) || '#3a4a7a', boot = (look && look.boot) || '#5a3420', pD = shade(pants, -0.25);
-    ctx.drawImage(c, 0, 0, 18, 29, cx - 9, fy - 32, 18, 29);
-    if (dir === 1) { R(cx - 4, fy - 6, 8, 3, pants); R(cx - 4, fy - 3, 3, 4, pD); R(cx + 1, fy - 3, 3, 4, pD); R(cx - 4, fy + 1, 3, 1, boot); R(cx + 1, fy + 1, 3, 1, boot); }
-    else if (dir === 3 || dir === 2) { const s = dir === 3 ? 1 : -1; R(cx - 3 + (s < 0 ? -2 : 0), fy - 6, 8, 3, pants); R(cx + (s > 0 ? 3 : -6), fy - 3, 3, 4, pD); R(cx + (s > 0 ? 3 : -6), fy + 1, 4, 1, boot); }
+    // o quadril fica na altura do assento; as pernas dobram para a frente e balançam devagar
+    const c = farmerCanvas(look || {}, dir, 0), pants = (look && look.pants) || '#3a4a7a', boot = (look && look.boot) || '#5a3420', pD = shade(pants, -0.25), pL = shade(pants, 0.15);
+    const k = performance.now() / 1000, sw = Math.sin(k * 2.2) > 0 ? 1 : 0, resp = Math.sin(k * 1.6) > 0.6 ? 1 : 0;
+    ctx.drawImage(c, 0, 0, 18, 29 - resp, cx - 9, fy - 37 + resp, 18, 29 - resp);
+    if (dir === 1) {
+      R(cx - 5, fy - 9, 10, 4, pants); R(cx - 5, fy - 9, 10, 1, pL); R(cx - 1, fy - 9, 1, 4, pD);
+      R(cx - 5 + sw, fy - 5, 3, 5, pD); R(cx + 2 - sw, fy - 5, 3, 5, pD);
+      R(cx - 5 + sw, fy, 4, 2, boot); R(cx + 2 - sw, fy, 4, 2, boot);
+    } else if (dir === 3 || dir === 2) {
+      const s2 = dir === 3 ? 1 : -1, x0 = s2 > 0 ? cx - 2 : cx - 7;
+      R(x0, fy - 9, 9, 4, pants); R(x0, fy - 9, 9, 1, pL);
+      const kx = s2 > 0 ? cx + 4 : cx - 7;
+      R(kx + sw * s2, fy - 5, 3, 5, pD); R(kx + sw * s2 + (s2 > 0 ? 0 : -1), fy, 4, 2, boot);
+    }
   }
   // dançar: gira, pula e solta notinhas; a dois, coraçõezinhos
   function drawDancando(cx, fy, look, t0, perto) {
@@ -209,7 +219,8 @@
   let brinq = null;
   function darthBrinca(dt) {
     const s = petSt, p = P && P.pet;
-    const parar = () => { brinq = null; s.alt = 0; s.pose2 = null; };
+    // ao terminar, desce para um quadrado livre ao lado do brinquedo (senão ele fica preso dentro do móvel)
+    const parar = () => { brinq = null; s.alt = 0; s.pose2 = null; soltarDarth(); };
     if (!p || s.map !== 'house' || P.map !== 'house') { if (brinq) parar(); return false; }
     if (brinq) {
       if (casa()[brinq.k] !== brinq.id || (p.mode !== 'roam' && walkT > 0 && Math.hypot(P.x - s.x, P.y - s.y) > 64) || p.mode === 'come') { parar(); return false; }
@@ -231,6 +242,16 @@
       if (toys.length) { const [k, id] = toys[Math.floor(Math.random() * toys.length)]; brinq = { k, id, fase: 'indo', t: 0 }; s.idle = 0; return true; }
     }
     return false;
+  }
+  function soltarDarth() {
+    const s = petSt, m = getMap(s.map || 'house'); if (!m) return;
+    if (petFree(m, s.x, s.y) && petFree(m, s.x + 4, s.y) && petFree(m, s.x - 4, s.y)) return;
+    const tx = Math.floor(s.x / T), ty = Math.floor((s.y - 3) / T);
+    for (let r = 1; r <= 4; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const nx = (tx + dx) * T + 8, ny = (ty + dy) * T + 12;
+      if (petFree(m, nx, ny) && petFree(m, nx + 4, ny) && petFree(m, nx - 4, ny)) { s.x = nx; s.y = ny; s.mv = 0; s.wait = 0.5; s.tx = nx; s.ty = ny; if (P.pet) { P.pet.hx = nx; P.pet.hy = ny; } return; }
+    }
   }
   // desenho do Darth brincando (poses especiais); devolve true se desenhou
   function drawDarthBrinca(s) {
@@ -317,12 +338,21 @@
   }
 
   // decoração de casa: livro rosa, comida na mesa e o criado-mudo/brinquedos
+  // onde fica o tampo de cada mesa (centro do prato), em pixels
+  function topoMesa(x, y, id, r) {
+    const px = x * T, py = y * T;
+    if (id === 'mesapinho') return [px + 8, py + 5];
+    if (id === 'mesacozinha') return [px + 23, py + 11];
+    if (id === 'mesacarvalho') return r % 2 ? [px + 8, py + 22] : [px + 25, py + 5];
+    return [px + 8, py + 5];
+  }
   function casa3Ents(m, ents, t) {
     if (m.id !== 'house') return;
     for (const [k, v] of Object.entries(W.farm.mesa || {})) {
       const id = casa()[k]; if (!id || !v) continue;
-      const d = movelDims(k, id), [x, y] = k.split(',').map(Number), cx = (x + d.w / 2) * T, cy = y * T + (d.h > 1 ? T : 4);
-      ents.push({ y: (y + d.h - 1) * T + 15, f: () => { oval(cx, cy + 4, 7, 2.5, '#f4f0e8'); drawIconAt(v.id, cx - 6, cy - 6, 0.75); for (let i = 0; i < 2; i++) { const p = (t * 0.6 + i * 0.5) % 1; R(cx - 2 + i * 4, cy - 8 - p * 8, 1, 2, `rgba(255,255,255,${0.6 * (1 - p)})`); } } });
+      const d = movelDims(k, id), [x, y] = k.split(',').map(Number), [cx, cy] = topoMesa(x, y, id, rotOf(k));
+      // prato apoiado no tampo da mesa (cy = altura do tampo) e a comida em cima dele
+      ents.push({ y: (y + d.h - 1) * T + 15, f: () => { oval(cx, cy, 6.5, 2.2, '#c8c0b0'); oval(cx, cy - 0.5, 6, 1.8, '#f8f4ec'); drawIconAt(v.id, cx - 5, cy - 10, 0.62); for (let i = 0; i < 2; i++) { const p = (t * 0.6 + i * 0.5) % 1; R(cx - 2 + i * 4, cy - 12 - p * 8, 1, 2, `rgba(255,255,255,${0.6 * (1 - p)})`); } } });
     }
     if (W.farm.livro) {
       const [x, y] = W.farm.livro.split(',').map(Number), mv = movelAt(x, y), top = mv ? (mv.id === 'criadomudo' ? -5 : mv.id === 'mesacozinha' ? 0 : mv.id === 'guardaroupa' ? -26 : mv.id === 'comoda' ? -8 : mv.id === 'estanteipe' ? -18 : 0) : 8;

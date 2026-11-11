@@ -679,6 +679,7 @@
       await store.doc('world/meta').set(stripNull(clone(W.meta)));
       W.clock = { min: DAY_START, at: Date.now(), day: nd, by: P.uid };
       await store.doc('world/clock').set(W.clock);
+      salvarBackupAuto(nd);
       onNewDay();
     } catch (e) { netError(e); }
     ending = false;

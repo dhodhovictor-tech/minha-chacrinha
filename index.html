@@ -150,6 +150,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 #fishcv { width: 150px; height: 360px; image-rendering: pixelated; }
 .big { font-size: 26px; text-align: center; font-weight: 700; }
 #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.25s; }
+/* relógio compacto: na mina e na mata (ou quando a pessoa toca nele) fica só o relógio e a hora, pequeno e meio transparente */
+#clock { pointer-events: auto; cursor: pointer; transition: opacity .2s; }
+body.compacto #clock { min-width: 0; padding: 3px 6px 3px 3px; opacity: 0.82; column-gap: 4px; }
+body.compacto #clock #cDay, body.compacto #clock #cSeason, body.compacto #clock .g { display: none; }
+body.compacto #clock .t { font-size: 13px; padding: 0 3px; }
+body.compacto #dial { width: 28px; height: 28px; }
+body.compacto #clock .info::after { content: attr(data-lugar); font-size: 10px; font-weight: 700; color: #6a3a1a; }
 @media (max-width: 520px) { .slot { width: 32px; height: 32px; } .slot img { width: 26px; height: 26px; } #clock { font-size: 12px; min-width: 128px; } #clock .t { font-size: 15px; } #dial { width: 42px; height: 42px; } #clock .g { font-size: 15px; } }
 @media (orientation: landscape) and (max-height: 520px) {
   #hotbar { left: calc(4px + env(safe-area-inset-left, 0px)); top: 4px; bottom: auto; transform: none; flex-direction: column; max-width: none; max-height: calc(100% - 8px); padding: 3px; gap: 1px; }
@@ -162,7 +169,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 </style>
 </head>
 <body>
-<script>window.__APP_VERSION = 'ac11e8d'; window.__APP_DATE = '11/11/2026';</script>
+<script>window.__APP_VERSION = '5d9b909'; window.__APP_DATE = '11/11/2026';</script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -1453,7 +1460,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
           }
         }
       }
-      if (m.id === 'house' && (gt === G.WALL || gt === G.WOOD)) { const cc = casaPx(m, gt, px, py, tx, ty); if (cc) { put(i, cc); continue; } }
+      if ((m.papel || m.piso) && !m.woodWall && (gt === G.WALL || gt === (m.pisoG || G.WOOD))) { const cc = casaPx(m, gt, px, py, tx, ty); if (cc) { put(i, cc); continue; } }
       const n = fbm(px / 26, py / 26), dith = hash(px, py, 5);
       switch (gt) {
         case G.GRASS: case G.FLOWERS: case G.FOREST: {
@@ -3819,6 +3826,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       await store.doc('world/meta').set(stripNull(clone(W.meta)));
       W.clock = { min: DAY_START, at: Date.now(), day: nd, by: P.uid };
       await store.doc('world/clock').set(W.clock);
+      salvarBackupAuto(nd);
       onNewDay();
     } catch (e) { netError(e); }
     ending = false;
@@ -3923,6 +3931,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     $('cDay').textContent = `${weekday()} ${dom()} · Ano ${year()}`;
     $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${climaNome()}`;
     $('cTime').textContent = `${h}:${mm}`;
+    hudCompacto();
     $('cGold').textContent = `${fmt(gold())} ₲`;
     $('enFill').style.height = clamp(P.energy / P.maxEnergy, 0, 1) * 100 + '%';
     const ef = clamp(P.energy / P.maxEnergy, 0, 1);
@@ -3992,6 +4001,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
         <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções, árvores e máquinas de lugar</button></div>
+        <div class="row"><button class="btn" data-a="dicas" data-t="Chacrinha" type="button">📒 Caderninho de dicas</button><button class="btn" data-a="bkAbrir" type="button">💾 Cópia de segurança</button></div>
         ${partner() ? `<div class="row"><button class="btn g" data-a="letterOpen" type="button">Escrever cartinha para ${esc(partner().name)} 💌</button></div>` : ''}
         ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
@@ -4077,7 +4087,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     let body = '';
     const ext = extraShopTab(who, shopTab);
     if (ext != null) body = ext;
-    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele') {
+    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele' || shopTab === 'ela') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
@@ -4871,6 +4881,14 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     return null;
   }
   function emitP2P(data) { if (room) room.emit('p2p', { ...data, fromUid: P.uid, from: P.name }).catch(() => toast('Não deu para enviar agora.')); }
+  // balãozinho com leite ou lã em cima do bicho que já dá para tirar
+  function avisoProduto(a, def, x, y) {
+    const b = Math.round(Math.sin(performance.now() / 260 + x) * 1.5), h = { vaca: 36, cabra: 30, ovelha: 30 }[a.kind] || 32, bx = Math.round(x - 7), by = Math.round(y - h + b);
+    R(bx, by, 14, 12, '#ffffff'); R(bx + 1, by - 1, 12, 1, '#ffffff'); R(bx + 1, by + 12, 12, 1, '#ffffff'); poly([[x - 2, by + 12], [x + 2, by + 12], [x, by + 15]], '#ffffff');
+    R(bx - 1, by, 1, 12, '#6a4a3a'); R(bx + 14, by, 1, 12, '#6a4a3a'); R(bx + 1, by - 2, 12, 1, '#6a4a3a'); R(bx + 1, by + 13, 12, 1, '#6a4a3a');
+    if (def.tool === 'balde') { R(bx + 4, by + 3, 6, 8, '#f4f8ff'); R(bx + 4, by + 3, 6, 8, '#e8eef8'); R(bx + 5, by + 1, 4, 2, '#3a8ad8'); R(bx + 4, by + 6, 6, 3, '#3a8ad8'); R(bx + 5, by + 4, 1, 6, '#ffffff'); }
+    else { disc(x - 2, by + 6, 3, '#f4f0e8'); disc(x + 2, by + 6, 3, '#f4f0e8'); disc(x, by + 4, 3, '#ffffff'); R(x - 3, by + 7, 6, 1, '#d8d0c0'); }
+  }
   function interactPeer(p) {
     const s = held();
     if (s && s.id === 'alianca') {
@@ -5002,7 +5020,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 
   // ================= desenho extra do mundo =================
   function extraEnts(m, ents, nf, t, x0, x1, y0, y1) {
-    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t); casa3Ents(m, ents, t);
+    festEnts(m, ents, t); atelieEnts(m, ents); casaEnts(m, ents, t); larEnts(m, ents, t); loja3Ents(m, ents, t); vidaEnts(m, ents, t); jardimEnts(m, ents, t); feiraEnts(m, ents, t); mercEnts(m, ents, t); placaEnts(m, ents); convoEnts(m, ents); luauDecor(m, ents, t); bugEnts(m, ents); mataEnts(m, ents, t); aventuraEnts(m, ents, t); casa3Ents(m, ents, t); interiorEnts(m, ents, t);
     if (m.id === 'farm') {
       for (const [bid, b] of Object.entries(farmB())) { const B = BUILDS[b.type]; if (!B || (placing && placing.move === bid)) continue; if ((b.x + B.w) * T < camX - 40 || b.x * T > camX + VW + 40 || (b.y + B.h) * T < camY - 10 || b.y * T > camY + VH + 60) continue; ents.push({ y: (b.y + B.h) * T - 1, f: () => drawFarmBuilding(b, nf) }); }
       for (const [, b] of horsesFree()) { const hx = (b.x + 2) * T, hy = (b.y + 2) * T + 12; ents.push({ y: hy, f: () => drawHorse(hx, hy, 3, false) }); }
@@ -5010,7 +5028,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     }
     for (const [id, a] of animalsOn(m.id)) {
       const s = animState(id, a, m.id), def = ANIMALS[a.kind];
-      ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
+      ents.push({ y: s.y, f: () => { drawAnimal(a, s.x, s.y, s.dir, s.walk, (a.age || 0) < def.mature, a.kind === 'ovelha' && !a.prod); if (def.tool && a.prod && (a.age || 0) >= def.mature) avisoProduto(a, def, s.x, s.y); if (s.heart > 0) drawHeart(s.x, s.y - 24 - (1.6 - s.heart) * 6); } });
     }
     if (m.bid) { const b = farmB()[m.bid]; if (b && b.items) for (const [k, id] of Object.entries(b.items)) { const [x, y] = k.split(',').map(Number); ents.push({ y: y * T + 8, f: () => { shadowAt(x * T + 8, y * T + 13, 4, 1.5); drawIconAt(splitQ(id)[0], x * T, y * T - 1); } }); } }
     for (const id of Object.keys(NPCS)) {
@@ -5276,7 +5294,7 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   function panelAction3(a, b) {
-    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b) || loja3Action(a) || vidaAction(a, b) || jardimAction(a, b) || casa2Action(a, b) || moinhoAction(a, b) || casa3Action(a, b)) return true;
+    if (diaryAction(a, b) || casaAction(a, b) || encAction(a, b) || loja3Action(a) || vidaAction(a, b) || jardimAction(a, b) || casa2Action(a, b) || moinhoAction(a, b) || casa3Action(a, b) || firmeAction(a, b)) return true;
     switch (a) {
       case 'ccTab': openCC(+b.dataset.i); break;
       case 'reload': location.reload(); break;
@@ -9769,14 +9787,16 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
         case 'estrelas': { const h = hsh(px, ly, 41); return rgb(h > 0.97 ? '#f4e8a0' : h > 0.94 ? '#8a9ad8' : ly < 5 ? '#24305e' : '#2a3a6a'); }
         case 'tijolo': { const row = Math.floor((ly - 2) / 3), lx = (px + (row % 2) * 4) % 8; return rgb((ly - 2) % 3 === 2 || lx === 0 ? '#c8c4bc' : hsh(px >> 3, row, 5) < 0.3 ? '#e8e4dc' : '#f4f0e8'); }
         case 'lambri': return rgb((px % 5) === 0 ? '#5a3418' : (px % 5) === 1 ? '#a8703a' : hsh(px / 5 | 0, 0, 3) < 0.5 ? '#8a5428' : '#94602e');
+        default: { const c = lojaParede(m.papel, px, ly); return c ? rgb(c) : null; }
       }
     }
-    if (gt === G.WOOD && m.piso && m.piso !== 'tabua') {
+    if (gt === (m.pisoG || G.WOOD) && m.piso && m.piso !== 'tabua') {
       switch (m.piso) {
         case 'escuro': { const row = Math.floor(py / 5), ly = py % 5, j = (px + hsh(row, 0, 9) * 48) % 48 | 0, h = hsh(row, Math.floor((px + hsh(row, 0, 9) * 48) / 48), 4); return rgb(ly === 4 || j === 0 ? '#2a160a' : ly === 0 ? '#6a4024' : h < 0.5 ? '#4a2a16' : '#55321a'); }
         case 'taco': { const bx = px >> 3, by = py >> 3, hor = (bx + by) % 2, lx = px % 8, ly = py % 8; const e = hor ? ly % 4 === 3 || lx === 7 : lx % 4 === 3 || ly === 7; return rgb(e ? '#7a4a24' : hor ? '#c8884a' : '#b8783e'); }
         case 'ladrilho': { const lx = px % 16, ly = py % 16, dx = Math.abs(lx - 7.5), dy = Math.abs(ly - 7.5); if (lx === 0 || ly === 0) return rgb('#b8ac98'); if (dx + dy < 3) return rgb('#c84a3a'); if (dx + dy < 6 && (dx < 1 || dy < 1)) return rgb('#3a7a9a'); if (dx > 5.5 && dy > 5.5) return rgb('#3a7a9a'); return rgb(Math.abs(dx - dy) < 0.6 && dx + dy < 11 ? '#e8b850' : '#f0e6d4'); }
         case 'xadrez': { const d = ((px >> 3) + (py >> 3)) % 2, e = px % 8 === 0 || py % 8 === 0; return rgb(e ? (d ? '#3a3a42' : '#d8d4cc') : d ? '#24242a' : '#f4f2ec'); }
+        default: { const c = lojaPiso(m.piso, px, py); return c ? rgb(c) : null; }
       }
     }
     return null;
@@ -10352,10 +10372,20 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
   // desenho sentado: corpo de cima e pernas dobradas
   function drawSentado(cx, fy, look, dir) {
-    const c = farmerCanvas(look || {}, dir, 0), pants = (look && look.pants) || '#3a4a7a', boot = (look && look.boot) || '#5a3420', pD = shade(pants, -0.25);
-    ctx.drawImage(c, 0, 0, 18, 29, cx - 9, fy - 32, 18, 29);
-    if (dir === 1) { R(cx - 4, fy - 6, 8, 3, pants); R(cx - 4, fy - 3, 3, 4, pD); R(cx + 1, fy - 3, 3, 4, pD); R(cx - 4, fy + 1, 3, 1, boot); R(cx + 1, fy + 1, 3, 1, boot); }
-    else if (dir === 3 || dir === 2) { const s = dir === 3 ? 1 : -1; R(cx - 3 + (s < 0 ? -2 : 0), fy - 6, 8, 3, pants); R(cx + (s > 0 ? 3 : -6), fy - 3, 3, 4, pD); R(cx + (s > 0 ? 3 : -6), fy + 1, 4, 1, boot); }
+    // o quadril fica na altura do assento; as pernas dobram para a frente e balançam devagar
+    const c = farmerCanvas(look || {}, dir, 0), pants = (look && look.pants) || '#3a4a7a', boot = (look && look.boot) || '#5a3420', pD = shade(pants, -0.25), pL = shade(pants, 0.15);
+    const k = performance.now() / 1000, sw = Math.sin(k * 2.2) > 0 ? 1 : 0, resp = Math.sin(k * 1.6) > 0.6 ? 1 : 0;
+    ctx.drawImage(c, 0, 0, 18, 29 - resp, cx - 9, fy - 37 + resp, 18, 29 - resp);
+    if (dir === 1) {
+      R(cx - 5, fy - 9, 10, 4, pants); R(cx - 5, fy - 9, 10, 1, pL); R(cx - 1, fy - 9, 1, 4, pD);
+      R(cx - 5 + sw, fy - 5, 3, 5, pD); R(cx + 2 - sw, fy - 5, 3, 5, pD);
+      R(cx - 5 + sw, fy, 4, 2, boot); R(cx + 2 - sw, fy, 4, 2, boot);
+    } else if (dir === 3 || dir === 2) {
+      const s2 = dir === 3 ? 1 : -1, x0 = s2 > 0 ? cx - 2 : cx - 7;
+      R(x0, fy - 9, 9, 4, pants); R(x0, fy - 9, 9, 1, pL);
+      const kx = s2 > 0 ? cx + 4 : cx - 7;
+      R(kx + sw * s2, fy - 5, 3, 5, pD); R(kx + sw * s2 + (s2 > 0 ? 0 : -1), fy, 4, 2, boot);
+    }
   }
   // dançar: gira, pula e solta notinhas; a dois, coraçõezinhos
   function drawDancando(cx, fy, look, t0, perto) {
@@ -10463,7 +10493,8 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   let brinq = null;
   function darthBrinca(dt) {
     const s = petSt, p = P && P.pet;
-    const parar = () => { brinq = null; s.alt = 0; s.pose2 = null; };
+    // ao terminar, desce para um quadrado livre ao lado do brinquedo (senão ele fica preso dentro do móvel)
+    const parar = () => { brinq = null; s.alt = 0; s.pose2 = null; soltarDarth(); };
     if (!p || s.map !== 'house' || P.map !== 'house') { if (brinq) parar(); return false; }
     if (brinq) {
       if (casa()[brinq.k] !== brinq.id || (p.mode !== 'roam' && walkT > 0 && Math.hypot(P.x - s.x, P.y - s.y) > 64) || p.mode === 'come') { parar(); return false; }
@@ -10485,6 +10516,16 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       if (toys.length) { const [k, id] = toys[Math.floor(Math.random() * toys.length)]; brinq = { k, id, fase: 'indo', t: 0 }; s.idle = 0; return true; }
     }
     return false;
+  }
+  function soltarDarth() {
+    const s = petSt, m = getMap(s.map || 'house'); if (!m) return;
+    if (petFree(m, s.x, s.y) && petFree(m, s.x + 4, s.y) && petFree(m, s.x - 4, s.y)) return;
+    const tx = Math.floor(s.x / T), ty = Math.floor((s.y - 3) / T);
+    for (let r = 1; r <= 4; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const nx = (tx + dx) * T + 8, ny = (ty + dy) * T + 12;
+      if (petFree(m, nx, ny) && petFree(m, nx + 4, ny) && petFree(m, nx - 4, ny)) { s.x = nx; s.y = ny; s.mv = 0; s.wait = 0.5; s.tx = nx; s.ty = ny; if (P.pet) { P.pet.hx = nx; P.pet.hy = ny; } return; }
+    }
   }
   // desenho do Darth brincando (poses especiais); devolve true se desenhou
   function drawDarthBrinca(s) {
@@ -10571,12 +10612,21 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
   }
 
   // decoração de casa: livro rosa, comida na mesa e o criado-mudo/brinquedos
+  // onde fica o tampo de cada mesa (centro do prato), em pixels
+  function topoMesa(x, y, id, r) {
+    const px = x * T, py = y * T;
+    if (id === 'mesapinho') return [px + 8, py + 5];
+    if (id === 'mesacozinha') return [px + 23, py + 11];
+    if (id === 'mesacarvalho') return r % 2 ? [px + 8, py + 22] : [px + 25, py + 5];
+    return [px + 8, py + 5];
+  }
   function casa3Ents(m, ents, t) {
     if (m.id !== 'house') return;
     for (const [k, v] of Object.entries(W.farm.mesa || {})) {
       const id = casa()[k]; if (!id || !v) continue;
-      const d = movelDims(k, id), [x, y] = k.split(',').map(Number), cx = (x + d.w / 2) * T, cy = y * T + (d.h > 1 ? T : 4);
-      ents.push({ y: (y + d.h - 1) * T + 15, f: () => { oval(cx, cy + 4, 7, 2.5, '#f4f0e8'); drawIconAt(v.id, cx - 6, cy - 6, 0.75); for (let i = 0; i < 2; i++) { const p = (t * 0.6 + i * 0.5) % 1; R(cx - 2 + i * 4, cy - 8 - p * 8, 1, 2, `rgba(255,255,255,${0.6 * (1 - p)})`); } } });
+      const d = movelDims(k, id), [x, y] = k.split(',').map(Number), [cx, cy] = topoMesa(x, y, id, rotOf(k));
+      // prato apoiado no tampo da mesa (cy = altura do tampo) e a comida em cima dele
+      ents.push({ y: (y + d.h - 1) * T + 15, f: () => { oval(cx, cy, 6.5, 2.2, '#c8c0b0'); oval(cx, cy - 0.5, 6, 1.8, '#f8f4ec'); drawIconAt(v.id, cx - 5, cy - 10, 0.62); for (let i = 0; i < 2; i++) { const p = (t * 0.6 + i * 0.5) % 1; R(cx - 2 + i * 4, cy - 12 - p * 8, 1, 2, `rgba(255,255,255,${0.6 * (1 - p)})`); } } });
     }
     if (W.farm.livro) {
       const [x, y] = W.farm.livro.split(',').map(Number), mv = movelAt(x, y), top = mv ? (mv.id === 'criadomudo' ? -5 : mv.id === 'mesacozinha' ? 0 : mv.id === 'guardaroupa' ? -26 : mv.id === 'comoda' ? -8 : mv.id === 'estanteipe' ? -18 : 0) : 8;
@@ -10708,6 +10758,19 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
     dalia: { name: 'Dália', seed: 90, sell: 140, days: 8, seasons: ['fall'], kind: 'flower', col: '#c8203a', leaf: '#3a7a3a', cat: 'flower' },
     camelia: { name: 'Camélia', seed: 120, sell: 160, days: 9, seasons: ['winter'], kind: 'flower', col: '#f07aa0', leaf: '#2a6a3a', cat: 'flower' },
     amorperfeito: { name: 'Amor-perfeito', seed: 60, sell: 90, days: 6, seasons: ['winter', 'spring'], kind: 'flower', col: '#7a4ac8', leaf: '#3a7a3a', cat: 'flower' },
+    rosavermelha: { name: 'Rosa vermelha', seed: 120, sell: 170, days: 8, seasons: ['spring', 'summer'], kind: 'flower', col: '#d8203a', leaf: '#3a7a3a', cat: 'flower' },
+    violeta: { name: 'Violeta', seed: 40, sell: 65, days: 5, seasons: ['spring', 'winter'], kind: 'flower', col: '#6a3ab8', leaf: '#3a8a3a', cat: 'flower' },
+    azaleia: { name: 'Azaleia', seed: 70, sell: 105, days: 7, seasons: ['winter', 'spring'], kind: 'flower', col: '#f05a9a', leaf: '#4a8a3a', cat: 'flower' },
+    copodeleite: { name: 'Copo-de-leite', seed: 90, sell: 135, days: 8, seasons: ['spring', 'fall'], kind: 'flower', col: '#fbfbf4', leaf: '#3a8a3a', cat: 'flower' },
+    gerbera: { name: 'Gérbera', seed: 50, sell: 80, days: 6, seasons: ['summer'], kind: 'flower', col: '#ff7a2a', leaf: '#4a9a3a', cat: 'flower' },
+    petunia: { name: 'Petúnia', seed: 40, sell: 65, days: 5, seasons: ['summer'], kind: 'flower', col: '#c84ad8', leaf: '#4a9a3a', cat: 'flower' },
+    jasmim: { name: 'Jasmim', seed: 80, sell: 125, days: 7, seasons: ['summer'], kind: 'flower', col: '#fff4d0', leaf: '#3a8a3a', cat: 'flower' },
+    orquidea: { name: 'Orquídea', seed: 160, sell: 230, days: 10, seasons: ['summer', 'fall'], kind: 'flower', col: '#d88ae8', leaf: '#4a8a3a', cat: 'flower' },
+    cravo: { name: 'Cravo', seed: 50, sell: 80, days: 6, seasons: ['fall'], kind: 'flower', col: '#e84a6a', leaf: '#5a8a5a', cat: 'flower' },
+    begonia: { name: 'Begônia', seed: 60, sell: 95, days: 6, seasons: ['fall'], kind: 'flower', col: '#f04a4a', leaf: '#3a7a3a', cat: 'flower' },
+    astromelia: { name: 'Astromélia', seed: 70, sell: 110, days: 7, seasons: ['fall'], kind: 'flower', col: '#f4a040', leaf: '#4a8a3a', cat: 'flower' },
+    bicodepapagaio: { name: 'Bico-de-papagaio', seed: 100, sell: 150, days: 8, seasons: ['winter'], kind: 'flower', col: '#d8202a', leaf: '#2a6a3a', cat: 'flower' },
+    rosadeinverno: { name: 'Rosa-de-inverno', seed: 90, sell: 140, days: 7, seasons: ['winter'], kind: 'flower', col: '#e8c8e8', leaf: '#2a6a3a', cat: 'flower' },
   };
   Object.assign(FLOWERS, FLORES2); // ícone de flor e mel com o sabor dela na colmeia
   for (const [k, c] of Object.entries(FLORES2)) {
@@ -10899,6 +10962,182 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
       for (const [uid, id, x, y] of d.b) { if (!BUGS[id]) continue; vistos.add(uid); let b = bugs.find(z => z.uid === uid); if (!b) { b = { uid, id, x, y, hx: x, hy: y, tx: x, ty: y, a: 0, ph: Math.random() * 6, wait: 0, h: 10, life: 999 }; bugs.push(b); } b.nx = x; b.ny = y; }
       bugs = bugs.filter(b => vistos.has(b.uid));
     }
+  }
+
+  // ---------- relógio compacto ----------
+  let hudMini = null;
+  function hudCompacto() {
+    if (hudMini === null) { try { hudMini = localStorage.getItem('hudMini') === '1'; } catch (e) { hudMini = false; } }
+    const m = curMap(), auto = !!(m && (m.cave || m.mata)), on = hudMini !== auto ? true : false;
+    document.body.classList.toggle('compacto', auto ? !hudMini : hudMini);
+    const info = document.querySelector('#clock .info'); if (info) info.dataset.lugar = m && m.cave && m.floor ? `andar ${m.floor}` : m && m.mataN ? `clareira ${m.mataN}` : '';
+    void on;
+  }
+  // tocar no relógio troca entre completo e compacto (lembra a escolha; na mina e na mata o padrão é compacto)
+  document.getElementById('clock').addEventListener('click', () => { hudMini = !hudMini; try { localStorage.setItem('hudMini', hudMini ? '1' : '0'); } catch (e) {} hudCompacto(); });
+
+  // ================= interiores com a cara de cada lugar: parede, piso, tapete da porta e enfeites na parede =================
+  // Usa as mesmas regras de papel de parede e piso da casa (casaPx), com padrões novos só das lojas.
+  Object.assign(PAPEIS, {
+    armazem: { rod: '#4a6a3a' }, forja: { rod: '#2a2220' }, celeiro: { rod: '#5a1a12' }, ondas: { rod: '#24486e' },
+    padaria: { rod: '#8a5a2a' }, azulejo: { rod: '#3a8a6a' }, patinhas: { rod: '#4a7ab8' }, estante: { rod: '#3a1a0a' }, tijolobar: { rod: '#3a1a10' },
+  });
+  Object.assign(PISOS, { serragem: {}, deck: {}, terracota: {}, azulclaro: {}, clinica: {}, marmore: {} });
+  // cor de um pixel dos padrões novos (ly = linha dentro do quadrado da parede)
+  function lojaParede(papel, px, ly) {
+    switch (papel) {
+      case 'armazem': return (px % 8) < 4 ? '#d8e4b8' : '#c4d49c';
+      case 'forja': { const row = Math.floor((ly - 2) / 3), lx = (px + (row % 2) * 4) % 8; return (ly - 2) % 3 === 2 || lx === 0 ? '#2a2220' : hash(px >> 3, row, 9) < 0.3 ? '#5a3a30' : '#6a4a3a'; }
+      case 'celeiro': return (px % 6) === 0 ? '#5a1a12' : (px % 6) === 1 ? '#c84a3a' : '#a83228';
+      case 'ondas': { const w = Math.round(Math.sin(px * 0.5) * 1.2); return ly === 4 + w || ly === 8 + w ? '#e8f8ff' : ly < 6 ? '#5a9ad8' : '#3a7ac0'; }
+      case 'padaria': return (px % 6 === 0 || (ly - 2) % 4 === 0) ? '#c8c0b0' : ((px >> 3) + (ly >> 2)) % 2 ? '#f8f4ec' : '#e8f0f8';
+      case 'azulejo': return ly === 7 ? '#3a8a6a' : (px % 5 === 0 || (ly - 2) % 3 === 0) ? '#d8e0dc' : '#f8fbfa';
+      case 'patinhas': { const cx = (px % 12), cy = ly; const pata = (Math.abs(cx - 5) <= 1 && cy >= 5 && cy <= 7) || ((cx === 3 || cx === 7) && cy === 3) || ((cx === 4 || cx === 6) && cy === 2); return pata ? '#ffffff' : '#a8d0f0'; }
+      case 'estante': { const lv = (ly - 2) % 4, livro = Math.floor(px / 3); return lv === 3 ? '#5a2a10' : ['#c83a3a', '#3a7ad0', '#e8b83a', '#5aa83a', '#8a4ab8', '#f4f0e8', '#c86a3a'][(livro * 7 + Math.floor((ly - 2) / 4)) % 7]; }
+      case 'tijolobar': { const row = Math.floor((ly - 2) / 3), lx = (px + (row % 2) * 4) % 8; return (ly - 2) % 3 === 2 || lx === 0 ? '#8a7a6a' : hash(px >> 3, row, 4) < 0.3 ? '#9a3a28' : '#b84a32'; }
+    }
+    return null;
+  }
+  function lojaPiso(piso, px, py) {
+    switch (piso) {
+      case 'serragem': { const row = Math.floor(py / 6), j = (px + hash(row, 0, 7) * 40) % 40 | 0; if (hash(px, py, 21) > 0.97) return '#f0d8a0'; return py % 6 === 5 || j === 0 ? '#7a5428' : hash(row, Math.floor(px / 40), 3) < 0.5 ? '#c8945a' : '#bc8a50'; }
+      case 'deck': { const row = Math.floor(py / 5), j = (px + hash(row, 0, 5) * 32) % 32 | 0; return py % 5 === 4 || j === 0 ? '#4a5a68' : hash(row, 1, 2) < 0.5 ? '#8a9aa8' : '#7a8a98'; }
+      case 'terracota': { const lx = px % 12, ly = py % 12; return lx === 0 || ly === 0 ? '#e8d8c0' : ((px / 12 | 0) + (py / 12 | 0)) % 2 ? '#c86a3a' : '#d47a48'; }
+      case 'azulclaro': { const d = ((px >> 3) + (py >> 3)) % 2, e = px % 8 === 0 || py % 8 === 0; return e ? '#d8e8f0' : d ? '#a8d4ec' : '#f4fafc'; }
+      case 'clinica': { const e = px % 16 === 0 || py % 16 === 0; return e ? '#b8d8c8' : hash(px >> 4, py >> 4, 3) < 0.2 ? '#e0f0e8' : '#f0f8f4'; }
+      case 'marmore': { const v = Math.sin(px * 0.15 + py * 0.08 + Math.sin(py * 0.2) * 2); return px % 16 === 0 || py % 16 === 0 ? '#c8c0b8' : v > 0.92 ? '#b8b0a8' : '#ece8e2'; }
+    }
+    return null;
+  }
+  // estilo de cada lugar: [papel de parede, piso]
+  const ESTILO_LOJA = {
+    store: ['armazem', 'taco'], smith: ['forja', null], carpentry: ['lambri', 'serragem'], ranch: ['celeiro', null], bar: ['tijolobar', 'escuro'],
+    fishshop: ['ondas', 'deck'], atelie: ['lavanda', 'taco'], moveis: ['lambri', 'serragem'], padaria: ['padaria', 'ladrilho'], flores: ['floral', 'terracota'],
+    petshop: ['patinhas', 'azulclaro'], clinica: ['azulejo', 'clinica'], biblioteca: ['estante', 'escuro'], museum: ['tijolo', 'marmore'], cc: ['lambri', null],
+  };
+  for (const [id, [pa, pi]] of Object.entries(ESTILO_LOJA)) {
+    const m = MAPS[id]; if (!m) continue;
+    const cont = new Map(); for (let i = 0; i < m.w * m.h; i++) { const g = m.g[i]; if (g !== G.WALL && g !== G.CARPET) cont.set(g, (cont.get(g) || 0) + 1); }
+    m.pisoG = [...cont.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    m.papel = pa; if (pi) m.piso = pi; m.estiloLoja = true;
+  }
+
+  // enfeites na parede do fundo e tapetinho na porta (desenhos simples, não ocupam lugar)
+  const ENFEITE_PAREDE = {
+    store: [[5, 'lousa'], [8, 'cartaz']], smith: [[4, 'ferramentas'], [8, 'ferradura']], carpentry: [[3, 'serrote'], [6, 'planta']], ranch: [[3, 'ferradura'], [6, 'sino']],
+    bar: [[10, 'alvo'], [12, 'letreiro']], fishshop: [[3, 'ancora'], [6, 'boia'], [8, 'trofeu']], padaria: [[3, 'paes'], [6, 'relogio'], [8, 'paes']], flores: [[3, 'vasoparede'], [6, 'quadroflor'], [8, 'vasoparede']],
+    petshop: [[3, 'quadrogato'], [6, 'osso'], [8, 'quadrogato']], clinica: [[3, 'cruz'], [6, 'tabela'], [8, 'quadro']], biblioteca: [[6, 'relogio']], atelie: [[5, 'quadroflor']], moveis: [[5, 'serrote']],
+  };
+  const TAPETE = { store: '#4a8a4a', smith: '#5a3a2a', carpentry: '#a86a3a', ranch: '#c84a3a', bar: '#8a2a3a', fishshop: '#3a6ab8', padaria: '#e8b860', flores: '#e86a9a', petshop: '#4a8ad8', clinica: '#3a8a6a', biblioteca: '#6a3a8a', atelie: '#e86a9a', moveis: '#8a5a2a' };
+  function enfeite(tipo, x, t) {
+    const px = x * T, py = T;
+    switch (tipo) {
+      case 'lousa': R(px - 6, py + 2, 28, 14, '#7a4a24'); R(px - 5, py + 3, 26, 12, '#2a3a2e'); for (let i = 0; i < 3; i++) R(px - 2, py + 5 + i * 3, 10 + (i % 2) * 8, 1, '#e8f0e0'); disc(px + 18, py + 6, 1.5, '#f4c83a'); break;
+      case 'cartaz': R(px + 1, py + 3, 14, 12, '#f8f0d8'); disc(px + 8, py + 8, 3.5, '#e8402a'); R(px + 7, py + 3, 2, 3, '#4a9a3a'); R(px + 3, py + 13, 10, 1, '#8a5a2a'); break;
+      case 'ferramentas': R(px - 4, py + 3, 24, 2, '#5a3418'); for (const [dx, c] of [[-2, '#8a8a92'], [4, '#5a5a62'], [10, '#a8a8b0'], [16, '#7a7a82']]) { R(px + dx, py + 5, 2, 9, '#6a4a2a'); R(px + dx - 1, py + 5, 4, 3, c); } break;
+      case 'ferradura': ctx.strokeStyle = '#a8a8b0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px + 8, py + 10, 4, Math.PI * 0.1, Math.PI * 0.9, true); ctx.stroke(); break;
+      case 'serrote': poly([[px, py + 6], [px + 16, py + 9], [px + 16, py + 12], [px, py + 11]], '#c8c8d0'); R(px - 3, py + 6, 4, 6, '#a86a3a'); for (let i = 1; i < 16; i += 2) R(px + i, py + 11 + (i % 4 === 1 ? 1 : 0), 1, 1, '#8a8a92'); break;
+      case 'planta': R(px + 5, py + 9, 6, 5, '#c86a3a'); disc(px + 8, py + 7, 4, '#3a8a3a'); disc(px + 6, py + 5, 2.5, '#5ab84a'); break;
+      case 'sino': R(px + 7, py + 2, 2, 3, '#5a3418'); poly([[px + 4, py + 12], [px + 6, py + 5], [px + 10, py + 5], [px + 12, py + 12]], '#d8a830'); disc(px + 8, py + 13, 1.5, '#8a6a20'); break;
+      case 'alvo': for (const [r, c] of [[7, '#2a2a2a'], [5.5, '#f4f0e8'], [4, '#e8402a'], [2.5, '#f4f0e8'], [1.2, '#e8402a']]) disc(px + 8, py + 9, r, c); R(px + 10, py + 6, 4, 1, '#f4c83a'); break;
+      case 'letreiro': { const on = Math.sin(t * 3) > -0.6; R(px - 6, py + 4, 28, 9, '#2a1a2a'); drawText('BAR', px + 8, py + 9, on ? '#ff6ab8' : '#8a3a6a', 7); break; }
+      case 'ancora': ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 8, py + 3); ctx.lineTo(px + 8, py + 14); ctx.stroke(); ctx.beginPath(); ctx.arc(px + 8, py + 10, 5, 0.2, Math.PI - 0.2); ctx.stroke(); R(px + 4, py + 5, 8, 2, '#4a4a52'); disc(px + 8, py + 2, 1.6, '#4a4a52'); break;
+      case 'boia': disc(px + 8, py + 9, 6, '#f4f0e8'); disc(px + 8, py + 9, 3, '#3a7ac0'); for (const a of [0.4, 2, 3.6, 5.2]) disc(px + 8 + Math.cos(a) * 4.5, py + 9 + Math.sin(a) * 4.5, 1.8, '#e8402a'); break;
+      case 'trofeu': R(px + 1, py + 4, 14, 10, '#7a4a24'); R(px + 2, py + 5, 12, 8, '#c8a060'); oval(px + 8, py + 9, 5, 2.5, '#3a8ad8'); R(px + 12, py + 8, 2, 3, '#3a8ad8'); break;
+      case 'paes': R(px - 2, py + 11, 20, 2, '#7a4a24'); for (let i = 0; i < 3; i++) { oval(px + 2 + i * 6, py + 9, 3, 2.2, '#c8843a'); R(px + 1 + i * 6, py + 8, 2, 1, '#e8b870'); } break;
+      case 'relogio': disc(px + 8, py + 8, 6, '#7a4a24'); disc(px + 8, py + 8, 5, '#f8f4ec'); R(px + 8, py + 5, 1, 4, '#2a1a0a'); R(px + 8, py + 8, 3, 1, '#2a1a0a'); break;
+      case 'vasoparede': R(px + 4, py + 9, 8, 5, '#c86a3a'); for (const [dx, dy, c] of [[-3, 0, '#ff6aa8'], [0, -3, '#f4c83a'], [3, -1, '#ffffff'], [2, 2, '#c86ad8']]) disc(px + 8 + dx, py + 8 + dy, 1.8, c); R(px + 5, py + 13, 1, 3, '#3a8a3a'); R(px + 10, py + 13, 1, 4, '#3a8a3a'); break;
+      case 'quadroflor': R(px, py + 2, 16, 13, '#c8a050'); R(px + 1, py + 3, 14, 11, '#f8f4e8'); for (const [dx, dy, c] of [[4, 6, '#e8402a'], [8, 5, '#f4c83a'], [11, 7, '#e86ab0']]) { R(px + dx, py + dy + 2, 1, 5, '#3a8a3a'); disc(px + dx, py + dy, 2, c); } break;
+      case 'quadrogato': R(px, py + 2, 16, 13, '#7a4a24'); R(px + 1, py + 3, 14, 11, '#f8e8c8'); oval(px + 8, py + 10, 5, 3, '#2a2a32'); disc(px + 8, py + 6, 3, '#2a2a32'); poly([[px + 5, py + 5], [px + 6, py + 2], [px + 7, py + 5]], '#2a2a32'); poly([[px + 9, py + 5], [px + 10, py + 2], [px + 11, py + 5]], '#2a2a32'); R(px + 7, py + 6, 1, 1, '#5ae05a'); R(px + 9, py + 6, 1, 1, '#5ae05a'); break;
+      case 'osso': R(px + 3, py + 8, 10, 3, '#f8f4ec'); for (const dx of [2, 13]) { disc(px + dx, py + 7.5, 2, '#f8f4ec'); disc(px + dx, py + 11.5, 2, '#f8f4ec'); } break;
+      case 'cruz': R(px + 2, py + 3, 12, 12, '#ffffff'); R(px + 6, py + 4, 4, 10, '#e8402a'); R(px + 3, py + 7, 10, 4, '#e8402a'); break;
+      case 'tabela': R(px + 1, py + 2, 14, 14, '#ffffff'); for (let i = 0; i < 5; i++) R(px + 8 - (5 - i), py + 3 + i * 3, (5 - i) * 2, 2, '#2a2a2a'); break;
+      case 'quadro': R(px, py + 3, 16, 11, '#5a3418'); R(px + 1, py + 4, 14, 9, '#a8d8f0'); poly([[px + 1, py + 13], [px + 6, py + 7], [px + 10, py + 11], [px + 15, py + 6], [px + 15, py + 13]], '#5aa83a'); break;
+    }
+  }
+  function interiorEnts(m, ents, t) {
+    const lista = ENFEITE_PAREDE[m.id];
+    if (lista) ents.push({ y: -997, f: () => { for (const [x, tipo] of lista) enfeite(tipo, x, t); } });
+    const tc = TAPETE[m.id], porta = m.warps.find(w => w.to === 'town' || w.to === 'beach');
+    if (tc && porta) ents.push({ y: -996, f: () => { const px = porta.x * T - 8, py = (porta.y - 1) * T + 3; R(px, py, 32, 11, shade(tc, -0.3)); R(px + 1, py + 1, 30, 9, tc); for (let x = px + 3; x < px + 30; x += 4) R(x, py + 1, 1, 9, shade(tc, 0.2)); } });
+  }
+
+  // ================= firmeza: cópias de segurança e caderninho de dicas =================
+  // Toda manhã quem vira o dia grava uma cópia em "backup/b0..b2" (os 3 últimos dias).
+  // Na aba Chacrinha da mochila dá para baixar uma cópia num arquivo e voltar para uma cópia (automática ou do arquivo).
+  async function fotoDoJogo() {
+    const players = {}, diarios = {};
+    for (const uid of Object.keys(W.players || {})) {
+      try { const s = await store.doc('players/' + uid).get(); if (s.exists) players[uid] = s.data(); } catch (e) { if (W.players[uid]) players[uid] = clone(W.players[uid]); }
+      try { const d = await store.doc('diary/' + uid).get(); if (d.exists) diarios[uid] = d.data(); } catch (e) {}
+    }
+    if (P && P.uid) players[P.uid] = playerDoc();
+    return { v: 1, at: Date.now(), dia: W.meta.day, nome: farmName(), meta: stripNull(clone(W.meta)), farm: stripNull(clone(W.farm)), clock: clone(W.clock), players, diarios };
+  }
+  async function salvarBackupAuto(nd) {
+    try { const f = await fotoDoJogo(); await store.doc('backup/b' + (nd % 3)).set(f); } catch (e) { console.warn('backup', e); }
+  }
+  let backups = null;
+  async function listarBackups() {
+    const out = [];
+    for (let i = 0; i < 3; i++) { try { const s = await store.doc('backup/b' + i).get(); if (s.exists) { const d = s.data(); out.push({ i, dia: d.dia, at: d.at }); } } catch (e) {} }
+    backups = out.sort((a, b) => b.dia - a.dia);
+    if (panelOpen && panelKind === 'backup') abrirBackup();
+  }
+  function abrirBackup() {
+    if (!backups) listarBackups();
+    const lista = !backups ? '<p style="text-align:center">Procurando as cópias...</p>' : backups.length ? `<div class="list">${backups.map(b => `<div class="item"><span class="nm"><b>${diaryDate(b.dia)}</b><small>Guardada em ${new Date(b.at).toLocaleString('pt-BR')}</small></span><button class="btn" data-a="bkVoltar" data-i="${b.i}" type="button">Voltar para esta</button></div>`).join('')}</div>` : '<p style="text-align:center">Ainda não tem cópia automática. A primeira é feita quando o próximo dia começar.</p>';
+    openPanel(`<h2>Cópia de segurança</h2>
+      <p style="text-align:center;font-size:13px">O jogo guarda sozinho uma cópia de tudo a cada manhã (os 3 últimos dias): chacrinha, casa, dinheiro, mochilas, diários. Também dá para baixar uma cópia para o celular.</p>
+      <div class="row"><button class="btn g" data-a="bkBaixar" type="button">Baixar cópia agora</button><label class="btn" style="cursor:pointer">Restaurar de um arquivo<input id="bkArq" type="file" accept=".json,application/json" style="display:none"></label></div>
+      <h3>Cópias automáticas</h3>${lista}
+      <p style="text-align:center;font-size:12px">Antes de voltar para uma cópia, peça para a outra pessoa fechar o jogo. Depois o jogo recarrega sozinho.</p>`, 'backup');
+    const inp = document.getElementById('bkArq');
+    if (inp) inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; try { const d = JSON.parse(await f.text()); if (!d || !d.meta || !d.farm) throw new Error('arquivo'); confirmarRestaurar(d); } catch (e) { toast('Esse arquivo não é uma cópia da chacrinha.'); } };
+  }
+  let bkConfirma = null;
+  function confirmarRestaurar(d) {
+    bkConfirma = d;
+    openPanel(`<h2>Voltar para a cópia?</h2><p style="text-align:center">A chacrinha volta a ficar como estava em <b>${diaryDate(d.dia)}</b>. O que aconteceu depois disso some.</p><div class="row"><button class="btn r" data-a="bkSim" type="button">Sim, voltar</button><button class="btn" data-a="close" type="button">Cancelar</button></div>`, 'backup2');
+  }
+  async function restaurar(d) {
+    try {
+      await store.doc('world/meta').set(d.meta); await store.doc('world/farm').set(d.farm); await store.doc('world/clock').set({ ...d.clock, at: Date.now() });
+      for (const [uid, pl] of Object.entries(d.players || {})) await store.doc('players/' + uid).set(pl);
+      for (const [uid, di] of Object.entries(d.diarios || {})) await store.doc('diary/' + uid).set(di);
+      toast('Cópia restaurada! Recarregando...', 'big'); setTimeout(() => location.reload(), 1200);
+    } catch (e) { toast('Não deu para restaurar agora. Tente de novo com internet.'); }
+  }
+  // (síncrona: devolve true/false na hora; o trabalho com o banco segue sozinho)
+  function firmeAction(a, b) {
+    switch (a) {
+      case 'bkAbrir': abrirBackup(); return true;
+      case 'bkBaixar': baixarCopia(); return true;
+      case 'bkVoltar': store.doc('backup/b' + b.dataset.i).get().then(s => { if (s.exists) confirmarRestaurar(s.data()); }).catch(() => toast('Não deu para abrir a cópia agora.')); return true;
+      case 'bkSim': if (bkConfirma) restaurar(bkConfirma); return true;
+      case 'dicas': abrirDicas(b.dataset.t); return true;
+    }
+    return false;
+  }
+  async function baixarCopia() {
+    {
+        const f = await fotoDoJogo(), blob = new Blob([JSON.stringify(f)], { type: 'application/json' }), url = URL.createObjectURL(blob), el = document.createElement('a');
+        el.href = url; el.download = `chacrinha-dia${f.dia}.json`; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+        toast('Cópia baixada! Guarde o arquivo num lugar seguro.');
+    }
+  }
+
+  // ---------- caderninho de dicas ----------
+  const DICAS = [
+    ['Chacrinha', [['Plantar', 'Enxada na terra, semente e regador. A estufa deixa plantar em qualquer estação.'], ['Arrancar uma planta', 'Picareta na planta: o primeiro golpe avisa, o segundo arranca.'], ['Máquinas', 'Toque numa máquina com a mão vazia para mudar de lugar, guardar ou jogar fora.'], ['Moinho', 'Construa com a Rosa. Trigo vira farinha, beterraba vira 3 açúcares, girassol vira óleo, no dia seguinte.'], ['Leite e lã', 'Um balãozinho aparece em cima da vaca, da cabra ou da ovelha quando dá para tirar.'], ['Mato e capim', 'Nascem devagar. A foice no capim vira feno no silo.']]],
+    ['Casa', [['Móveis', 'Segure e toque no chão para colocar. Toque no móvel para girar, mover ou guardar.'], ['Sentar', 'Toque no sofá, poltrona ou cadeira. Ande para levantar. Juntinhos, a energia volta mais rápido.'], ['Comer juntos', 'Segure uma comida e toque na mesa. Depois toquem na mesa juntos: rende 50% a mais para os dois.'], ['Guarda-roupa', 'O guarda-roupa e a cômoda guardam roupas, sapatos, anéis e coleiras.'], ['Livro rosa', 'Fica no criado-mudo: as páginas do diário dos dois. Escreva pela mochila, na aba Diário.'], ['Aquário', 'Feito pelo Tonico. Começa com 3 peixes e cresce até 7. Lendários também nadam!'], ['Paredes e piso', 'Com o Tonico. A Rosa amplia a casa.']]],
+    ['Vila', [['Cardápio da estação', 'O bar da Lia e a padaria mudam os pratos no dia 1 e no dia 16 de cada estação.'], ['Roupas', 'Ateliê da Bia: coleção da estação (bônus na estação dela), Para ela e Para ele (o ano todo).'], ['Clínica', 'Chuva sem capa dá resfriado, sol forte sem chapéu dá insolação, vespa pica, trabalhar até cansar dá dor nas costas. O Doutor Davi tem remédio.'], ['Floricultura', 'Sementes de flores de todas as estações e enfeites de jardim.'], ['Pet shop', 'Brinquedos do Darth: ele vai sozinho brincar em casa.']]],
+    ['Mina e mata', [['Elevador e cabana', 'A mina e a mata guardam uma parada a cada 5 andares/clareiras.'], ['Andares e clareiras especiais', 'Veio rico, infestado, cogumelos, buraco, baú; colmeia, fadas, javalis, acampamento.'], ['Jogando juntos', 'Os bichos e as borboletas são os mesmos para os dois. Quem dá o último golpe ganha o prêmio.'], ['Relógio', 'Na mina e na mata ele fica pequeno. Toque nele para trocar.']]],
+    ['Casal', [['Dançar', 'Toque na outra pessoa com a mão vazia: Dançar juntinhos ou beijinho.'], ['Gazebo', 'Sentar juntinhos, dançar, piquenique e ver estrelas.'], ['Estrelas cadentes', 'Em noites de chuva de estrelas, toque em Usar quando uma passar: faça um pedido (a dois vale o dobro).'], ['Cartinhas', 'Na aba Chacrinha da mochila.']]],
+  ];
+  function abrirDicas(t) {
+    const aba = DICAS.find(d => d[0] === t) || DICAS[0];
+    openPanel(`<h2>📒 Caderninho de dicas</h2><div class="tabs">${DICAS.map(([n]) => `<button type="button" data-a="dicas" data-t="${n}" class="${n === aba[0] ? 'on' : ''}">${n}</button>`).join('')}</div><div class="list">${aba[1].map(([n, d]) => `<div class="item"><span class="nm"><b>${n}</b><small>${d}</small></span></div>`).join('')}</div>`, 'dicas', aba[0]);
   }
   // ================= rede: presença dos jogadores =================
   const remote = new Map(); // peer -> {x,y,...} suavizado

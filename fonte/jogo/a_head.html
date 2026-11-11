@@ -129,6 +129,13 @@ input[type=text] { font-family: var(--font); font-size: 18px; padding: 8px 10px;
 #fishcv { width: 150px; height: 360px; image-rendering: pixelated; }
 .big { font-size: 26px; text-align: center; font-weight: 700; }
 #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.25s; }
+/* relógio compacto: na mina e na mata (ou quando a pessoa toca nele) fica só o relógio e a hora, pequeno e meio transparente */
+#clock { pointer-events: auto; cursor: pointer; transition: opacity .2s; }
+body.compacto #clock { min-width: 0; padding: 3px 6px 3px 3px; opacity: 0.82; column-gap: 4px; }
+body.compacto #clock #cDay, body.compacto #clock #cSeason, body.compacto #clock .g { display: none; }
+body.compacto #clock .t { font-size: 13px; padding: 0 3px; }
+body.compacto #dial { width: 28px; height: 28px; }
+body.compacto #clock .info::after { content: attr(data-lugar); font-size: 10px; font-weight: 700; color: #6a3a1a; }
 @media (max-width: 520px) { .slot { width: 32px; height: 32px; } .slot img { width: 26px; height: 26px; } #clock { font-size: 12px; min-width: 128px; } #clock .t { font-size: 15px; } #dial { width: 42px; height: 42px; } #clock .g { font-size: 15px; } }
 @media (orientation: landscape) and (max-height: 520px) {
   #hotbar { left: calc(4px + env(safe-area-inset-left, 0px)); top: 4px; bottom: auto; transform: none; flex-direction: column; max-width: none; max-height: calc(100% - 8px); padding: 3px; gap: 1px; }

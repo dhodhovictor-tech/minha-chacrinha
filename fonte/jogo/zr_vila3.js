@@ -113,6 +113,19 @@
     dalia: { name: 'Dália', seed: 90, sell: 140, days: 8, seasons: ['fall'], kind: 'flower', col: '#c8203a', leaf: '#3a7a3a', cat: 'flower' },
     camelia: { name: 'Camélia', seed: 120, sell: 160, days: 9, seasons: ['winter'], kind: 'flower', col: '#f07aa0', leaf: '#2a6a3a', cat: 'flower' },
     amorperfeito: { name: 'Amor-perfeito', seed: 60, sell: 90, days: 6, seasons: ['winter', 'spring'], kind: 'flower', col: '#7a4ac8', leaf: '#3a7a3a', cat: 'flower' },
+    rosavermelha: { name: 'Rosa vermelha', seed: 120, sell: 170, days: 8, seasons: ['spring', 'summer'], kind: 'flower', col: '#d8203a', leaf: '#3a7a3a', cat: 'flower' },
+    violeta: { name: 'Violeta', seed: 40, sell: 65, days: 5, seasons: ['spring', 'winter'], kind: 'flower', col: '#6a3ab8', leaf: '#3a8a3a', cat: 'flower' },
+    azaleia: { name: 'Azaleia', seed: 70, sell: 105, days: 7, seasons: ['winter', 'spring'], kind: 'flower', col: '#f05a9a', leaf: '#4a8a3a', cat: 'flower' },
+    copodeleite: { name: 'Copo-de-leite', seed: 90, sell: 135, days: 8, seasons: ['spring', 'fall'], kind: 'flower', col: '#fbfbf4', leaf: '#3a8a3a', cat: 'flower' },
+    gerbera: { name: 'Gérbera', seed: 50, sell: 80, days: 6, seasons: ['summer'], kind: 'flower', col: '#ff7a2a', leaf: '#4a9a3a', cat: 'flower' },
+    petunia: { name: 'Petúnia', seed: 40, sell: 65, days: 5, seasons: ['summer'], kind: 'flower', col: '#c84ad8', leaf: '#4a9a3a', cat: 'flower' },
+    jasmim: { name: 'Jasmim', seed: 80, sell: 125, days: 7, seasons: ['summer'], kind: 'flower', col: '#fff4d0', leaf: '#3a8a3a', cat: 'flower' },
+    orquidea: { name: 'Orquídea', seed: 160, sell: 230, days: 10, seasons: ['summer', 'fall'], kind: 'flower', col: '#d88ae8', leaf: '#4a8a3a', cat: 'flower' },
+    cravo: { name: 'Cravo', seed: 50, sell: 80, days: 6, seasons: ['fall'], kind: 'flower', col: '#e84a6a', leaf: '#5a8a5a', cat: 'flower' },
+    begonia: { name: 'Begônia', seed: 60, sell: 95, days: 6, seasons: ['fall'], kind: 'flower', col: '#f04a4a', leaf: '#3a7a3a', cat: 'flower' },
+    astromelia: { name: 'Astromélia', seed: 70, sell: 110, days: 7, seasons: ['fall'], kind: 'flower', col: '#f4a040', leaf: '#4a8a3a', cat: 'flower' },
+    bicodepapagaio: { name: 'Bico-de-papagaio', seed: 100, sell: 150, days: 8, seasons: ['winter'], kind: 'flower', col: '#d8202a', leaf: '#2a6a3a', cat: 'flower' },
+    rosadeinverno: { name: 'Rosa-de-inverno', seed: 90, sell: 140, days: 7, seasons: ['winter'], kind: 'flower', col: '#e8c8e8', leaf: '#2a6a3a', cat: 'flower' },
   };
   Object.assign(FLOWERS, FLORES2); // ícone de flor e mel com o sabor dela na colmeia
   for (const [k, c] of Object.entries(FLORES2)) {
@@ -305,3 +318,15 @@
       bugs = bugs.filter(b => vistos.has(b.uid));
     }
   }
+
+  // ---------- relógio compacto ----------
+  let hudMini = null;
+  function hudCompacto() {
+    if (hudMini === null) { try { hudMini = localStorage.getItem('hudMini') === '1'; } catch (e) { hudMini = false; } }
+    const m = curMap(), auto = !!(m && (m.cave || m.mata)), on = hudMini !== auto ? true : false;
+    document.body.classList.toggle('compacto', auto ? !hudMini : hudMini);
+    const info = document.querySelector('#clock .info'); if (info) info.dataset.lugar = m && m.cave && m.floor ? `andar ${m.floor}` : m && m.mataN ? `clareira ${m.mataN}` : '';
+    void on;
+  }
+  // tocar no relógio troca entre completo e compacto (lembra a escolha; na mina e na mata o padrão é compacto)
+  document.getElementById('clock').addEventListener('click', () => { hudMini = !hudMini; try { localStorage.setItem('hudMini', hudMini ? '1' : '0'); } catch (e) {} hudCompacto(); });

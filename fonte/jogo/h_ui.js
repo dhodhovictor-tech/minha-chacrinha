@@ -67,6 +67,7 @@
     $('cDay').textContent = `${weekday()} ${dom()} · Ano ${year()}`;
     $('cSeason').textContent = `${SEASONS[SEASON_ID.indexOf(s)]} · ${climaNome()}`;
     $('cTime').textContent = `${h}:${mm}`;
+    hudCompacto();
     $('cGold').textContent = `${fmt(gold())} ₲`;
     $('enFill').style.height = clamp(P.energy / P.maxEnergy, 0, 1) * 100 + '%';
     const ef = clamp(P.energy / P.maxEnergy, 0, 1);
@@ -136,6 +137,7 @@
         <p style="font-size:13px">Feno no silo: ${W.farm.hay || 0}/${siloCap()} · Animais: ${Object.keys(farmA()).length} · Construções: ${Object.keys(farmB()).length}</p>
         <div class="row"><button class="btn" data-a="relook" type="button">Trocar visual do personagem</button></div>
         <div class="row"><button class="btn" data-a="moveStart" type="button">Mudar construções, árvores e máquinas de lugar</button></div>
+        <div class="row"><button class="btn" data-a="dicas" data-t="Chacrinha" type="button">📒 Caderninho de dicas</button><button class="btn" data-a="bkAbrir" type="button">💾 Cópia de segurança</button></div>
         ${partner() ? `<div class="row"><button class="btn g" data-a="letterOpen" type="button">Escrever cartinha para ${esc(partner().name)} 💌</button></div>` : ''}
         ${window.__chacrinhaApp ? `<p style="font-size:13px;text-align:center">Código da chacrinha: <b>${esc(window.__chacrinhaApp.code)}</b></p><div class="row"><button class="btn" data-a="appswitch" type="button">Trocar de chacrinha ou de personagem</button></div><p style="font-size:12px;text-align:center">Versão do jogo: ${esc(window.__APP_DATE || '')} (${esc(window.__APP_VERSION || '?')})</p><div class="row"><button class="btn" data-a="appupdate" type="button">Procurar atualização</button></div>` : ''}
         ${!online ? '<div class="row"><button class="btn r" data-a="wipe" type="button">Apagar esta chacrinha e começar de novo</button></div>' : ''}`;
@@ -221,7 +223,7 @@
     let body = '';
     const ext = extraShopTab(who, shopTab);
     if (ext != null) body = ext;
-    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele') {
+    else if (shopTab === 'buy' || shopTab === 'moda' || shopTab === 'ele' || shopTab === 'ela') {
       const list = shopList(who);
       body = list.length ? `<div class="list">${list.map(o => { const have = o.one && (P.inv.some(s => s && s.id === o.id) || Object.values(P.eq || {}).includes(o.id)); const pr = coopPrice(o.price); if (have) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><small>Já tem</small>`);
         if (o.one) return row(iconURL(o.id), item(o.id).name, item(o.id).desc, `<span class="price">${fmt(pr)} ₲</span><button class="btn g" data-a="buy" data-id="${o.id}" data-n="1" type="button" ${gold() < pr ? 'disabled' : ''}>Comprar</button>`);
